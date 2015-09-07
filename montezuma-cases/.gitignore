@@ -2,3 +2,4 @@ target/**
 previous_generated_tests/
 recordings/
 src/generatedtests/
+.classpath
