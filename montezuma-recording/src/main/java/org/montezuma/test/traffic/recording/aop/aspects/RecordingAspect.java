@@ -31,6 +31,8 @@ import java.util.Stack;
 
 @Aspect
 public class RecordingAspect {
+
+
 	// TODO - make the serialisation level configurable by System property or configuration file.
 	// PERHAPS ALL OR PART OF THIS SHOULD BE IMPLEMENTED BY THE SPECIFIC SERIALISERS, as
 	// every object contained by this object can be or not be Serializable.
@@ -374,8 +376,8 @@ public class RecordingAspect {
 			return;
 		if (log) {
 			System.out.print("\nAFTER CALL on " + "type: " + joinPoint.getStaticPart().getKind() + ", " + signature.getDeclaringType().getName() + ", to signature type: "
-					+ signature.getDeclaringType().getName() + ", to target: " + (joinPoint.getTarget() == null ? null : joinPoint.getTarget().getClass().getName()) + ", method "
-					+ signature.toString() + ", n. args: " + joinPoint.getArgs().length);
+					+ signature.getDeclaringType().getName() + ", to target: " + (joinPoint.getTarget() == null ? null : joinPoint.getTarget().getClass().getName()) + ", method " + signature.toString()
+					+ ", n. args: " + joinPoint.getArgs().length);
 			System.out.println("InvocationData stack size before peeking:" + stackOfExecutionData.size());
 		}
 		final InvocationData data = stackOfExecutionData.peek().getLastCall();
