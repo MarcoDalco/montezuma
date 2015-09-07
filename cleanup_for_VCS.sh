@@ -6,4 +6,4 @@ recordings_path=montezuma-cases/recordings
 mvn clean
 rm -fr $previous_tests_path/*
 rm -fr $src_path/*
-rm -fr $recording_path/*
+rm -fr $recordings_path/*
