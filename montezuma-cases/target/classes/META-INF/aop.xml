@@ -1,0 +1,59 @@
+<aspectj>
+	<aspects>
+		<!-- declare two existing aspects to the weaver -->
+               <aspect name="org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect"/>
+
+              <!-- define a concrete aspect inline -->
+<!--
+              <concrete-aspect name="com.xyz.tracing.MyTracing"
+                               extends="tracing.AbstractTracing"
+                               precedence="com.xyz.first, *">
+                <pointcut name="tracingScope" expression="within(org.maw.*)"/>
+              </concrete-aspect>
+-->
+ 
+              <!-- Of the set of aspects declared to the weaver
+                   use aspects matching the type pattern "com..*" for weaving. -->
+              <include within="org..*"/>
+
+              <!-- Of the set of aspects declared to the weaver
+                   do not use any aspects with the @CoolAspect annotation for weaving -->
+<!--
+              <exclude within="@CoolAspect *"/>
+-->
+
+            </aspects>
+
+            <weaver options="-verbose -debug -showWeaveInfo">
+              <!-- Weave types that are within the javax.* or org.aspectj.*
+                   packages. Also weave all types in the foo package that do
+                   not have the @NoWeave annotation. -->
+
+              <dump within="analysethis..*" beforeandafter="true"/>
+<!--                 <include within="uhuru.matrix.lookups.db.DBContext"/> -->
+<!--                <include within="uhuru.matrix.lookups.db..*"/> -->
+               <include within="analysethis..*"/>
+              <include within="org.montezuma.test.traffic.recording..*"/>
+              <include within="org.montezuma.test.traffic.recording.cases..*"/>
+<!--
+              <include within="javax.*"/>
+              <include within="org.aspectj.*"/>
+              <include within="(!@NoWeave foo.*) AND foo.*"/>
+-->
+
+              <!-- Do not weave types within the "bar" package -->
+<!--
+              <exclude within="bar.*"/>
+-->
+
+              <!-- Dump all types within the "com.foo.bar" package
+                   to the "./_ajdump" folder on disk (for diagnostic purposes) -->
+
+              <!-- Dump all types within the "com.foo.bar" package and sub-packages,
+                   both before are after they are woven,
+                   which can be used for byte-code generated at runtime -->
+<!--
+              <dump within="com.foo.bar..*" beforeandafter="true"/> 
+-->
+            </weaver>
+</aspectj>
