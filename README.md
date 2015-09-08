@@ -4,6 +4,12 @@
 This is a Maven project. Its purpose is to automatically generate unit tests basing on real-time execution data, captured using Aspect Oriented Programming techniques. It can also replay the same execution over and over. It is therefore split over 3 modules (Recording, Replaying, Test-Generation), a "common" module and a test-cases module.
 
 
+## Code quality notes ##
+This project is still under quick-and-dirty development, and therefore many classes are NOT written as I would like to, and again... that is why this repository is not public yet, as it would be "impossible" to manage contributions from different people. Before going out in the wild this project needs:
+1) Single-responsibility patterns and separation of concerns (e.g. TestMethodsWriter class completely refactored).
+2) Comments on most methods and several chunks of code.
+
+
 #### Checking this project functionality ####
 Run these sections in sequence:  
 
