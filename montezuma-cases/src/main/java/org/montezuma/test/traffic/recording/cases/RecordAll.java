@@ -13,5 +13,10 @@ public class RecordAll {
 		SuperClassCallWithStateTrafficRecorder.main(args);
 		TimeConsumerTrafficRecorder.main(args);
 		UtilsConsumerTrafficRecorder.main(args);
+
+		System.out.println();
+		System.out.println("************************************");
+		System.out.println("*** END OF EXECUTION (recording) ***");
+		System.out.println("************************************");
 	}
 }

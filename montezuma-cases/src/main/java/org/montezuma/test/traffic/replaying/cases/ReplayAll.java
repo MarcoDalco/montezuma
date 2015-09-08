@@ -15,6 +15,10 @@ public class ReplayAll {
 		SuperClassCallWithStateTrafficReplayer.main(args);
 		TimeConsumingTrafficReplayer.main(args);
 		UtilsConsumerTrafficReplayer.main(args);
-	}
 
+		System.out.println();
+		System.out.println("************************************");
+		System.out.println("*** END OF EXECUTION (replaying) ***");
+		System.out.println("************************************");
+	}
 }

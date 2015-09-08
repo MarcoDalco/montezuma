@@ -15,6 +15,10 @@ public class WriteAll {
 		SuperClassCallWithStateTestWriter.main(args);
 		TimeConsumerTestWriter.main(args);
 		UtilsConsumerTestWriter.main(args);
-	}
 
+		System.out.println();
+		System.out.println("*******************************************");
+		System.out.println("*** END OF TEST GENERATION (with mocks) ***");
+		System.out.println("*******************************************");
+	}
 }

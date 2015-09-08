@@ -15,6 +15,10 @@ public class WriteAllNoMocking {
 		SuperClassCallWithStateTestWriter.main(args);
 		TimeConsumerTestWriter.main(args);
 		UtilsConsumerNoUtilsMockingTestWriter.main(args);
-	}
 
+		System.out.println();
+		System.out.println("**********************************************");
+		System.out.println("*** END OF TEST GENERATION (without mocks) ***");
+		System.out.println("**********************************************");
+	}
 }
