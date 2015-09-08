@@ -1,4 +1,4 @@
-This is a Maven project
+This is a Maven project. Its purpose is to automatically generate unit tests basing on real-time execution data, captured using Aspect Oriented Programming techniques. It can also replay the same execution over and over. It is therefore split over 3 modules (Recording, Replaying, Test-Generation), a "common" module and a test-cases module.
 
 
 Set up in Eclipse:
