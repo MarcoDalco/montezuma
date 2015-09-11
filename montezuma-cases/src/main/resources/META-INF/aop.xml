@@ -29,7 +29,7 @@
                    packages. Also weave all types in the foo package that do
                    not have the @NoWeave annotation. -->
 
-              <dump within="analysethis..*" beforeandafter="true"/>
+<!--               <dump within="analysethis..*" beforeandafter="true"/> -->
 <!--                 <include within="uhuru.matrix.lookups.db.DBContext"/> -->
 <!--                <include within="uhuru.matrix.lookups.db..*"/> -->
                <include within="analysethis..*"/>
