@@ -46,7 +46,8 @@ public class RecordingAspect {
 	// private static final String WITHIN_REGEX = "uhuru.matrix.lookups.db..*";
 //	 private static final String WITHIN_REGEX = "uhuru.matrix.lookups.db.DBContext";
 	private static final String		WITHIN_REGEX																	= "analysethis..*";
-	private static final String		CALL_INVOCATION_FILTER												= "((call(* *(..))) || (call(*.new(..))))" + (behaviouralCapture ? " && (!call(* " + WITHIN_REGEX + "(..))) && (!call(" + WITHIN_REGEX + ".new(..)))" : "") + " && within(" + WITHIN_REGEX + ")";
+//	private static final String		CALL_INVOCATION_FILTER												= "((call(* *(..))) || (call(*.new(..))))" + (behaviouralCapture ? " && (!call(* " + WITHIN_REGEX + "(..))) && (!call(" + WITHIN_REGEX + ".new(..)))" : "") + " && within(" + WITHIN_REGEX + ")";
+		private static final String		CALL_INVOCATION_FILTER												= "((call(* *(..))) || (call(*.new(..)))) && within(" + WITHIN_REGEX + ")";
 	private static final String		BEFORE_EXECUTION_AND_NEW_INVOCATION_FILTER		= "((execution(* *(..))) || (execution(*.new(..)))) && within(" + WITHIN_REGEX + ")";
 	private static final String		AFTER_EXECUTION_INVOCATION_FILTER							= "((execution(* *(..))) || (staticinitialization(*))) && within(" + WITHIN_REGEX + ")";
 	private static final String		EXECUTION_INVOCATION_FILTER_AFTER_CONSTRUCTOR	= "((execution(*.new(..))) && this(thiz)) && within(" + WITHIN_REGEX + ")";
@@ -237,6 +238,9 @@ public class RecordingAspect {
 		if (stop)
 			return;
 
+		if (!shouldRecordCall(joinPoint))
+			return;
+
 		final LinkedList<InvocationData> stackOfExecutionData = threadLocalStackOfExecutionInvocationData.get();
 		if (stackOfExecutionData.size() == 0)
 			return; // STATIC CODE NOT SUPPORTED YET
@@ -366,6 +370,10 @@ public class RecordingAspect {
 	public void logAfterCallReturning(JoinPoint joinPoint, Object result) throws IOException {
 		if (stop)
 			return;
+
+		if (!shouldRecordCall(joinPoint))
+			return;
+
 		final LinkedList<InvocationData> stackOfExecutionData = threadLocalStackOfExecutionInvocationData.get();
 		if (stackOfExecutionData.size() == 0)
 			return; // INITIALISER CODE NOT SUPPORTED YET
@@ -395,6 +403,9 @@ public class RecordingAspect {
 		if (stop)
 			return;
 
+		if (!shouldRecordCall(joinPoint))
+			return;
+
 		if (joinPoint.getSignature() instanceof InitializerSignature)
 			return; // INITIALISER CODE NOT SUPPORTED YET
 		if (log) {
@@ -412,6 +423,26 @@ public class RecordingAspect {
 			System.out.println("Behavioural stack (after throwin, before popping) size:" + threadLocalWasOutsideScopeStack.get().size() + ", last: " + threadLocalWasOutsideScopeStack.get().peek());
 			threadLocalWasOutsideScopeStack.get().pop(); // Coming back into instrumented code
 		}
+	}
+
+	private boolean shouldRecordCall(JoinPoint joinPoint) {
+		if (!behaviouralCapture)
+			return true;
+
+		final Object thiz = joinPoint.getThis();
+		Class<?> thisClass = (thiz == null ? joinPoint.getSourceLocation().getWithinType() : thiz.getClass());
+		boolean isWithin = isWithin(thisClass);
+		boolean isCallingWithin = isCallingWithin(joinPoint);
+
+		return isWithin != isCallingWithin;
+	}
+
+	private boolean isCallingWithin(JoinPoint joinPoint) {
+		return isWithin(joinPoint.getSignature().getDeclaringType());
+	}
+
+	private boolean isWithin(Class<?> clazz) {
+		return clazz.getName().matches(WITHIN_REGEX);
 	}
 
 	private void store(JoinPoint joinPoint, InvocationData data) throws FileNotFoundException, IOException {
