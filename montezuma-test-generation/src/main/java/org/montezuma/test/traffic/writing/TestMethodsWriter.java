@@ -219,7 +219,7 @@ public class TestMethodsWriter {
 			public void generateRequiredInits() {
 				// final VariableNameRenderer variableNameRenderer;
 				if (!argClass.isPrimitive() && !argClass.isArray() && !argClass.getPackage().equals(Package.getPackage("java.lang"))) {
-					requiredImports.add(new Import(argClass.getName()));
+					requiredImports.add(new Import(argClass.getCanonicalName()));
 				}
 				// maincodeChunk.requiredInits.add(variableCodeChunk);
 				if ((arg instanceof Number) || (arg instanceof Boolean)) {
@@ -269,7 +269,7 @@ public class TestMethodsWriter {
 								}
 							};
 						}
-						final String actualArgType = argClass.getName();
+						final String actualArgType = argClass.getCanonicalName();
 						final String declaredArgClassName = (actualArgType.startsWith("java") ? argClass.getSimpleName() : actualArgType);
 						codeRenderers.add(new StructuredTextRenderer("final " + declaredArgClassName + " %s = %s;",
  new VariableNameRenderer(argID, argClass, variableNamePrefix), initExpressionRenderer));
@@ -297,7 +297,7 @@ public class TestMethodsWriter {
 					String[] arrayArgTypes = new String[array.length];
 					int[] arrayArgIDs = new int[array.length];
 					for (int l = 0; l < array.length; l++) {
-						arrayArgTypes[l] = arrayBaseType.getName();
+						arrayArgTypes[l] = arrayBaseType.getCanonicalName();
 						arrayArgIDs[l] = TestMethodsWriter.generateIdentityHashCode(); // TODO: store the real object ID?
 					}
 					StructuredTextRenderer arrayObjectsRenderer = buildInvocationParameters(this, array, arrayArgTypes, arrayArgIDs);
@@ -395,7 +395,7 @@ public class TestMethodsWriter {
 
 		boolean shouldMock = true;
 		for (String dontMockPattern : dontMockRegexList) {
-			if (targetClazz.getName().matches(dontMockPattern)) {
+			if (targetClazz.getCanonicalName().matches(dontMockPattern)) {
 				shouldMock = false;
 				break;
 			}
@@ -412,7 +412,7 @@ public class TestMethodsWriter {
 		// TODO - add mocks to a "(Mocked)FieldContainer" instead of the testClassWriter
 		// TODO - get the argClass simpleName lazily from the ImportContainer
 		testClassWriter.addImport("mockit.Mocked");
-		testClassWriter.addImport(argClass.getName());
+		testClassWriter.addImport(argClass.getCanonicalName());
 		testClassWriter.addField(identityHashCode, new StructuredTextRenderer("@Mocked private %s %s;", new ClassNameRenderer(argClass), variableNameRenderer));
 	}
 
