@@ -23,7 +23,8 @@ public class TestMethod implements TextRenderer {
 		for (CodeChunk codeChunk : requiredInits.values()) {
 			structuredTextFileWriter.appendChunk(2, codeChunk);
 		}
-		instantiationMethodPart.getRenderer().render(structuredTextFileWriter);
+		if (instantiationMethodPart != null)
+			instantiationMethodPart.getRenderer().render(structuredTextFileWriter);
 
 		List<CodeChunk> combinedCodeChunks = CodeChunk.tryCombine(codeChunks);
 		for (CodeChunk codeChunk : combinedCodeChunks) {
@@ -36,7 +37,8 @@ public class TestMethod implements TextRenderer {
 	private LinkedHashMap<Integer, InitCodeChunk> collectAllTheRequiredInits() {
 		LinkedHashMap<Integer, InitCodeChunk> inits = new LinkedHashMap<Integer, InitCodeChunk>();
 
-		inits.putAll(instantiationMethodPart.collectAllTheRequiredInits());
+		if (instantiationMethodPart != null)
+			inits.putAll(instantiationMethodPart.collectAllTheRequiredInits());
 		for (CodeChunk chunk : codeChunks) {
 			inits.putAll(chunk.collectAllTheRequiredInits());
 		}
@@ -52,7 +54,8 @@ public class TestMethod implements TextRenderer {
 	private Collection<Class<? extends Throwable>> getAllDeclaredThrowables() {
 		Set<Class<? extends Throwable>> allDeclaredExceptions = new HashSet<>();
 
-		allDeclaredExceptions.addAll(instantiationMethodPart.getAllDeclaredThrowables());
+		if (instantiationMethodPart != null)
+			allDeclaredExceptions.addAll(instantiationMethodPart.getAllDeclaredThrowables());
 		for (CodeChunk codeChunk : codeChunks) {
 			allDeclaredExceptions.addAll(codeChunk.getAllDeclaredThrowables());
 		}
@@ -68,7 +71,8 @@ public class TestMethod implements TextRenderer {
 			allImports.add(new Import(throwableClass.getName()));
 		}
 
-		allImports.addAll(instantiationMethodPart.getAllImports());
+		if (instantiationMethodPart != null)
+			allImports.addAll(instantiationMethodPart.getAllImports());
 		for (CodeChunk codeChunk : codeChunks) {
 			allImports.addAll(codeChunk.getAllImports());
 		}
@@ -81,14 +85,16 @@ public class TestMethod implements TextRenderer {
 		TestMethod newMethod = new TestMethod();
 
 		newMethod.opening = new TestMethodOpening(opening, methodName);
-		newMethod.instantiationMethodPart = new CodeChunk(instantiationMethodPart);
+		if (instantiationMethodPart != null)
+			newMethod.instantiationMethodPart = new CodeChunk(instantiationMethodPart);
 
 		return newMethod;
 	}
 
 	public void preprocess() {
 		opening.preprocess();
-		instantiationMethodPart.preprocess();
+		if (instantiationMethodPart != null)
+			instantiationMethodPart.preprocess();
 		for (CodeChunk codeChunk : codeChunks) {
 			codeChunk.preprocess();
 		}

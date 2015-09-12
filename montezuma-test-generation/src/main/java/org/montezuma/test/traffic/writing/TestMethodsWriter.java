@@ -67,12 +67,13 @@ public class TestMethodsWriter {
 				}
 				testNumber++;
 				if (isInitMethod) {
-					currentTestMethod = getNewTestMethodOpening(false, "test" + testNumber, methodArgs, argTypes, invocationData.argIDs, invocationData.calls);
+					currentTestMethod = getNewTestMethodOpening(testNumber);
+					generateInstantiation(currentTestMethod, methodArgs, argTypes, invocationData.argIDs, invocationData.calls);
 					justInstantiated = true;
 					continue; // Fetch the next invocation
 				} else if (!justInstantiated) {
 					if (amTestingTheStaticPart && (testNumber == 1))
-						currentTestMethod = getNewTestMethodOpening(true, "test" + testNumber, null, null, null, invocationData.calls);
+						currentTestMethod = getNewTestMethodOpening(testNumber);
 					else if (this.oneTestPerInvocation)
 						currentTestMethod = currentTestMethod.cloneOpening("test" + testNumber);
 					else
@@ -128,25 +129,26 @@ public class TestMethodsWriter {
 		return testMethods;
 	}
 
-	private TestMethod getNewTestMethodOpening(boolean amTestingTheStaticClass, String testMethodName, Object[] methodArgs, String[] argTypes, int[] argIDs, Queue<CallInvocationData> calls) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
+	private TestMethod getNewTestMethodOpening(int testNumber) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
 		TestMethod currentTestMethod = new TestMethod();
-		final TestMethodOpening testMethodOpening = new TestMethodOpening("void", testMethodName);
+		final TestMethodOpening testMethodOpening = new TestMethodOpening("void", "test" + testNumber);
 		testMethodOpening.annotations.add("@Test");
 		testMethodOpening.modifiers.add("public");
 		currentTestMethod.opening = testMethodOpening;
-		CodeChunk instantiationMethodPart = new CodeChunk();
-		if (!amTestingTheStaticClass) {
-			instantiationMethodPart.methodPartsBeforeLines.addAll(buildExpectations(calls));
-
-			final StructuredTextRenderer invocationParametersRenderer = buildInvocationParameters(instantiationMethodPart, methodArgs, argTypes, argIDs);
-
-			final ClassNameRenderer classNameRenderer = new ClassNameRenderer(testClass);
-			instantiationMethodPart.addExpressionRenderer(new StructuredTextRenderer(
-					"final %s cut = new %s(%s);" + StructuredTextFileWriter.EOL, classNameRenderer, classNameRenderer, invocationParametersRenderer));
-
-		}
-		currentTestMethod.instantiationMethodPart = instantiationMethodPart;
 		return currentTestMethod;
+	}
+
+	protected void generateInstantiation(TestMethod currentTestMethod, Object[] methodArgs, String[] argTypes, int[] argIDs, Queue<CallInvocationData> calls) throws ClassNotFoundException, IOException, NoSuchMethodException {
+		CodeChunk instantiationMethodPart = new CodeChunk();
+		instantiationMethodPart.methodPartsBeforeLines.addAll(buildExpectations(calls));
+
+		final StructuredTextRenderer invocationParametersRenderer = buildInvocationParameters(instantiationMethodPart, methodArgs, argTypes, argIDs);
+
+		final ClassNameRenderer classNameRenderer = new ClassNameRenderer(testClass);
+		instantiationMethodPart.addExpressionRenderer(new StructuredTextRenderer(
+				"final %s cut = new %s(%s);" + StructuredTextFileWriter.EOL, classNameRenderer, classNameRenderer, invocationParametersRenderer));
+
+		currentTestMethod.instantiationMethodPart = instantiationMethodPart;
 	}
 
 	private List<CodeChunk> buildExpectations(Queue<CallInvocationData> calls) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
