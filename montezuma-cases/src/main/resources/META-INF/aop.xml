@@ -34,7 +34,6 @@
 <!--                <include within="uhuru.matrix.lookups.db..*"/> -->
                <include within="analysethis..*"/>
               <include within="org.montezuma.test.traffic.recording..*"/>
-              <include within="org.montezuma.test.traffic.recording.cases..*"/>
 <!--
               <include within="javax.*"/>
               <include within="org.aspectj.*"/>
