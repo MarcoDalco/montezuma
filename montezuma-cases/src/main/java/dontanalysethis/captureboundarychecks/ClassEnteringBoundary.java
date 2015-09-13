@@ -3,8 +3,13 @@ package dontanalysethis.captureboundarychecks;
 import analysethis.captureboundarychecks.EntryClassToAnalyse;
 
 public class ClassEnteringBoundary {
-	public String enterBoundary() {
+	public String enterBoundaryForFullTraversal() {
 		EntryClassToAnalyse boundaryEntryClass = new EntryClassToAnalyse();
-		return boundaryEntryClass.enterBoundary("A - From outside") + "- A - returning";
+		return boundaryEntryClass.enterBoundaryForFullTraversal("A - From outside") + "- A - returning";
+	}
+
+	public String enterBoundaryForTraversalAndCallback() {
+		EntryClassToAnalyse boundaryEntryClass = new EntryClassToAnalyse();
+		return boundaryEntryClass.enterBoundaryForTraversalAndCallback("A - From outside") + "- A - returning";
 	}
 }

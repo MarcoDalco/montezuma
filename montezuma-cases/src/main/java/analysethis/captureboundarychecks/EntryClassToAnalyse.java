@@ -2,10 +2,16 @@ package analysethis.captureboundarychecks;
 
 public class EntryClassToAnalyse {
 
-	public String enterBoundary(String string) {
+	public String enterBoundaryForFullTraversal(String string) {
 		SecondClassToAnalyse classExitingBoundary = new SecondClassToAnalyse();
 
-		return classExitingBoundary.continueWithinBoundary(string + ", B - entered boundary") + ", B - returning and exiting boundary";
+		return classExitingBoundary.continueWithinBoundaryForFullTraversal(string + ", B - entered boundary") + ", B - returning and exiting boundary";
+	}
+
+	public String enterBoundaryForTraversalAndCallback(String string) {
+		SecondClassToAnalyse classExitingBoundary = new SecondClassToAnalyse();
+
+		return classExitingBoundary.continueWithinBoundaryForTraversalAndCallback(string + ", B - entered boundary") + ", B - returning and exiting boundary";
 	}
 
 }
