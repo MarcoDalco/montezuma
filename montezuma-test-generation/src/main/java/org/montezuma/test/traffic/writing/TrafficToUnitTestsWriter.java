@@ -27,7 +27,10 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 
 	public static List<String> getDontMockClasses() {
 		List<String> dontMockRegexList = new ArrayList<String>();
-		dontMockRegexList.add("java.*");
+		dontMockRegexList.add("java.lang.*");
+		dontMockRegexList.add("java.math.*");
+		dontMockRegexList.add("java.text.*");
+		dontMockRegexList.add("java.util.*");
 		return dontMockRegexList;
 	}
 
