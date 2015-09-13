@@ -450,6 +450,10 @@ public class TestMethodsWriter {
 		}
 		// final Class<? extends Object> returnValueClass = (returnValue instanceof MustMock ? ((MustMock)
 		// returnValue).clazz : returnValue.getClass());
+		// TODO - To be checked with downcast invocations, i.e. when the object - say it's returned by an expected
+		// invocation - is then cast by the cut to a more specific type and a method from that type is invoked. That would
+		// be a good reason to use returnValueClass (returnValue.getClass()), but such class might not be visible (private
+		// inner class).
 		final VariableNameRenderer returnValueNameRenderer = new VariableNameRenderer(identityHashCode, returnValueDeclaredType, "expected");
 
 		final InitCodeChunk returnValueInitCodeChunk = createInitCodeChunk(returnValue, returnValueDeclaredType, identityHashCode, "expected");
