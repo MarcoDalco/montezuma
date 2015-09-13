@@ -10,7 +10,9 @@ import org.montezuma.test.traffic.serialisers.SerialisationFactory;
 import org.montezuma.test.traffic.writing.serialisation.SerialisationRendererFactory;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -54,7 +56,8 @@ public class TestMethodsWriter {
 			String methodSignature = invocationData.signature;
 			final int indexOfSeparatorBetweenMethodNameAndArgs = methodSignature.indexOf(Common.METHOD_NAME_TO_ARGS_SEPARATOR);
 			String methodName = methodSignature.substring(0, indexOfSeparatorBetweenMethodNameAndArgs);
-			final String[] argTypes = methodSignature.substring(1 + indexOfSeparatorBetweenMethodNameAndArgs).split(Common.ARGS_SEPARATOR);
+			final String argTypesSubstring = methodSignature.substring(1 + indexOfSeparatorBetweenMethodNameAndArgs);
+			final String[] argTypes = (argTypesSubstring.length() == 0 ? new String[] {} : argTypesSubstring.split(Common.ARGS_SEPARATOR));
 			if (log)
 				System.out.println("WRITING TEST - METHOD NAME: " + methodName);
 			Object[] methodArgs = TrafficReader.getDeserialisedArgs(invocationData.serialisedArgs);
@@ -105,7 +108,8 @@ public class TestMethodsWriter {
 					currentMethodPart.requiredImports.add(new Import("org.junit.Assert", "assertSame"));
 					instantiationRenderer = new StructuredTextRenderer("assertSame(%s, %s);", returnValueNameRenderer, invocationRenderer);
 				} else {
-					ExpressionRenderer returnValueNameRenderer = buildExpectedReturnValue(currentMethodPart, serialisedReturnValue, returnValueID);
+					Method invokedMethod = this.testClass.getDeclaredMethod(methodName, buildParameterTypes(argTypes));
+					ExpressionRenderer returnValueNameRenderer = buildExpectedReturnValue(currentMethodPart, serialisedReturnValue, invokedMethod.getReturnType(), returnValueID);
 					if (returnValueNameRenderer instanceof VariableNameRenderer) {
 						// TODO - when the returned values are primitive wrappers (instances of java.lang.Number descendants), cast
 						// the first argument to their original class (the primitive or the wrapper/Object) basing on the return
@@ -331,17 +335,9 @@ public class TestMethodsWriter {
 		final StrictExpectationsCodeChunk codeChunk = new StrictExpectationsCodeChunk();
 		String methodSignature = callData.signature;
 		final int indexOfSeparatorBetweenMethodNameAndArgs = methodSignature.indexOf(Common.METHOD_NAME_TO_ARGS_SEPARATOR);
-		final String argsSubstring = methodSignature.substring(1 + indexOfSeparatorBetweenMethodNameAndArgs);
-		final String[] argTypes = (argsSubstring.length() == 0 ? new String[] {} : argsSubstring.split(Common.ARGS_SEPARATOR));
-		Class<?>[] parameterTypes = new Class<?>[argTypes.length];
-		for (int i = 0; i < argTypes.length; i++) {
-			final String argTypeString = argTypes[i];
-			Class<?> argClass = Common.primitiveClasses.get(argTypeString);
-			if (argClass == null) {
-				argClass = Class.forName(argTypeString);
-			}
-			parameterTypes[i] = argClass;
-		}
+		final String argTypesSubstring = methodSignature.substring(1 + indexOfSeparatorBetweenMethodNameAndArgs);
+		final String[] argTypes = (argTypesSubstring.length() == 0 ? new String[] {} : argTypesSubstring.split(Common.ARGS_SEPARATOR));
+		Class<?>[] parameterTypes = buildParameterTypes(argTypes);
 
 		String methodName = methodSignature.substring(0, indexOfSeparatorBetweenMethodNameAndArgs);
 		final Class<?> declaringType = callData.declaringType;
@@ -377,13 +373,27 @@ public class TestMethodsWriter {
 		final byte[] serialisedReturnValue = callData.serialisedReturnValue;
 		// TODO - implement behaviour of when a Throwable is thrown rather than a result returned: serialisedReturnValue is
 		// null, but returnValueID and serialisedThrowable aren't. Return the throwable.
+		final Class<?> returnType = (isConstructorInvocation ? targetClazzOrDeclaringType : ((Method) declaredMethod).getReturnType());
 		final ExpressionRenderer resultExpressionRenderer =
 				(serialisedReturnValue == null ? ExpressionRenderer.nullRenderer() : new StructuredTextRenderer(" result = %s;", buildExpectedReturnValue(
-						codeChunk, serialisedReturnValue, callData.returnValueID)));
+						codeChunk, serialisedReturnValue, returnType, callData.returnValueID)));
 		StructuredTextRenderer structuredTextRenderer = new StructuredTextRenderer("%s%s%s", invocationExpressionRenderer, timesExpressionRenderer, resultExpressionRenderer);
 		codeChunk.addExpressionRenderer(structuredTextRenderer);
 
 		return codeChunk;
+	}
+
+	protected Class<?>[] buildParameterTypes(final String[] argTypes) throws ClassNotFoundException {
+		Class<?>[] parameterTypes = new Class<?>[argTypes.length];
+		for (int i = 0; i < argTypes.length; i++) {
+			final String argTypeString = argTypes[i];
+			Class<?> argClass = Common.primitiveClasses.get(argTypeString);
+			if (argClass == null) {
+				argClass = Class.forName(argTypeString);
+			}
+			parameterTypes[i] = argClass;
+		}
+		return parameterTypes;
 	}
 
 	private boolean mustMock(final Object arg) {
@@ -433,15 +443,16 @@ public class TestMethodsWriter {
 		return bigIntInit;
 	}
 
-	private ExpressionRenderer buildExpectedReturnValue(CodeChunk codeChunk, byte[] serialisedReturnValue, int identityHashCode) throws ClassNotFoundException, IOException {
+	private ExpressionRenderer buildExpectedReturnValue(CodeChunk codeChunk, byte[] serialisedReturnValue, Class<?> returnValueDeclaredType, int identityHashCode) throws ClassNotFoundException, IOException {
 		Object returnValue = deserialiser.deserialise(serialisedReturnValue);
 		if (returnValue == null) {
 			return ExpressionRenderer.stringRenderer("null");
 		}
-		final Class<? extends Object> returnValueClass = (returnValue instanceof MustMock ? ((MustMock) returnValue).clazz : returnValue.getClass());
-		final VariableNameRenderer returnValueNameRenderer = new VariableNameRenderer(identityHashCode, returnValueClass, "expected");
+		// final Class<? extends Object> returnValueClass = (returnValue instanceof MustMock ? ((MustMock)
+		// returnValue).clazz : returnValue.getClass());
+		final VariableNameRenderer returnValueNameRenderer = new VariableNameRenderer(identityHashCode, returnValueDeclaredType, "expected");
 
-		final InitCodeChunk returnValueInitCodeChunk = createInitCodeChunk(returnValue, returnValueClass, identityHashCode, "expected");
+		final InitCodeChunk returnValueInitCodeChunk = createInitCodeChunk(returnValue, returnValueDeclaredType, identityHashCode, "expected");
 		codeChunk.requiredInits.put(identityHashCode, returnValueInitCodeChunk);
 		return returnValueNameRenderer;
 	}
