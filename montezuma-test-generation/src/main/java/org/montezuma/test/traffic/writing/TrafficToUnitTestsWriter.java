@@ -47,7 +47,7 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 		final Map<String, List<InvocationData>> groupedInvocationDataLists;
 		// Arbitrary grouping policy based on the number of tests (test classes) to write
 		// TODO - make this arbitrary grouping policy configurable
-		boolean allTogether = invocationDataLists.size() < 10;
+		boolean allTogether = false; // invocationDataLists.size() < 10; temporarily disabled until the identityHashCode
 		if (allTogether) {
 			groupedInvocationDataLists = new HashMap<String, List<InvocationData>>();
 			final List<InvocationData> staticInvocationsDataList = invocationDataLists.remove("0");
