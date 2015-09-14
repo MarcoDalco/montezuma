@@ -230,8 +230,7 @@ public class TestMethodsWriter {
 				// maincodeChunk.requiredInits.add(variableCodeChunk);
 				if ((arg instanceof Number) || (arg instanceof Boolean)) {
 					if (argClass.equals(BigDecimal.class)) {
-						codeRenderers.add(new StructuredTextRenderer("final %s %s = %s;", new ClassNameRenderer(argClass),
- new VariableNameRenderer(argID, argClass, variableNamePrefix), new ExpressionRenderer() {
+						codeRenderers.add(new StructuredTextRenderer("final %s %s = %s;", new ClassNameRenderer(argClass), new VariableNameRenderer(argID, argClass, variableNamePrefix), new ExpressionRenderer() {
 							@Override
 							public String render() {
 								return getBigDecimalInitialiser(arg);
@@ -277,17 +276,24 @@ public class TestMethodsWriter {
 						}
 						final String actualArgType = argClass.getCanonicalName();
 						final String declaredArgClassName = (actualArgType.startsWith("java") ? argClass.getSimpleName() : actualArgType);
-						codeRenderers.add(new StructuredTextRenderer("final " + declaredArgClassName + " %s = %s;",
- new VariableNameRenderer(argID, argClass, variableNamePrefix), initExpressionRenderer));
+						codeRenderers.add(
+								new StructuredTextRenderer("final " + declaredArgClassName + " %s = %s;",
+										new VariableNameRenderer(argID, argClass, variableNamePrefix), initExpressionRenderer)
+						);
 					}
 				} else if (argClass == String.class) {
-					codeRenderers.add(new StructuredTextRenderer("final %s %s = \"%s\";", new ClassNameRenderer(argClass),
- new VariableNameRenderer(argID, argClass, variableNamePrefix), new ExpressionRenderer() {
-						@Override
-						public String render() {
-							return ((String) arg).replaceAll("\n", "\\n").replaceAll("\r", "\\r").replaceAll("\\\\", "\\\\\\\\");
-						}
-					}));
+					codeRenderers.add(
+							new StructuredTextRenderer("final %s %s = \"%s\";",
+									new ClassNameRenderer(argClass),
+									new VariableNameRenderer(argID, argClass, variableNamePrefix),
+									new ExpressionRenderer() {
+										@Override
+										public String render() {
+											return ((String) arg).replaceAll("\n", "\\n").replaceAll("\r", "\\r").replaceAll("\\\\", "\\\\\\\\");
+										}
+									}
+							)
+					);
 				} else if (argClass.isAssignableFrom(List.class)) {} else if (argClass.isAssignableFrom(Set.class)) {} else if (argClass.isAssignableFrom(Map.class)) {} else if (argClass.isArray()) {
 					final Object[] arrayArg = (Object[]) arg;
 					final Object[] array = new Object[arrayArg.length];
