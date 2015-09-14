@@ -15,7 +15,7 @@ public abstract class InitCodeChunk extends CodeChunk {
 	public abstract void generateRequiredInits();
 
 	protected TextRenderer getRenderer() {
-		return this;
+		throw new RuntimeException("UNEXPECTED INVOCATION"); // TODO - Was "return this;": is it safe to remove?
 	}
 
 	@Override
