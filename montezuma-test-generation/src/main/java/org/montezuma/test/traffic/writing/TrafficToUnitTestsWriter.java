@@ -76,7 +76,7 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 		classWriter.addImport("mockit.integration.junit4.JMockit");
 		classWriter.addImport("org.junit.Test");
 		classWriter.addImport("org.junit.runner.RunWith");
-		TestMethodsWriter methodsWriter = new TestMethodsWriter(invocationDataList, clazz, instanceId, classWriter, dontMockRegexList, new ImmutablesChecker());
+		TestMethodsWriter methodsWriter = new TestMethodsWriter(invocationDataList, clazz, instanceId, classWriter, dontMockRegexList, new ImmutablesChecker(), classWriter.importsContainer);
 		List<TestMethod> testMethods = methodsWriter.buildTestMethods();
 		classWriter.addTestMethods(testMethods);
 

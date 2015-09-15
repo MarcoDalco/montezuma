@@ -64,21 +64,21 @@ public class TestMethod implements TextRenderer {
 		return allDeclaredExceptions;
 	}
 
-	public Collection<? extends Import> getAllImports() {
-		Set<Import> allImports = new HashSet<>();
+	public ImportsContainer getAllImports() {
+		ImportsContainer importsContainer = new ImportsContainer();
 
 		for (Class<? extends Throwable> throwableClass : getAllDeclaredThrowables()) {
-			allImports.add(new Import(throwableClass.getName()));
+			importsContainer.addImport(new Import(throwableClass.getName()));
 		}
 
 		if (instantiationMethodPart != null)
-			allImports.addAll(instantiationMethodPart.getAllImports());
+			importsContainer.add(instantiationMethodPart.getAllImports());
 		for (CodeChunk codeChunk : codeChunks) {
-			allImports.addAll(codeChunk.getAllImports());
+			importsContainer.add(codeChunk.getAllImports());
 		}
-		allImports.addAll(closure.getAllImports());
+		importsContainer.add(closure.getAllImports());
 
-		return allImports;
+		return importsContainer;
 	}
 
 	public TestMethod cloneOpening(String methodName) {

@@ -1,17 +1,23 @@
 package org.montezuma.test.traffic.writing;
 
 public class Import implements Comparable<Import> {
+	private transient final String	shortName;
 	public final String	className;
 	public final String	methodName;
 
 	public Import(String className, String methodName) {
 		super();
+		this.shortName = className.substring(1 + className.lastIndexOf('.'));
 		this.className = className;
 		this.methodName = methodName;
 	}
 
 	public Import(String className) {
 		this(className, null);
+	}
+
+	public String getShortName() {
+		return shortName;
 	}
 
 	public String getText() {

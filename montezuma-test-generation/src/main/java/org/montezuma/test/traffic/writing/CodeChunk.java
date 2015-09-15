@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 public class CodeChunk implements TextRenderer {
-	public Set<Import>														requiredImports					= new HashSet<>();
+	public ImportsContainer												requiredImports					= new ImportsContainer();
 	public Set<String>														requiredMocks						= new HashSet<>();
 	public Set<Class<? extends Throwable>>				declaredThrowables			= new HashSet<>();
 	public LinkedHashMap<Integer, InitCodeChunk>	requiredInits						= new LinkedHashMap<>();
@@ -19,7 +19,7 @@ public class CodeChunk implements TextRenderer {
 	public CodeChunk() {}
 
 	public CodeChunk(CodeChunk original) {
-		requiredImports.addAll(original.requiredImports);
+		requiredImports.add(original.requiredImports);
 		requiredMocks.addAll(original.requiredMocks);
 		declaredThrowables.addAll(original.declaredThrowables);
 		requiredInits.putAll(original.requiredInits);
@@ -83,22 +83,24 @@ public class CodeChunk implements TextRenderer {
 		return allDeclaredExceptions;
 	}
 
-	public Collection<? extends Import> getAllImports() {
-		Set<Import> allImports = new HashSet<>(requiredImports);
+	public ImportsContainer getAllImports() {
+		ImportsContainer importsContainer = new ImportsContainer();
+
+		importsContainer.add(requiredImports);
 
 		for (CodeChunk codeChunk : requiredInits.values()) {
-			allImports.addAll(codeChunk.getAllImports());
+			importsContainer.add(codeChunk.getAllImports());
 		}
 
 		for (CodeChunk codeChunk : methodPartsBeforeLines) {
-			allImports.addAll(codeChunk.getAllImports());
+			importsContainer.add(codeChunk.getAllImports());
 		}
 
 		for (CodeChunk codeChunk : methodPartsAfterLines) {
-			allImports.addAll(codeChunk.getAllImports());
+			importsContainer.add(codeChunk.getAllImports());
 		}
 
-		return allImports;
+		return importsContainer;
 	}
 
 	public List<ExpressionRenderer> getExpressionRenderers() {
@@ -114,7 +116,7 @@ public class CodeChunk implements TextRenderer {
 	}
 
 	protected void mergeAllFrom(CodeChunk codeChunk) {
-		requiredImports.addAll(codeChunk.requiredImports);
+		requiredImports.add(codeChunk.requiredImports);
 		requiredMocks.addAll(codeChunk.requiredMocks);
 		declaredThrowables.addAll(codeChunk.declaredThrowables);
 		requiredInits.putAll(codeChunk.requiredInits);

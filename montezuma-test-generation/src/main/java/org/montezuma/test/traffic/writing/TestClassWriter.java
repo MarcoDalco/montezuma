@@ -6,20 +6,20 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 public class TestClassWriter {
 
 	private String														packageName;
 	private String														testClassName;
-	private Set<Import>												imports					= new HashSet<Import>();
-	private Map<Integer, ExpressionRenderer>	fieldRenderers	= new HashMap<>();
-	private List<TestMethod>									testMethods			= new ArrayList<>();
+	protected ImportsContainer								importsContainer	= new ImportsContainer();
+	private Map<Integer, ExpressionRenderer>	fieldRenderers		= new HashMap<>();
+	private List<TestMethod>									testMethods				= new ArrayList<>();
 	private final StructuredTextFileWriter		structuredFileWriter;
-	static final String												FILE_SEPARATOR	= System.getProperty("file.separator");
+	static final String												FILE_SEPARATOR		= System.getProperty("file.separator");
 
 	public TestClassWriter(String packageName, String testClassName) {
 		this.packageName = packageName;
@@ -60,16 +60,14 @@ public class TestClassWriter {
 	}
 
 	public void addImport(String importExpression) {
-		imports.add(new Import(importExpression));
+		importsContainer.addImport(new Import(importExpression));
 	}
 
 	private void appendImports() {
-		Set<Import> allImports = new HashSet<Import>(imports);
 		for (TestMethod testMethod : testMethods) {
-			allImports.addAll(testMethod.getAllImports());
+			importsContainer.add(testMethod.getAllImports());
 		}
-		List<Import> sortedImports = new ArrayList<>(allImports);
-		Collections.sort(sortedImports);
+		Set<Import> sortedImports = new TreeSet<>(importsContainer.getResolvedImports());
 		for (Import importPath : sortedImports) {
 			structuredFileWriter.appendLine(0, "import " + importPath.getText() + ";");
 		}

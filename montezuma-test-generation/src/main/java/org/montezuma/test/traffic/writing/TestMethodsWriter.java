@@ -33,10 +33,11 @@ public class TestMethodsWriter {
 	private List<String>								dontMockRegexList;
 	private final int										instanceId;
 	private final boolean								oneTestPerInvocation;
+	private final ImportsContainer			importsContainer;
 	private Deserialiser								deserialiser					= SerialisationFactory.getDeserialiser();
 	private final static boolean				log										= true;
 
-	public TestMethodsWriter(List<InvocationData> invocationDataList, final Class<?> testClass, int instanceId, TestClassWriter testClassWriter, List<String> dontMockRegexList, ImmutablesChecker immutablesChecker) {
+	public TestMethodsWriter(List<InvocationData> invocationDataList, final Class<?> testClass, int instanceId, TestClassWriter testClassWriter, List<String> dontMockRegexList, ImmutablesChecker immutablesChecker, ImportsContainer importsContainer) {
 		this.invocationDataList = invocationDataList;
 		this.testClass = testClass;
 		this.testClassWriter = testClassWriter;
@@ -44,9 +45,12 @@ public class TestMethodsWriter {
 		this.dontMockRegexList = dontMockRegexList;
 		this.instanceId = instanceId;
 		this.oneTestPerInvocation = immutablesChecker.isImmutable(testClass);
+		this.importsContainer = importsContainer;
 	}
 
 	public List<TestMethod> buildTestMethods() throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
+		importsContainer.addImport(new Import(testClass.getCanonicalName()));
+
 		List<TestMethod> testMethods = new ArrayList<>();
 
 		int testNumber = 0;
@@ -91,7 +95,7 @@ public class TestMethodsWriter {
 			final List<CodeChunk> expectationChunks = buildExpectations(invocationData.calls);
 			currentMethodPart.methodPartsBeforeLines.addAll(expectationChunks);
 			final byte[] serialisedReturnValue = invocationData.serialisedReturnValue;
-			ExpressionRenderer cutVariableOrClassNameRenderer = (amTestingTheStaticPart ? new ClassNameRenderer(this.testClass) : ExpressionRenderer.stringRenderer("cut"));
+			ExpressionRenderer cutVariableOrClassNameRenderer = (amTestingTheStaticPart ? new ClassNameRenderer(this.testClass, importsContainer) : ExpressionRenderer.stringRenderer("cut"));
 			StructuredTextRenderer instantiatedInvocationParametersRenderer = buildInvocationParameters(currentMethodPart, methodArgs, argTypes, invocationData.argIDs);
 			final ExpressionRenderer invocationRenderer = new StructuredTextRenderer("%s." + methodName + "(%s)", cutVariableOrClassNameRenderer, instantiatedInvocationParametersRenderer);
 			// TODO - distinguish between methods that return 'void' and methods who actually returned 'null'. If the method
@@ -105,7 +109,7 @@ public class TestMethodsWriter {
 				final int returnValueID = invocationData.returnValueID;
 				if (returnValueID == this.instanceId) {
 					ExpressionRenderer returnValueNameRenderer = ExpressionRenderer.stringRenderer("cut");
-					currentMethodPart.requiredImports.add(new Import("org.junit.Assert", "assertSame"));
+					currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertSame"));
 					instantiationRenderer = new StructuredTextRenderer("assertSame(%s, %s);", returnValueNameRenderer, invocationRenderer);
 				} else {
 					Method invokedMethod = this.testClass.getDeclaredMethod(methodName, buildParameterTypes(argTypes));
@@ -114,10 +118,10 @@ public class TestMethodsWriter {
 						// TODO - when the returned values are primitive wrappers (instances of java.lang.Number descendants), cast
 						// the first argument to their original class (the primitive or the wrapper/Object) basing on the return
 						// value of the signature of the method corresponding to this 'cut' invocation
-						currentMethodPart.requiredImports.add(new Import("org.junit.Assert", "assertEquals"));
+						currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertEquals"));
 						instantiationRenderer = new StructuredTextRenderer("assertEquals(%s, %s);", returnValueNameRenderer, invocationRenderer);
 					} else {
-						currentMethodPart.requiredImports.add(new Import("org.junit.Assert", "assertNull"));
+						currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertNull"));
 						instantiationRenderer = new StructuredTextRenderer("assertNull(%s);", invocationRenderer);
 					}
 				}
@@ -148,7 +152,7 @@ public class TestMethodsWriter {
 
 		final StructuredTextRenderer invocationParametersRenderer = buildInvocationParameters(instantiationMethodPart, methodArgs, argTypes, argIDs);
 
-		final ClassNameRenderer classNameRenderer = new ClassNameRenderer(testClass);
+		final ClassNameRenderer classNameRenderer = new ClassNameRenderer(testClass, importsContainer);
 		instantiationMethodPart.addExpressionRenderer(new StructuredTextRenderer(
 				"final %s cut = new %s(%s);" + StructuredTextFileWriter.EOL, classNameRenderer, classNameRenderer, invocationParametersRenderer));
 
@@ -225,12 +229,12 @@ public class TestMethodsWriter {
 			public void generateRequiredInits() {
 				// final VariableNameRenderer variableNameRenderer;
 				if (!argClass.isPrimitive() && !argClass.isArray() && !argClass.getPackage().equals(Package.getPackage("java.lang"))) {
-					requiredImports.add(new Import(argClass.getCanonicalName()));
+					requiredImports.addImport(new Import(argClass.getCanonicalName()));
 				}
 				// maincodeChunk.requiredInits.add(variableCodeChunk);
 				if ((arg instanceof Number) || (arg instanceof Boolean)) {
 					if (argClass.equals(BigDecimal.class)) {
-						codeRenderers.add(new StructuredTextRenderer("final %s %s = %s;", new ClassNameRenderer(argClass), new VariableNameRenderer(argID, argClass, variableNamePrefix), new ExpressionRenderer() {
+						codeRenderers.add(new StructuredTextRenderer("final %s %s = %s;", new ClassNameRenderer(argClass, importsContainer), new VariableNameRenderer(argID, argClass, variableNamePrefix), new ExpressionRenderer() {
 							@Override
 							public String render() {
 								return getBigDecimalInitialiser(arg);
@@ -284,7 +288,7 @@ public class TestMethodsWriter {
 				} else if (argClass == String.class) {
 					codeRenderers.add(
 							new StructuredTextRenderer("final %s %s = \"%s\";",
-									new ClassNameRenderer(argClass),
+									new ClassNameRenderer(argClass, importsContainer),
 									new VariableNameRenderer(argID, argClass, variableNamePrefix),
 									new ExpressionRenderer() {
 										@Override
@@ -314,7 +318,7 @@ public class TestMethodsWriter {
 					}
 					StructuredTextRenderer arrayObjectsRenderer = buildInvocationParameters(this, array, arrayArgTypes, arrayArgIDs);
 					codeRenderers.add(new StructuredTextRenderer(
-							"final %s %s = new %s {%s};", new ClassNameRenderer(argClass), new VariableNameRenderer(argID, argClass, variableNamePrefix), new ClassNameRenderer(argClass), arrayObjectsRenderer));
+							"final %s %s = new %s {%s};", new ClassNameRenderer(argClass, importsContainer), new VariableNameRenderer(argID, argClass, variableNamePrefix), new ClassNameRenderer(argClass, importsContainer), arrayObjectsRenderer));
 				} else {
 					// Using mocks:
 					if (mustMock(arg) || shouldMock(argClass)) {
@@ -328,12 +332,12 @@ public class TestMethodsWriter {
 	}
 
 	private StructuredTextRenderer addRealParameter(CodeChunk codeChunk, Class<?> argClass, Object arg, int argID) {
-		final ClassNameRenderer classNameRenderer = new ClassNameRenderer(argClass);
+		final ClassNameRenderer classNameRenderer = new ClassNameRenderer(argClass, importsContainer);
 		return new StructuredTextRenderer("final %s %s = (%s) %s;", classNameRenderer, new VariableNameRenderer(argID, argClass, "given"), classNameRenderer, getDeserialisationRenderer(codeChunk, arg));
 	}
 
 	private ExpressionRenderer getDeserialisationRenderer(CodeChunk codeChunk, Object object) {
-		return SerialisationRendererFactory.getSerialisationRenderer().getDeserialisationCodeChunkFor(codeChunk, object);
+		return SerialisationRendererFactory.getSerialisationRenderer().getDeserialisationCodeChunkFor(codeChunk, object, importsContainer);
 	}
 
 	private CodeChunk getStrictExpectationPart(CallInvocationData callData) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
@@ -373,8 +377,8 @@ public class TestMethodsWriter {
 		Object[] methodArgs = TrafficReader.getDeserialisedArgs(callData.serialisedArgs);
 		final StructuredTextRenderer invocationParameters = buildInvocationParameters(codeChunk, methodArgs, argTypes, callData.argIDs);
 		final ExpressionRenderer invocationExpressionRenderer =
-				isConstructorInvocation ? new StructuredTextRenderer("new %s(%s);", new ClassNameRenderer(declaringType), invocationParameters) : new StructuredTextRenderer("%s.%s(%s);", isStaticMethod
-						? new ClassNameRenderer(declaringType) : new VariableNameRenderer(callData.id, targetClazzOrDeclaringType, "given"), ExpressionRenderer.stringRenderer(methodName), invocationParameters);
+				isConstructorInvocation ? new StructuredTextRenderer("new %s(%s);", new ClassNameRenderer(declaringType, importsContainer), invocationParameters) : new StructuredTextRenderer("%s.%s(%s);", isStaticMethod
+						? new ClassNameRenderer(declaringType, importsContainer) : new VariableNameRenderer(callData.id, targetClazzOrDeclaringType, "given"), ExpressionRenderer.stringRenderer(methodName), invocationParameters);
 		final ExpressionRenderer timesExpressionRenderer = ExpressionRenderer.stringRenderer(" times = 1;");
 		final byte[] serialisedReturnValue = callData.serialisedReturnValue;
 		// TODO - implement behaviour of when a Throwable is thrown rather than a result returned: serialisedReturnValue is
@@ -431,7 +435,7 @@ public class TestMethodsWriter {
 		// TODO - get the argClass simpleName lazily from the ImportContainer
 		testClassWriter.addImport("mockit.Mocked");
 		testClassWriter.addImport(argClass.getCanonicalName());
-		testClassWriter.addField(identityHashCode, new StructuredTextRenderer("@Mocked private %s %s;", new ClassNameRenderer(argClass), variableNameRenderer));
+		testClassWriter.addField(identityHashCode, new StructuredTextRenderer("@Mocked private %s %s;", new ClassNameRenderer(argClass, importsContainer), variableNameRenderer));
 	}
 
 	private String getBigDecimalInitialiser(Object arg) {
