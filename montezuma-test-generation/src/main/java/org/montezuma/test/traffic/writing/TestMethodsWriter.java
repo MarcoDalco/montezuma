@@ -10,14 +10,13 @@ import org.montezuma.test.traffic.serialisers.SerialisationFactory;
 import org.montezuma.test.traffic.writing.serialisation.SerialisationRendererFactory;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -187,6 +186,25 @@ public class TestMethodsWriter {
 		return testMethod;
 	}
 
+	private void buildList(InitCodeChunk maincodeChunk, List<Object> rebuiltRuntimeList, String[] listElementTypes, int[] listElementIDs, VariableNameRenderer listNameRenderer) {
+		int i = 0;
+		for (Iterator<?> runtimeObjectsIterator = rebuiltRuntimeList.iterator(); runtimeObjectsIterator.hasNext(); i++) {
+			Object element = runtimeObjectsIterator.next();
+
+			if (element == null) {
+				maincodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(null);", listNameRenderer));
+			} else {
+				final Class<?> elementClass = (element instanceof MustMock ? ((MustMock) element).clazz : element.getClass());
+				final int elementID = listElementIDs[i];
+
+				final InitCodeChunk variableCodeChunk = createInitCodeChunk(element, elementClass, elementID, "given");
+				maincodeChunk.requiredInits.put(elementID, variableCodeChunk);
+
+				maincodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(%s);", listNameRenderer, new VariableNameRenderer(elementID, elementClass, "given")));
+			}
+		}
+	}
+
 	private StructuredTextRenderer buildInvocationParameters(CodeChunk maincodeChunk, Object[] args, String[] argTypes, int[] argIDs) {
 
 		List<ExpressionRenderer> expressionRenderers = new ArrayList<>();
@@ -228,6 +246,7 @@ public class TestMethodsWriter {
 			@Override
 			public void generateRequiredInits() {
 				// final VariableNameRenderer variableNameRenderer;
+				// TODO - exclude the mocking case too, as it already adds the class to the imports
 				if (!argClass.isPrimitive() && !argClass.isArray() && !argClass.getPackage().equals(Package.getPackage("java.lang"))) {
 					requiredImports.addImport(new Import(argClass.getCanonicalName()));
 				}
@@ -298,27 +317,45 @@ public class TestMethodsWriter {
 									}
 							)
 					);
-				} else if (argClass.isAssignableFrom(List.class)) {} else if (argClass.isAssignableFrom(Set.class)) {} else if (argClass.isAssignableFrom(Map.class)) {} else if (argClass.isArray()) {
-					final Object[] arrayArg = (Object[]) arg;
-					final Object[] array = new Object[arrayArg.length];
-					for (int i = 0; i < array.length; i++) {
+				} else if (argClass.isAssignableFrom(List.class) && argClass.getPackage().getName().startsWith("java.util")) {
+					@SuppressWarnings("unchecked") final List<Object> rebuiltRuntimeList = (List<Object>) arg;
+					final int listSize = rebuiltRuntimeList.size();
+					String[] listElementTypes = new String[listSize];
+					int[] listElementIDs = new int[listSize];
+					int i = 0;
+					for (Object element : rebuiltRuntimeList) {
+						listElementTypes[i] = element.getClass().getCanonicalName();
+						listElementIDs[i] = TestMethodsWriter.generateIdentityHashCode(); // TODO: store the real object ID?
+						i++;
+					}
+					final ClassNameRenderer declaredClassNameRenderer = new ClassNameRenderer(argClass, importsContainer);
+					final VariableNameRenderer listNameRenderer = new VariableNameRenderer(argID, argClass, variableNamePrefix);
+					final ClassNameRenderer actualClassNameRenderer = new ClassNameRenderer(arg.getClass(), importsContainer);
+					codeRenderers.add(new StructuredTextRenderer("final %s %s = new %s();", declaredClassNameRenderer, listNameRenderer, actualClassNameRenderer));
+					buildList(this, rebuiltRuntimeList, listElementTypes, listElementIDs, listNameRenderer);
+				} else if (argClass.isAssignableFrom(Set.class)) {} else if (argClass.isAssignableFrom(Map.class)) {} else if (argClass.isArray()) {
+					final Object[] serialisedObjectsArray = (Object[]) arg;
+					final Object[] rebuiltRuntimeArray = new Object[serialisedObjectsArray.length];
+					for (int i = 0; i < rebuiltRuntimeArray.length; i++) {
 						try {
-							array[i] = deserialiser.deserialise((byte[]) arrayArg[i]);
+							rebuiltRuntimeArray[i] = deserialiser.deserialise((byte[]) serialisedObjectsArray[i]);
 						}
 						catch (ClassNotFoundException | IOException e) {
 							throw new RuntimeException(e);
 						}
 					}
 					final Class<?> arrayBaseType = argClass.getComponentType();
-					String[] arrayArgTypes = new String[array.length];
-					int[] arrayArgIDs = new int[array.length];
-					for (int l = 0; l < array.length; l++) {
-						arrayArgTypes[l] = arrayBaseType.getCanonicalName();
+					String[] arrayArgTypes = new String[rebuiltRuntimeArray.length];
+					int[] arrayArgIDs = new int[rebuiltRuntimeArray.length];
+					final String arrayBaseTypeCanonicalName = arrayBaseType.getCanonicalName();
+					for (int l = 0; l < rebuiltRuntimeArray.length; l++) {
+						arrayArgTypes[l] = arrayBaseTypeCanonicalName;
 						arrayArgIDs[l] = TestMethodsWriter.generateIdentityHashCode(); // TODO: store the real object ID?
 					}
-					StructuredTextRenderer arrayObjectsRenderer = buildInvocationParameters(this, array, arrayArgTypes, arrayArgIDs);
+					StructuredTextRenderer arrayObjectsRenderer = buildInvocationParameters(this, rebuiltRuntimeArray, arrayArgTypes, arrayArgIDs);
+					final ClassNameRenderer classNameRenderer = new ClassNameRenderer(argClass, importsContainer);
 					codeRenderers.add(new StructuredTextRenderer(
-							"final %s %s = new %s {%s};", new ClassNameRenderer(argClass, importsContainer), new VariableNameRenderer(argID, argClass, variableNamePrefix), new ClassNameRenderer(argClass, importsContainer), arrayObjectsRenderer));
+							"final %s %s = new %s {%s};", classNameRenderer, new VariableNameRenderer(argID, argClass, variableNamePrefix), classNameRenderer, arrayObjectsRenderer));
 				} else {
 					// Using mocks:
 					if (mustMock(arg) || shouldMock(argClass)) {
@@ -373,6 +410,8 @@ public class TestMethodsWriter {
 		final boolean isStaticMethod = Modifier.isStatic(callData.modifiers);
 		final int identityHashCode = isStaticMethod ? TestMethodsWriter.generateIdentityHashCodeForStaticClass(declaringType) : id;
 		final VariableNameRenderer mockedFieldNameRenderer = getMockedFieldNameRenderer(targetClazzOrDeclaringType, identityHashCode);
+		// TODO - invoke addMock with a different Class<?> than targetClazzOrDeclaringType if targetClazzOrDeclaringType is
+		// not visible (e.g.: private class), like we already do for expected return values.
 		addMock(identityHashCode, targetClazzOrDeclaringType, mockedFieldNameRenderer);
 		Object[] methodArgs = TrafficReader.getDeserialisedArgs(callData.serialisedArgs);
 		final StructuredTextRenderer invocationParameters = buildInvocationParameters(codeChunk, methodArgs, argTypes, callData.argIDs);
@@ -471,6 +510,7 @@ public class TestMethodsWriter {
 		return returnValueNameRenderer;
 	}
 
+	// TODO - check all the calling methods, to see where instance detection can be improved (or rather "introduced"!!)
 	private static int generateIdentityHashCode() {
 		return fakeIdentityHashCode++;
 	}
