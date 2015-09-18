@@ -38,6 +38,7 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 		InitCodeChunk initCodeChunk = new InitCodeChunk(9876) {
 			@Override
 			public void generateRequiredInits() {
+				// FIXME: if required twice in a method, this causes a compile error, as it declares Kryo twice.
 				ClassNameRenderer kryoClassNameRenderer = new ClassNameRenderer(Kryo.class, importsContainer);
 				codeRenderers.add(new StructuredTextRenderer("%s %s = new %s();", kryoClassNameRenderer, kryoVariableNameRenderer, kryoClassNameRenderer));
 
