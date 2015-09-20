@@ -106,6 +106,9 @@ public class TestMethodsWriter {
 				instantiationRenderer = new StructuredTextRenderer("%s;", invocationRenderer);
 			} else {
 				final int returnValueID = invocationData.returnValueID;
+				// FIXME - add condition to if that, if the return value is not mocked, the assert should be "assertEquals" with
+				// a different (made-up) identityHashCode, because mutable objects like Lists might have been changed by the
+				// invoked method (the one under test, in this case), in which case the changes can't be detected by assertSame.
 				if (returnValueID == this.instanceId) {
 					ExpressionRenderer returnValueNameRenderer = ExpressionRenderer.stringRenderer("cut");
 					currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertSame"));
