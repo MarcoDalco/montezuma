@@ -9,6 +9,8 @@ public class WriteAllNoMocking {
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
 		BigDecimalUtilsTestWriter.main(args);
 		BoundaryChecksTestWriter.main(args);
+		BoundaryChecksCallbackTestWriter.main(args);
+		BoundaryChecksWithStateChangeInBothCallForthAndCallBackTestWriter.main(args);
 		CompiledStatementStoringPreparedStatementCreatorTestWriter.main(args);
 		CurrencyUtilsTestWriter.main(args);
 		PassThroughClassNoDummyThirdPartyMockingTestWriter.main(args);

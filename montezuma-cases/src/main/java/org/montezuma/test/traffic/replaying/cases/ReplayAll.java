@@ -9,6 +9,8 @@ public class ReplayAll {
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
 		BigDecimalUtilsTrafficReplayer.main(args);
 		BoundaryChecksTrafficReplayer.main(args);
+		BoundaryChecksCallbackTrafficReplayer.main(args);
+		BoundaryChecksWithStateChangeInBothCallForthAndCallBackTrafficReplayer.main(args);
 		CompiledStatementStoringPreparedStatementCreatorTrafficReplayer.main(args);
 		CurrencyUtilsTrafficReplayer.main(args);
 		PassThroughClassTrafficReplayer.main(args);

@@ -28,10 +28,8 @@ public class BoundaryChecksTrafficRecorder {
 				ClassEnteringBoundary cut = new ClassEnteringBoundary();
 
 				final String result = cut.enterBoundaryForFullTraversal();
-				final String result2 = cut.enterBoundaryForTraversalAndCallback();
 				RecordingAspect.turnOff();
 				System.out.println(result);
-				System.out.println(result2);
 			}
 		}, BOUNDARY_CHECKS_RECORDING_SUBDIR);
 	}

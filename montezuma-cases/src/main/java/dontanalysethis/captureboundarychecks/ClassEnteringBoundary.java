@@ -7,9 +7,4 @@ public class ClassEnteringBoundary {
 		EntryClassToAnalyse boundaryEntryClass = new EntryClassToAnalyse();
 		return boundaryEntryClass.enterBoundaryForFullTraversal("A - From outside") + "- A - returning";
 	}
-
-	public String enterBoundaryForTraversalAndCallback() {
-		EntryClassToAnalyse boundaryEntryClass = new EntryClassToAnalyse();
-		return boundaryEntryClass.enterBoundaryForTraversalAndCallback("A - From outside") + "- A - returning";
-	}
 }

@@ -7,6 +7,7 @@ public class RecordAll {
 	public static void main(String[] args) throws ClassNotFoundException, SQLException {
 		BigDecimalUtilsTrafficRecorder.main(args);
 		BoundaryChecksTrafficRecorder.main(args);
+		BoundaryChecksCallbackTrafficRecorder.main(args);
 		CompiledStatementStoringPreparedStatementCreatorTrafficRecorder.main(args);
 		CurrencyUtilsTrafficRecorder.main(args);
 		PassThroughClassTrafficRecorder.main(args);
