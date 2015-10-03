@@ -30,7 +30,7 @@ public class TrafficReplayer extends TrafficReader {
 	};
 
 	protected static void replay(final Class<?> clazz, String recordingSubDir) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-		final Map<String, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingSubDir);
+		final Map<Integer, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingSubDir);
 		for (List<InvocationData> invocationDataList : invocationDataLists.values()) {
 			printInvocationDataSizes(invocationDataList);
 		}
