@@ -52,7 +52,7 @@ public class TestMethodsWriter {
 
 		List<TestMethod> testMethods = new ArrayList<>();
 
-		int testNumber = 0;
+		int initialTestNumber = testClassWriter.testNumber;
 		TestMethod currentTestMethod = null;
 		boolean justInstantiated = false;
 		for (InvocationData invocationData : invocationDataList) {
@@ -66,22 +66,22 @@ public class TestMethodsWriter {
 			Object[] methodArgs = TrafficReader.getDeserialisedArgs(invocationData.serialisedArgs);
 			final boolean isInitMethod = methodName.equals("<init>");
 			boolean mustStartANewTestMethod =
-					(isInitMethod || ((!justInstantiated /* || lastInstantiationExpectsException */) && ((amTestingTheStaticPart && (testNumber == 0)) || this.oneTestPerInvocation)));
+					(isInitMethod || ((!justInstantiated /* || lastInstantiationExpectsException */) && ((amTestingTheStaticPart && (testClassWriter.testNumber == 0)) || this.oneTestPerInvocation)));
 			if (mustStartANewTestMethod) {
-				if (testNumber > 0) {
+				if (testClassWriter.testNumber > initialTestNumber) {
 					testMethods.add(closeTestMethod(currentTestMethod));
 				}
-				testNumber++;
+				testClassWriter.testNumber++;
 				if (isInitMethod) {
-					currentTestMethod = getNewTestMethodOpening(testNumber);
+					currentTestMethod = getNewTestMethodOpening(testClassWriter.testNumber);
 					generateInstantiation(currentTestMethod, methodArgs, argTypes, invocationData.argIDs, invocationData.calls);
 					justInstantiated = true;
 					continue; // Fetch the next invocation
 				} else if (!justInstantiated) {
-					if (amTestingTheStaticPart && (testNumber == 1))
-						currentTestMethod = getNewTestMethodOpening(testNumber);
+					if (amTestingTheStaticPart && (testClassWriter.testNumber == 1))
+						currentTestMethod = getNewTestMethodOpening(testClassWriter.testNumber);
 					else if (this.oneTestPerInvocation)
-						currentTestMethod = currentTestMethod.cloneOpening("test" + testNumber);
+						currentTestMethod = currentTestMethod.cloneOpening("test" + testClassWriter.testNumber);
 					else
 						throw new IllegalStateException("At the moment this just can't happen.");
 				} else
@@ -134,7 +134,7 @@ public class TestMethodsWriter {
 			currentTestMethod.codeChunks.add(currentMethodPart);
 			justInstantiated = false;
 		}
-		if (testNumber > 0) {
+		if (testClassWriter.testNumber > initialTestNumber) {
 			testMethods.add(closeTestMethod(currentTestMethod));
 		}
 

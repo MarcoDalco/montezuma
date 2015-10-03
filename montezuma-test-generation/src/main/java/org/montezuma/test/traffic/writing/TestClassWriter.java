@@ -19,6 +19,7 @@ public class TestClassWriter {
 	private Map<Integer, ExpressionRenderer>	fieldRenderers		= new HashMap<>();
 	private List<TestMethod>									testMethods				= new ArrayList<>();
 	private final StructuredTextFileWriter		structuredFileWriter;
+	int																				testNumber				= 0;
 	static final String												FILE_SEPARATOR		= System.getProperty("file.separator");
 
 	public TestClassWriter(String packageName, String testClassName) {

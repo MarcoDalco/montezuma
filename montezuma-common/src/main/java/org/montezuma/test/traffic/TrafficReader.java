@@ -30,7 +30,7 @@ public class TrafficReader {
 		}
 	}
 
-	protected static Map<String, List<InvocationData>> loadInvocationDataForClass(final Class<?> class1, String recordingSubDir) throws FileNotFoundException, IOException, ClassNotFoundException {
+	protected static Map<Integer, List<InvocationData>> loadInvocationDataForClass(final Class<?> class1, String recordingSubDir) throws FileNotFoundException, IOException, ClassNotFoundException {
 		File baseDir = new File(Common.BASE_RECORDING_PATH, recordingSubDir);
 		File[] recordingsForThatClass = baseDir.listFiles(new FilenameFilter() {
 			@Override
@@ -38,7 +38,7 @@ public class TrafficReader {
 				return name.startsWith(class1.getTypeName());
 			}
 		});
-		Map<String, List<InvocationData>> invocationLists = new HashMap<>();
+		Map<Integer, List<InvocationData>> invocationLists = new HashMap<>();
 		for (File firstRecording : recordingsForThatClass) {
 			String fileName = firstRecording.getName();
 			String instanceId = fileName.substring(1 + fileName.lastIndexOf('@'));
@@ -50,7 +50,7 @@ public class TrafficReader {
 				}
 				invocations = deserialisedObjects;
 			}
-			invocationLists.put(instanceId, invocations);
+			invocationLists.put(Integer.valueOf(instanceId), invocations);
 		}
 
 		return invocationLists;

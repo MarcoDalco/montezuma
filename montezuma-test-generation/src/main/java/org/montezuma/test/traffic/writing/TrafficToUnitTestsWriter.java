@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +36,7 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 	}
 
 	public void generateTestsFor(final Class<?> clazz, List<String> dontMockRegexList, String recordingSubDir, String outputClassPath) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-		final Map<String, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingSubDir);
+		final Map<Integer, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingSubDir);
 		for (List<InvocationData> invocationDataList : invocationDataLists.values()) {
 			printInvocationDataSizes(invocationDataList);
 		}
@@ -43,42 +44,45 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 		generateTestClasses(invocationDataLists, clazz, dontMockRegexList, outputClassPath);
 	}
 
-	private void generateTestClasses(Map<String, List<InvocationData>> invocationDataLists, Class<?> clazz, List<String> dontMockRegexList, String outputClassPath) throws IOException, ClassNotFoundException, NoSuchMethodException, SecurityException {
-		final Map<String, List<InvocationData>> groupedInvocationDataLists;
+	private void generateTestClasses(Map<Integer, List<InvocationData>> invocationDataLists, Class<?> clazz, List<String> dontMockRegexList, String outputClassPath) throws IOException, ClassNotFoundException, NoSuchMethodException, SecurityException {
+		final Map<Integer, Map<Integer, List<InvocationData>>> groupedInvocationDataListMapsMap = new HashMap<Integer, Map<Integer, List<InvocationData>>>();
 		// Arbitrary grouping policy based on the number of tests (test classes) to write
 		// TODO - make this arbitrary grouping policy configurable
 		boolean allTogether = (invocationDataLists.size() < 10); // TODO - Problem: this loses the identityHashCode. Solve.
 		if (allTogether) {
-			groupedInvocationDataLists = new HashMap<String, List<InvocationData>>();
 			final List<InvocationData> staticInvocationsDataList = invocationDataLists.remove("0");
 			if (staticInvocationsDataList != null)
-				groupedInvocationDataLists.put("0", staticInvocationsDataList);
+				groupedInvocationDataListMapsMap.put(0, Collections.singletonMap(0, staticInvocationsDataList));
 
-			List<InvocationData> invocationDataList = new ArrayList<>();
-			for (List<InvocationData> invocationsPerInstance : invocationDataLists.values()) {
-				invocationDataList.addAll(invocationsPerInstance);
+			if (invocationDataLists.size() > 0) {
+				groupedInvocationDataListMapsMap.put(1, invocationDataLists);
 			}
-			if (invocationDataList.size() > 0)
-				groupedInvocationDataLists.put("1", invocationDataList);
-		} else
-			groupedInvocationDataLists = invocationDataLists;
+		} else {
+			for (Map.Entry<Integer, List<InvocationData>> invocationDataListsEntry : invocationDataLists.entrySet()) {
+				final Integer identityHashCode = invocationDataListsEntry.getKey();
+				groupedInvocationDataListMapsMap.put(identityHashCode, Collections.singletonMap(identityHashCode, invocationDataListsEntry.getValue()));
+			}
+		}
 
-		for (Map.Entry<String, List<InvocationData>> invocationDataListEntry : groupedInvocationDataLists.entrySet())
-			generateTestClasses(Integer.parseInt(invocationDataListEntry.getKey()), invocationDataListEntry.getValue(), clazz, dontMockRegexList, outputClassPath);
+		for (Map.Entry<Integer, Map<Integer, List<InvocationData>>> invocationDataListEntry : groupedInvocationDataListMapsMap.entrySet())
+			generateTestClasses(invocationDataListEntry.getKey(), invocationDataListEntry.getValue(), clazz, dontMockRegexList, outputClassPath);
 	}
 
-	private void generateTestClasses(int instanceId, List<InvocationData> invocationDataList, Class<?> clazz, List<String> dontMockRegexList, String outputClassPath) throws IOException, ClassNotFoundException, NoSuchMethodException, SecurityException {
+	private void generateTestClasses(int testClassNumber, Map<Integer, List<InvocationData>> invocationDataListsMap, Class<?> clazz, List<String> dontMockRegexList, String outputClassPath) throws IOException, ClassNotFoundException, NoSuchMethodException, SecurityException {
 		final String className = clazz.getSimpleName();
-		final String testClassName = className + instanceId + "Test";
+		final String testClassName = className + testClassNumber + "Test";
 		final String packageName = clazz.getPackage().getName();
 
 		TestClassWriter classWriter = new TestClassWriter(packageName, testClassName);
 		classWriter.addImport("mockit.integration.junit4.JMockit");
 		classWriter.addImport("org.junit.Test");
 		classWriter.addImport("org.junit.runner.RunWith");
-		TestMethodsWriter methodsWriter = new TestMethodsWriter(invocationDataList, clazz, instanceId, classWriter, dontMockRegexList, new ImmutablesChecker(), classWriter.importsContainer);
-		List<TestMethod> testMethods = methodsWriter.buildTestMethods();
-		classWriter.addTestMethods(testMethods);
+		for (Map.Entry<Integer, List<InvocationData>> invocationDataListEntry : invocationDataListsMap.entrySet()) {
+			TestMethodsWriter methodsWriter =
+					new TestMethodsWriter(invocationDataListEntry.getValue(), clazz, invocationDataListEntry.getKey(), classWriter, dontMockRegexList, new ImmutablesChecker(), classWriter.importsContainer);
+			List<TestMethod> testMethods = methodsWriter.buildTestMethods();
+			classWriter.addTestMethods(testMethods);
+		}
 
 		classWriter.write(outputClassPath);
 	}
