@@ -46,6 +46,7 @@ public class TestClassWriter {
 			structuredFileWriter.addEmptyLine();
 			appendTestMethods();
 			appendClassEnd();
+			System.out.println("Writing to file: " + testClassFile.getAbsolutePath());
 			fileWriter.write(structuredFileWriter.toString());
 		}
 	}
