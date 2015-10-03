@@ -78,7 +78,7 @@ public class TestMethodsWriter {
 					justInstantiated = true;
 					continue; // Fetch the next invocation
 				} else if (!justInstantiated) {
-					if (amTestingTheStaticPart && (testClassWriter.testNumber == 1))
+					if (amTestingTheStaticPart && (testClassWriter.testNumber == initialTestNumber + 1))
 						currentTestMethod = getNewTestMethodOpening(testClassWriter.testNumber);
 					else if (this.oneTestPerInvocation)
 						currentTestMethod = currentTestMethod.cloneOpening("test" + testClassWriter.testNumber);
