@@ -474,12 +474,11 @@ public class TestMethodsWriter {
 	}
 
 	private void addMock(int identityHashCode, Class<?> argClass, final VariableNameRenderer variableNameRenderer) {
-		// TODO - add imports to an "ImportContainer" instead of the testClassWriter
 		// TODO - add mocks to a "(Mocked)FieldContainer" instead of the testClassWriter
 		// TODO - get the argClass simpleName lazily from the ImportContainer
 		// TODO - use @Injectable for stubbing instances, but @Mocked for stubbing static methods.
-		testClassWriter.addImport("mockit.Mocked");
-		testClassWriter.addImport(argClass.getCanonicalName());
+		importsContainer.addImport(new Import("mockit.Mocked"));
+		importsContainer.addImport(new Import(argClass.getCanonicalName()));
 		testClassWriter.addField(identityHashCode, new StructuredTextRenderer("@Mocked private %s %s;", new ClassNameRenderer(argClass, importsContainer), variableNameRenderer));
 	}
 
