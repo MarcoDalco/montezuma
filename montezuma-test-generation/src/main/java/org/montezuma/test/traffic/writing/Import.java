@@ -20,6 +20,10 @@ public class Import implements Comparable<Import> {
 		return shortName;
 	}
 
+	public String getMethodName() {
+		return methodName;
+	}
+
 	public String getText() {
 		final boolean hasMethodName = methodName == null;
 		return (hasMethodName ? "" : "static ") + className + (hasMethodName ? "" : "." + methodName);
@@ -81,6 +85,13 @@ public class Import implements Comparable<Import> {
 			return compareWithOtherForMethodName;
 		}
 
-		return className.compareTo(other.className);
+		int comparison = className.compareTo(other.className);
+		if (comparison == 0) {
+			if (hasMethodName != 0) {
+				comparison = methodName.compareTo(other.methodName);
+			}
+		}
+
+		return comparison;
 	}
 }

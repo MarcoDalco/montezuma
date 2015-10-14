@@ -8,6 +8,7 @@ public class RecordAll {
 		BigDecimalUtilsTrafficRecorder.main(args);
 		BoundaryChecksTrafficRecorder.main(args);
 		BoundaryChecksCallbackTrafficRecorder.main(args);
+		ChainedInitTrafficRecorder.main(args);
 		CompiledStatementStoringPreparedStatementCreatorTrafficRecorder.main(args);
 		CurrencyUtilsTrafficRecorder.main(args);
 		PassThroughClassTrafficRecorder.main(args);

@@ -12,11 +12,16 @@ public class ImportsContainer {
 	private Map<String, Import>				resolvedImportsAndLongNames		= null;
 
 	public void addImport(Import imporz) {
-		final String shortName = imporz.getShortName();
-		Set<Import> setOfImports = importSets.get(shortName);
+		Set<Import> setOfImports;
+		String id = imporz.getMethodName();
+		if (id == null) {
+			id = imporz.getShortName();
+		}
+
+		setOfImports = importSets.get(id);
 		if (setOfImports == null) {
 			setOfImports = new HashSet<>();
-			importSets.put(shortName, setOfImports);
+			importSets.put(id, setOfImports);
 		}
 
 		setOfImports.add(imporz);
