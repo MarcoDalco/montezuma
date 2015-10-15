@@ -74,7 +74,7 @@ public class TestMethodsWriter {
 				testClassWriter.testNumber++;
 				if (isInitMethod) {
 					currentTestMethod = getNewTestMethodOpening(testClassWriter.testNumber);
-					generateInstantiation(currentTestMethod, methodArgs, argTypes, invocationData.argIDs, invocationData.calls);
+					generateInstantiation(currentTestMethod, this.instanceId, methodArgs, argTypes, invocationData.argIDs, invocationData.calls);
 					justInstantiated = true;
 					continue; // Fetch the next invocation
 				} else if (!justInstantiated) {
@@ -111,14 +111,14 @@ public class TestMethodsWriter {
 				// invoked method (the one under test, in this case), in which case the changes can't be detected by assertSame.
 				// Mind you: all the objects held by the returned value might need to be handled the same way, recursively: new
 				// identityHashCode, to be recreated independently
-				if (returnValueID == this.instanceId) {
-					ExpressionRenderer returnValueNameRenderer = ExpressionRenderer.stringRenderer("cut");
+				if (currentTestMethod.declaresIdentityHashCode(returnValueID) || this.testClassWriter.declaresIdentityHashCode(returnValueID)) {
+					ExpressionRenderer returnValueNameRenderer = new ExistingVariableNameRenderer(returnValueID);
 					currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertSame"));
 					instantiationRenderer = new StructuredTextRenderer("assertSame(%s, %s);", returnValueNameRenderer, invocationRenderer);
 				} else {
 					Method invokedMethod = this.testClass.getDeclaredMethod(methodName, buildParameterTypes(argTypes));
 					ExpressionRenderer returnValueNameRenderer = buildExpectedReturnValue(currentMethodPart, serialisedReturnValue, invokedMethod.getReturnType(), returnValueID);
-					if (returnValueNameRenderer instanceof VariableNameRenderer) {
+					if (returnValueNameRenderer instanceof NewGeneratedVariableNameRenderer) {
 						// TODO - when the returned values are primitive wrappers (instances of java.lang.Number descendants), cast
 						// the first argument to their original class (the primitive or the wrapper/Object) basing on the return
 						// value of the signature of the method corresponding to this 'cut' invocation
@@ -150,15 +150,17 @@ public class TestMethodsWriter {
 		return currentTestMethod;
 	}
 
-	protected void generateInstantiation(TestMethod currentTestMethod, Object[] methodArgs, String[] argTypes, int[] argIDs, Queue<CallInvocationData> calls) throws ClassNotFoundException, IOException, NoSuchMethodException {
+	protected void generateInstantiation(TestMethod currentTestMethod, int identityHashCode, Object[] methodArgs, String[] argTypes, int[] argIDs, Queue<CallInvocationData> calls) throws ClassNotFoundException, IOException, NoSuchMethodException {
 		CodeChunk instantiationMethodPart = new CodeChunk();
 		instantiationMethodPart.methodPartsBeforeLines.addAll(buildExpectations(calls));
 
 		final StructuredTextRenderer invocationParametersRenderer = buildInvocationParameters(instantiationMethodPart, methodArgs, argTypes, argIDs);
 
 		final ClassNameRenderer classNameRenderer = new ClassNameRenderer(testClass, importsContainer);
+		ExpressionRenderer cutVariableNameRenderer = new NewVariableNameRenderer(identityHashCode) { @Override protected String getName() { return "cut"; } };
 		instantiationMethodPart.addExpressionRenderer(new StructuredTextRenderer(
-				"final %s cut = new %s(%s);" + StructuredTextFileWriter.EOL, classNameRenderer, classNameRenderer, invocationParametersRenderer));
+				"final %s %s = new %s(%s);" + StructuredTextFileWriter.EOL, classNameRenderer, cutVariableNameRenderer, classNameRenderer, invocationParametersRenderer));
+		instantiationMethodPart.addDeclaredIdentityHashCode(identityHashCode);
 
 		currentTestMethod.instantiationMethodPart = instantiationMethodPart;
 	}
@@ -191,7 +193,7 @@ public class TestMethodsWriter {
 		return testMethod;
 	}
 
-	private void buildList(InitCodeChunk maincodeChunk, List<Object> rebuiltRuntimeList, String[] listElementTypes, int[] listElementIDs, VariableNameRenderer listNameRenderer) {
+	private void buildList(InitCodeChunk maincodeChunk, List<Object> rebuiltRuntimeList, String[] listElementTypes, int[] listElementIDs, NewGeneratedVariableNameRenderer listNameRenderer) {
 		int i = 0;
 		for (Iterator<?> runtimeObjectsIterator = rebuiltRuntimeList.iterator(); runtimeObjectsIterator.hasNext(); i++) {
 			Object element = runtimeObjectsIterator.next();
@@ -204,8 +206,9 @@ public class TestMethodsWriter {
 
 				final InitCodeChunk variableCodeChunk = createInitCodeChunk(element, elementClass, elementID, "given");
 				maincodeChunk.requiredInits.put(elementID, variableCodeChunk);
+				maincodeChunk.addDeclaredIdentityHashCode(elementID);
 
-				maincodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(%s);", listNameRenderer, new VariableNameRenderer(elementID, elementClass, "given")));
+				maincodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(%s);", listNameRenderer, new ExistingVariableNameRenderer(elementID)));
 			}
 		}
 	}
@@ -232,7 +235,7 @@ public class TestMethodsWriter {
 				// and valueOf(Long). It will require this method to take the Declaring Type as an extra parameter.
 				// In the above process, consider the class type of each argument as given in the argTypes String array,
 				// i.e.: int.class versus Integer.class
-				expressionRenderers.add(new VariableNameRenderer(argID, argClass, "given"));
+				expressionRenderers.add(new NewGeneratedVariableNameRenderer(argID, argClass, "given"));
 				argumentNames.append("%s");
 			}
 			argumentNames.append(argSeparator);
@@ -250,7 +253,7 @@ public class TestMethodsWriter {
 		return new InitCodeChunk(argID) {
 			@Override
 			public void generateRequiredInits() {
-				// final VariableNameRenderer variableNameRenderer;
+				// final NewGeneratedVariableNameRenderer variableNameRenderer;
 				// TODO - exclude the mocking case too, as it already adds the class to the imports
 				if (!argClass.isPrimitive() && !argClass.isArray() && !argClass.getPackage().equals(Package.getPackage("java.lang"))) {
 					requiredImports.addImport(new Import(argClass.getCanonicalName()));
@@ -258,12 +261,13 @@ public class TestMethodsWriter {
 				// maincodeChunk.requiredInits.add(variableCodeChunk);
 				if ((arg instanceof Number) || (arg instanceof Boolean)) {
 					if (argClass.equals(BigDecimal.class)) {
-						codeRenderers.add(new StructuredTextRenderer("final %s %s = %s;", new ClassNameRenderer(argClass, importsContainer), new VariableNameRenderer(argID, argClass, variableNamePrefix), new ExpressionRenderer() {
+						codeRenderers.add(new StructuredTextRenderer("final %s %s = %s;", new ClassNameRenderer(argClass, importsContainer), new NewGeneratedVariableNameRenderer(argID, argClass, variableNamePrefix), new ExpressionRenderer() {
 							@Override
 							public String render() {
 								return getBigDecimalInitialiser(arg);
 							}
 						}));
+						addDeclaredIdentityHashCode(argID);
 					} else {
 						final ExpressionRenderer initExpressionRenderer;
 						if (argClass.equals(int.class) || argClass.equals(Integer.class)) {
@@ -306,14 +310,15 @@ public class TestMethodsWriter {
 						final String declaredArgClassName = (actualArgType.startsWith("java") ? argClass.getSimpleName() : actualArgType);
 						codeRenderers.add(
 								new StructuredTextRenderer("final " + declaredArgClassName + " %s = %s;",
-										new VariableNameRenderer(argID, argClass, variableNamePrefix), initExpressionRenderer)
+										new NewGeneratedVariableNameRenderer(argID, argClass, variableNamePrefix), initExpressionRenderer)
 						);
+						addDeclaredIdentityHashCode(argID);
 					}
 				} else if (argClass == String.class) {
 					codeRenderers.add(
 							new StructuredTextRenderer("final %s %s = \"%s\";",
 									new ClassNameRenderer(argClass, importsContainer),
-									new VariableNameRenderer(argID, argClass, variableNamePrefix),
+									new NewGeneratedVariableNameRenderer(argID, argClass, variableNamePrefix),
 									new ExpressionRenderer() {
 										@Override
 										public String render() {
@@ -322,6 +327,7 @@ public class TestMethodsWriter {
 									}
 							)
 					);
+					addDeclaredIdentityHashCode(argID);
 				} else if (argClass.isAssignableFrom(List.class) && argClass.getPackage().getName().startsWith("java.util")) {
 					@SuppressWarnings("unchecked") final List<Object> rebuiltRuntimeList = (List<Object>) arg;
 					final int listSize = rebuiltRuntimeList.size();
@@ -334,10 +340,11 @@ public class TestMethodsWriter {
 						i++;
 					}
 					final ClassNameRenderer declaredClassNameRenderer = new ClassNameRenderer(argClass, importsContainer);
-					final VariableNameRenderer listNameRenderer = new VariableNameRenderer(argID, argClass, variableNamePrefix);
+					final NewGeneratedVariableNameRenderer listNameRenderer = new NewGeneratedVariableNameRenderer(argID, argClass, variableNamePrefix);
 					final ClassNameRenderer actualClassNameRenderer = new ClassNameRenderer(arg.getClass(), importsContainer);
 					codeRenderers.add(new StructuredTextRenderer("final %s %s = new %s();", declaredClassNameRenderer, listNameRenderer, actualClassNameRenderer));
-					buildList(this, rebuiltRuntimeList, listElementTypes, listElementIDs, listNameRenderer);
+					addDeclaredIdentityHashCode(argID);
+					buildList(this, rebuiltRuntimeList, listElementTypes, listElementIDs, /* this could be an ExistingVariableNameRenderer */ listNameRenderer);
 				} else if (argClass.isAssignableFrom(Set.class)) {} else if (argClass.isAssignableFrom(Map.class)) {} else if (argClass.isArray()) {
 					final Object[] serialisedObjectsArray = (Object[]) arg;
 					final Object[] rebuiltRuntimeArray = new Object[serialisedObjectsArray.length];
@@ -360,7 +367,8 @@ public class TestMethodsWriter {
 					StructuredTextRenderer arrayObjectsRenderer = buildInvocationParameters(this, rebuiltRuntimeArray, arrayArgTypes, arrayArgIDs);
 					final ClassNameRenderer classNameRenderer = new ClassNameRenderer(argClass, importsContainer);
 					codeRenderers.add(new StructuredTextRenderer(
-							"final %s %s = new %s {%s};", classNameRenderer, new VariableNameRenderer(argID, argClass, variableNamePrefix), classNameRenderer, arrayObjectsRenderer));
+							"final %s %s = new %s {%s};", classNameRenderer, new NewGeneratedVariableNameRenderer(argID, argClass, variableNamePrefix), classNameRenderer, arrayObjectsRenderer));
+					addDeclaredIdentityHashCode(argID);
 				} else {
 					// Using mocks:
 					if (mustMock(arg) || shouldMock(argClass)) {
@@ -375,7 +383,10 @@ public class TestMethodsWriter {
 
 	private StructuredTextRenderer addRealParameter(CodeChunk codeChunk, Class<?> argClass, Object arg, int argID) {
 		final ClassNameRenderer classNameRenderer = new ClassNameRenderer(argClass, importsContainer);
-		return new StructuredTextRenderer("final %s %s = (%s) %s;", classNameRenderer, new VariableNameRenderer(argID, argClass, "given"), classNameRenderer, getDeserialisationRenderer(codeChunk, arg));
+		final StructuredTextRenderer renderer =
+				new StructuredTextRenderer("final %s %s = (%s) %s;", classNameRenderer, new NewGeneratedVariableNameRenderer(argID, argClass, "given"), classNameRenderer, getDeserialisationRenderer(codeChunk, arg));
+		codeChunk.addDeclaredIdentityHashCode(argID);
+		return renderer;
 	}
 
 	private ExpressionRenderer getDeserialisationRenderer(CodeChunk codeChunk, Object object) {
@@ -414,7 +425,7 @@ public class TestMethodsWriter {
 		// TODO - handle null pointers: id == 0 for non-static invocations to null pointers too!
 		final boolean isStaticMethod = Modifier.isStatic(callData.modifiers);
 		final int identityHashCode = isStaticMethod ? TestMethodsWriter.generateIdentityHashCodeForStaticClass(declaringType) : id;
-		final VariableNameRenderer mockedFieldNameRenderer = getMockedFieldNameRenderer(targetClazzOrDeclaringType, identityHashCode);
+		final NewGeneratedVariableNameRenderer mockedFieldNameRenderer = getMockedFieldNameRenderer(targetClazzOrDeclaringType, identityHashCode);
 		// TODO - invoke addMock with a different Class<?> than targetClazzOrDeclaringType if targetClazzOrDeclaringType is
 		// not visible (e.g.: private class), like we already do for expected return values.
 		addMock(identityHashCode, targetClazzOrDeclaringType, mockedFieldNameRenderer);
@@ -422,7 +433,8 @@ public class TestMethodsWriter {
 		final StructuredTextRenderer invocationParameters = buildInvocationParameters(codeChunk, methodArgs, argTypes, callData.argIDs);
 		final ExpressionRenderer invocationExpressionRenderer =
 				isConstructorInvocation ? new StructuredTextRenderer("new %s(%s);", new ClassNameRenderer(declaringType, importsContainer), invocationParameters) : new StructuredTextRenderer("%s.%s(%s);", isStaticMethod
-						? new ClassNameRenderer(declaringType, importsContainer) : new VariableNameRenderer(callData.id, targetClazzOrDeclaringType, "given"), ExpressionRenderer.stringRenderer(methodName), invocationParameters);
+ ? new ClassNameRenderer(declaringType, importsContainer) : new ExistingVariableNameRenderer(callData.id), ExpressionRenderer.stringRenderer(methodName),
+						invocationParameters);
 		final ExpressionRenderer timesExpressionRenderer = ExpressionRenderer.stringRenderer(" times = 1;");
 		final byte[] serialisedReturnValue = callData.serialisedReturnValue;
 		// TODO - implement behaviour of when a Throwable is thrown rather than a result returned: serialisedReturnValue is
@@ -469,17 +481,18 @@ public class TestMethodsWriter {
 		return shouldMock;
 	}
 
-	private VariableNameRenderer getMockedFieldNameRenderer(Class<?> clazz, int id) {
-		return new VariableNameRenderer(id, clazz, "mocked");
+	private NewGeneratedVariableNameRenderer getMockedFieldNameRenderer(Class<?> clazz, int id) {
+		return new NewGeneratedVariableNameRenderer(id, clazz, "mocked");
 	}
 
-	private void addMock(int identityHashCode, Class<?> argClass, final VariableNameRenderer variableNameRenderer) {
+	private void addMock(int identityHashCode, Class<?> argClass, final NewGeneratedVariableNameRenderer newGeneratedVariableNameRenderer) {
 		// TODO - add mocks to a "(Mocked)FieldContainer" instead of the testClassWriter
 		// TODO - get the argClass simpleName lazily from the ImportContainer
 		// TODO - use @Injectable for stubbing instances, but @Mocked for stubbing static methods.
 		importsContainer.addImport(new Import("mockit.Mocked"));
 		importsContainer.addImport(new Import(argClass.getCanonicalName()));
-		testClassWriter.addField(identityHashCode, new StructuredTextRenderer("@Mocked private %s %s;", new ClassNameRenderer(argClass, importsContainer), variableNameRenderer));
+		testClassWriter.addField(identityHashCode, new StructuredTextRenderer("@Mocked private %s %s;", new ClassNameRenderer(argClass, importsContainer), newGeneratedVariableNameRenderer));
+		testClassWriter.addDeclaredIdentityHashCode(identityHashCode);
 	}
 
 	private String getBigDecimalInitialiser(Object arg) {
@@ -508,7 +521,7 @@ public class TestMethodsWriter {
 		// invocation - is then cast by the cut to a more specific type and a method from that type is invoked. That would
 		// be a good reason to use returnValueClass (returnValue.getClass()), but such class might not be visible (private
 		// inner class).
-		final VariableNameRenderer returnValueNameRenderer = new VariableNameRenderer(identityHashCode, returnValueDeclaredType, "expected");
+		final NewGeneratedVariableNameRenderer returnValueNameRenderer = new NewGeneratedVariableNameRenderer(identityHashCode, returnValueDeclaredType, "expected");
 
 		final InitCodeChunk returnValueInitCodeChunk = createInitCodeChunk(returnValue, returnValueDeclaredType, identityHashCode, "expected");
 		codeChunk.requiredInits.put(identityHashCode, returnValueInitCodeChunk);

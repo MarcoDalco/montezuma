@@ -12,7 +12,7 @@ import org.montezuma.test.traffic.writing.Import;
 import org.montezuma.test.traffic.writing.ImportsContainer;
 import org.montezuma.test.traffic.writing.InitCodeChunk;
 import org.montezuma.test.traffic.writing.StructuredTextRenderer;
-import org.montezuma.test.traffic.writing.VariableNameRenderer;
+import org.montezuma.test.traffic.writing.NewGeneratedVariableNameRenderer;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -34,13 +34,14 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 		codeChunkNeedingDeserialisation.requiredImports.addImport(new Import("com.esotericsoftware.kryo.Kryo"));
 		codeChunkNeedingDeserialisation.requiredImports.addImport(new Import("org.montezuma.test.traffic.serialisers.kryo.KryoRegisteredSerialiser"));
 
-		VariableNameRenderer kryoVariableNameRenderer = new VariableNameRenderer(9876, Kryo.class, "");
+		NewGeneratedVariableNameRenderer kryoVariableNameRenderer = new NewGeneratedVariableNameRenderer(9876, Kryo.class, "");
 		InitCodeChunk initCodeChunk = new InitCodeChunk(9876) {
 			@Override
 			public void generateRequiredInits() {
 				// FIXME: if required twice in a method, this causes a compile error, as it declares Kryo twice.
 				ClassNameRenderer kryoClassNameRenderer = new ClassNameRenderer(Kryo.class, importsContainer);
 				codeRenderers.add(new StructuredTextRenderer("%s %s = new %s();", kryoClassNameRenderer, kryoVariableNameRenderer, kryoClassNameRenderer));
+				addDeclaredIdentityHashCode(9876);
 
 				ClassNameRenderer kryoRegisteredSerialiserClassNameRenderer = new ClassNameRenderer(KryoRegisteredSerialiser.class, importsContainer);
 				codeRenderers.add(new StructuredTextRenderer("%s.setDefaultSerializer(%s.class);", kryoVariableNameRenderer, kryoRegisteredSerialiserClassNameRenderer));
@@ -52,18 +53,21 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 		codeChunkNeedingDeserialisation.requiredImports.addImport(new Import("com.esotericsoftware.kryo.io.Input"));
 		codeChunkNeedingDeserialisation.declaredThrowables.add(ClassNotFoundException.class);
 		codeChunkNeedingDeserialisation.declaredThrowables.add(IOException.class);
-		VariableNameRenderer tmpObjectVariableNameRenderer = new VariableNameRenderer(9873, Object.class, "");
+		NewGeneratedVariableNameRenderer tmpObjectVariableNameRenderer = new NewGeneratedVariableNameRenderer(9873, Object.class, "");
 		ClassNameRenderer baisClassNameRenderer = new ClassNameRenderer(ByteArrayInputStream.class, importsContainer);
-		VariableNameRenderer baisVarNameRenderer = new VariableNameRenderer(9875, ByteArrayInputStream.class, "");
+		NewGeneratedVariableNameRenderer baisVarNameRenderer = new NewGeneratedVariableNameRenderer(9875, ByteArrayInputStream.class, "");
 		ExpressionRenderer baObjectInitCode = ExpressionRenderer.stringRenderer(getSerialisedObjectSourceCode(object));
 		ClassNameRenderer kryoInputClassNameRenderer = new ClassNameRenderer(Input.class, importsContainer);
-		VariableNameRenderer kryoInputVarNameRenderer = new VariableNameRenderer(9874, Input.class, "");
+		NewGeneratedVariableNameRenderer kryoInputVarNameRenderer = new NewGeneratedVariableNameRenderer(9874, Input.class, "");
 		ExpressionRenderer renderer =
 				new StructuredTextRenderer(
 						"final Object %s;\n" + "try (final %s %s = new %s(%s);\n" + "     final %s %s = new %s(%s)) {\n" + "  %s = %s.readClassAndObject(%s);\n" + "}", tmpObjectVariableNameRenderer,
 						baisClassNameRenderer, baisVarNameRenderer, baisClassNameRenderer, baObjectInitCode, kryoInputClassNameRenderer, kryoInputVarNameRenderer, kryoInputClassNameRenderer, baisVarNameRenderer,
 						tmpObjectVariableNameRenderer, kryoVariableNameRenderer, kryoInputVarNameRenderer);
 		codeChunkNeedingDeserialisation.codeRenderers.add(renderer);
+		codeChunkNeedingDeserialisation.addDeclaredIdentityHashCode(9873);
+		codeChunkNeedingDeserialisation.addDeclaredIdentityHashCode(9874);
+		codeChunkNeedingDeserialisation.addDeclaredIdentityHashCode(9875);
 
 		return tmpObjectVariableNameRenderer;
 	}

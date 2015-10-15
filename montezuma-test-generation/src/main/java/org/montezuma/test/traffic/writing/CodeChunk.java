@@ -7,7 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-public class CodeChunk implements TextRenderer {
+public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 	public ImportsContainer												requiredImports					= new ImportsContainer();
 	public Set<String>														requiredMocks						= new HashSet<>();
 	public Set<Class<? extends Throwable>>				declaredThrowables			= new HashSet<>();
@@ -15,6 +15,7 @@ public class CodeChunk implements TextRenderer {
 	public List<CodeChunk>												methodPartsBeforeLines	= new ArrayList<>();
 	public List<ExpressionRenderer>								codeRenderers						= new ArrayList<>();
 	public List<CodeChunk>												methodPartsAfterLines		= new ArrayList<>();
+	public Set<Integer>														declaredIdentityHashCodes	= new HashSet<>();
 
 	public CodeChunk() {}
 
@@ -171,5 +172,28 @@ public class CodeChunk implements TextRenderer {
 
 	public void addExpressionRenderer(ExpressionRenderer expressionRenderer) {
 		codeRenderers.add(expressionRenderer);
+	}
+
+	@Override
+	public void addDeclaredIdentityHashCode(int identityHashCode) {
+		declaredIdentityHashCodes.add(identityHashCode);
+	}
+
+	@Override
+	public boolean declaresIdentityHashCode(int identityHashCode) {
+		if (declaredIdentityHashCodes.contains(identityHashCode))
+			return true;
+
+		for (CodeChunk codeChunk : requiredInits.values())
+			if (codeChunk.declaresIdentityHashCode(identityHashCode))
+				return true;
+		for (CodeChunk codeChunk : methodPartsBeforeLines)
+			if (codeChunk.declaresIdentityHashCode(identityHashCode))
+				return true;
+		for (CodeChunk codeChunk : methodPartsAfterLines)
+			if (codeChunk.declaresIdentityHashCode(identityHashCode))
+				return true;
+
+		return false;
 	}
 }

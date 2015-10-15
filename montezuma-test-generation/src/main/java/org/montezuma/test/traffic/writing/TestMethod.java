@@ -7,11 +7,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Set;
 
-public class TestMethod implements TextRenderer {
+public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 	public TestMethodOpening	opening;
 	public CodeChunk					instantiationMethodPart;
 	public List<CodeChunk>		codeChunks	= new ArrayList<>();
 	public CodeChunk					closure;
+	private Set<Integer>			declaredIdentityHashCodes	= new HashSet<>();
 
 	@Override
 	public void render(StructuredTextFileWriter structuredTextFileWriter) {
@@ -85,8 +86,10 @@ public class TestMethod implements TextRenderer {
 		TestMethod newMethod = new TestMethod();
 
 		newMethod.opening = new TestMethodOpening(opening, methodName);
-		if (instantiationMethodPart != null)
+		if (instantiationMethodPart != null) {
 			newMethod.instantiationMethodPart = new CodeChunk(instantiationMethodPart);
+			declaredIdentityHashCodes = new HashSet<>(instantiationMethodPart.declaredIdentityHashCodes);
+		}
 
 		return newMethod;
 	}
@@ -99,5 +102,28 @@ public class TestMethod implements TextRenderer {
 			codeChunk.preprocess();
 		}
 		closure.preprocess();
+	}
+
+	@Override
+	public void addDeclaredIdentityHashCode(int identityHashCode) {
+		declaredIdentityHashCodes.add(identityHashCode);
+	}
+
+	@Override
+	public boolean declaresIdentityHashCode(int identityHashCode) {
+		if (declaredIdentityHashCodes.contains(identityHashCode))
+			return true;
+
+		if ((instantiationMethodPart != null) && (instantiationMethodPart.declaresIdentityHashCode(identityHashCode)))
+				return true;
+
+		for (CodeChunk codeChunk : codeChunks)
+			if (codeChunk.declaresIdentityHashCode(identityHashCode))
+				return true;
+
+		if ((closure != null) && (closure.declaresIdentityHashCode(identityHashCode)))
+				return true;
+
+			return false;
 	}
 }

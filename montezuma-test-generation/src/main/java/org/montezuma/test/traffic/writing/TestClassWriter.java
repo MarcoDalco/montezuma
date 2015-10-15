@@ -6,12 +6,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-public class TestClassWriter {
+public class TestClassWriter implements ObjectDeclarationScope {
 
 	private String														packageName;
 	private String														testClassName;
@@ -20,6 +21,7 @@ public class TestClassWriter {
 	private List<TestMethod>									testMethods				= new ArrayList<>();
 	private final StructuredTextFileWriter		structuredFileWriter;
 	int																				testNumber				= 0;
+	private Set<Integer>											declaredIdentityHashCodes	= new HashSet<>();
 	static final String												FILE_SEPARATOR		= System.getProperty("file.separator");
 
 	public TestClassWriter(String packageName, String testClassName) {
@@ -103,5 +105,15 @@ public class TestClassWriter {
 
 	private void appendClassEnd() {
 		structuredFileWriter.appendLine(0, "}");
+	}
+
+	@Override
+	public void addDeclaredIdentityHashCode(int identityHashCode) {
+		declaredIdentityHashCodes.add(identityHashCode);
+	}
+
+	@Override
+	public boolean declaresIdentityHashCode(int identityHashCode) {
+		return declaredIdentityHashCodes.contains(identityHashCode);
 	}
 }
