@@ -119,7 +119,8 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			int i = 0;
 			for (Object element : rebuiltRuntimeList) {
 				listElementTypes[i] = element.getClass().getCanonicalName();
-				listElementIDs[i] = TestMethodsWriter.generateIdentityHashCode(); // TODO: store the real object ID?
+				listElementIDs[i] = testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); // TODO: store the
+																																																	// real object ID?
 				i++;
 			}
 			final ClassNameRenderer declaredClassNameRenderer = new ClassNameRenderer(argClass, importsContainer);
@@ -145,7 +146,8 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			final String arrayBaseTypeCanonicalName = arrayBaseType.getCanonicalName();
 			for (int l = 0; l < rebuiltRuntimeArray.length; l++) {
 				arrayArgTypes[l] = arrayBaseTypeCanonicalName;
-				arrayArgIDs[l] = TestMethodsWriter.generateIdentityHashCode(); // TODO: store the real object ID?
+				arrayArgIDs[l] = testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); // TODO: store the real
+																																																// object ID?
 			}
 			StructuredTextRenderer arrayObjectsRenderer =
 					renderersStrategy.buildInvocationParameters(this, rebuiltRuntimeArray, arrayArgTypes, arrayArgIDs, importsContainer, mockingStrategy, testClassWriter);
@@ -158,7 +160,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			if (mockingStrategy.mustMock(arg) || mockingStrategy.shouldMock(argClass)) {
 				renderersStrategy.addMock(argID, argClass, renderersStrategy.getMockedFieldNameRenderer(argClass, argID), importsContainer, testClassWriter);
 			} else {
-				codeRenderers.add(renderersStrategy.addRealParameter(this, argClass, arg, argID, importsContainer));
+				codeRenderers.add(renderersStrategy.addRealParameter(this, argClass, arg, argID, importsContainer, testClassWriter.identityHashCodeGenerator));
 			}
 		}
 	}

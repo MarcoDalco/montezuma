@@ -12,17 +12,17 @@ public class RenderersStrategy {
 		return new NewGeneratedVariableNameRenderer(id, clazz, "mocked");
 	}
 
-	StructuredTextRenderer addRealParameter(CodeChunk codeChunk, Class<?> argClass, Object arg, int argID, ImportsContainer importsContainer) {
+	StructuredTextRenderer addRealParameter(CodeChunk codeChunk, Class<?> argClass, Object arg, int argID, ImportsContainer importsContainer, IdentityHashCodeGenerator identityHashCodeGenerator) {
 		final ClassNameRenderer classNameRenderer = new ClassNameRenderer(argClass, importsContainer);
 		final StructuredTextRenderer renderer =
 				new StructuredTextRenderer("final %s %s = (%s) %s;", classNameRenderer, new NewGeneratedVariableNameRenderer(argID, argClass, "given"), classNameRenderer, getDeserialisationRenderer(
-						codeChunk, arg, importsContainer));
+						codeChunk, arg, importsContainer, identityHashCodeGenerator));
 		codeChunk.addDeclaredIdentityHashCode(argID);
 		return renderer;
 	}
 
-	private ExpressionRenderer getDeserialisationRenderer(CodeChunk codeChunk, Object object, ImportsContainer importsContainer) {
-		return SerialisationRendererFactory.getSerialisationRenderer().getDeserialisationCodeChunkFor(codeChunk, object, importsContainer);
+	private ExpressionRenderer getDeserialisationRenderer(CodeChunk codeChunk, Object object, ImportsContainer importsContainer, IdentityHashCodeGenerator identityHashCodeGenerator) {
+		return SerialisationRendererFactory.getSerialisationRenderer().getDeserialisationCodeChunkFor(codeChunk, object, importsContainer, identityHashCodeGenerator);
 	}
 
 	void addMock(int identityHashCode, Class<?> argClass, final NewGeneratedVariableNameRenderer newGeneratedVariableNameRenderer, ImportsContainer importsContainer, TestClassWriter testClassWriter) {

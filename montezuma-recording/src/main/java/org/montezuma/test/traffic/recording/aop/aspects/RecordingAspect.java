@@ -6,6 +6,7 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.ConstructorSignature;
 import org.aspectj.lang.reflect.InitializerSignature;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -86,7 +87,10 @@ public class RecordingAspect {
 			};
 	// @formatter:on
 
-	@Before(BEFORE_EXECUTION_AND_NEW_INVOCATION_FILTER)
+	@Pointcut(BEFORE_EXECUTION_AND_NEW_INVOCATION_FILTER)
+	public void pointcut() {}
+
+	@Before("pointcut()")
 	public void logBeforeExecution(JoinPoint joinPoint) throws IOException {
 		if (stop)
 			return;

@@ -22,6 +22,9 @@ public class TestClassWriter implements ObjectDeclarationScope {
 	private final StructuredTextFileWriter		structuredFileWriter;
 	int																				testNumber				= 0;
 	private Set<Integer>											declaredIdentityHashCodes	= new HashSet<>();
+	// The IdentityHashCodeGenerator must not generate duplicate IDs within the same test class, can do it in different
+	// test classes; that's why it's here.
+	public final IdentityHashCodeGenerator		identityHashCodeGenerator	= new IdentityHashCodeGenerator();
 	static final String												FILE_SEPARATOR		= System.getProperty("file.separator");
 
 	public TestClassWriter(String packageName, String testClassName) {

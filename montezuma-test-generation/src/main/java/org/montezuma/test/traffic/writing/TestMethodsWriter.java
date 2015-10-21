@@ -24,7 +24,6 @@ public class TestMethodsWriter {
 	private final TestClassWriter				testClassWriter;
 	private final boolean								amTestingTheStaticPart;
 	public static int										globalVariableNumber	= 0;
-	private static int									fakeIdentityHashCode	= 1000000;
 	private final MockingStrategy				mockingStrategy;
 	private final RenderersStrategy			renderersStrategy;
 	private final int										instanceId;
@@ -116,7 +115,8 @@ public class TestMethodsWriter {
 
 				Method invokedMethod = this.testClass.getDeclaredMethod(methodName, buildParameterTypes(argTypes));
 				final Class<?> returnType = invokedMethod.getReturnType();
-				final NewGeneratedVariableNameRenderer returnValueNameRenderer = new NewGeneratedVariableNameRenderer(generateIdentityHashCode(), returnType, "returned");
+				final NewGeneratedVariableNameRenderer returnValueNameRenderer =
+						new NewGeneratedVariableNameRenderer(testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(), returnType, "returned");
 				currentMethodPart.addExpressionRenderer(new StructuredTextRenderer("final %s %s = %s;", new ClassNameRenderer(returnType, importsContainer), returnValueNameRenderer, invocationRenderer));
 
 				// final InitCodeChunk returnValueInitCodeChunk = createInitCodeChunk(returnValue, returnValueDeclaredType,
@@ -137,7 +137,7 @@ public class TestMethodsWriter {
 				// In any case:
 				{
 					Object returnValue = deserialiser.deserialise(serialisedReturnValue);
-					final int expectedReturnValueID = shouldAssertSame ? generateIdentityHashCode() : returnValueID;
+					final int expectedReturnValueID = shouldAssertSame ? testClassWriter.identityHashCodeGenerator.generateIdentityHashCode() : returnValueID;
 					ExpressionRenderer expectedValueNameRenderer = buildExpectedReturnValue(currentMethodPart, returnValue, returnType, expectedReturnValueID);
 					final ExpressionRenderer expressionRenderer;
 					if (expectedValueNameRenderer instanceof NewGeneratedVariableNameRenderer) {
@@ -184,7 +184,8 @@ public class TestMethodsWriter {
 		instantiationMethodPart.methodPartsBeforeLines.addAll(buildExpectations(calls));
 
 		final StructuredTextRenderer invocationParametersRenderer =
-				renderersStrategy.buildInvocationParameters(instantiationMethodPart, methodArgs, argTypes, argIDs, importsContainer, mockingStrategy, testClassWriter);
+				renderersStrategy.buildInvocationParameters(
+instantiationMethodPart, methodArgs, argTypes, argIDs, importsContainer, mockingStrategy, testClassWriter);
 
 		final ClassNameRenderer classNameRenderer = new ClassNameRenderer(testClass, importsContainer);
 		ExpressionRenderer cutVariableNameRenderer = new NewVariableNameRenderer(identityHashCode) { @Override protected String getName() { return "cut"; } };
@@ -254,7 +255,7 @@ public class TestMethodsWriter {
 		final int id = isConstructorInvocation ? callData.returnValueID : callData.id;
 		// TODO - handle null pointers: id == 0 for non-static invocations to null pointers too!
 		final boolean isStaticMethod = Modifier.isStatic(callData.modifiers);
-		final int identityHashCode = isStaticMethod ? TestMethodsWriter.generateIdentityHashCodeForStaticClass(declaringType) : id;
+		final int identityHashCode = isStaticMethod ? testClassWriter.identityHashCodeGenerator.generateIdentityHashCodeForStaticClass(declaringType) : id;
 		final NewGeneratedVariableNameRenderer mockedFieldNameRenderer = renderersStrategy.getMockedFieldNameRenderer(targetClazzOrDeclaringType, identityHashCode);
 		// TODO - invoke addMock with a different Class<?> than targetClazzOrDeclaringType if targetClazzOrDeclaringType is
 		// not visible (e.g.: private class), like we already do for expected return values.
@@ -316,15 +317,6 @@ public class TestMethodsWriter {
 		final InitCodeChunk returnValueInitCodeChunk = new StandardInitCodeChunk(argID, arg, argClass, argID, "expected", importsContainer, mockingStrategy, renderersStrategy, testClassWriter);
 		codeChunk.requiredInits.put(identityHashCode, returnValueInitCodeChunk);
 		return returnValueNameRenderer;
-	}
-
-	// TODO - check all the calling methods, to see where instance detection can be improved (or rather "introduced"!!)
-	static int generateIdentityHashCode() {
-		return fakeIdentityHashCode++;
-	}
-
-	private static int generateIdentityHashCodeForStaticClass(Class<?> clazz) {
-		return System.identityHashCode(clazz);
 	}
 
 }
