@@ -48,7 +48,7 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 		final Map<Integer, Map<Integer, List<InvocationData>>> groupedInvocationDataListMapsMap = new HashMap<Integer, Map<Integer, List<InvocationData>>>();
 		// Arbitrary grouping policy based on the number of tests (test classes) to write
 		// TODO - make this arbitrary grouping policy configurable
-		boolean allTogether = (invocationDataLists.size() < 10); // TODO - Problem: this loses the identityHashCode. Solve.
+		boolean allTogether = (invocationDataLists.size() < 10);
 		if (allTogether) {
 			final List<InvocationData> staticInvocationsDataList = invocationDataLists.remove("0");
 			if (staticInvocationsDataList != null)
