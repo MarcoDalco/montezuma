@@ -105,7 +105,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 							new ExpressionRenderer() {
 								@Override
 								public String render() {
-									return ((String) arg).replaceAll("\n", "\\n").replaceAll("\r", "\\r").replaceAll("\\\\", "\\\\\\\\");
+									return ((String) arg).replaceAll("\\\\", "\\\\\\\\").replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r").replaceAll("\"", "\\\\\"");
 								}
 							}
 					)
