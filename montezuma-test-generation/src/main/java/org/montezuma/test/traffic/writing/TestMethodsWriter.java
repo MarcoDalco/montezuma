@@ -148,7 +148,7 @@ public class TestMethodsWriter {
 						// The following 'if' condition means "don't assertEquals if it's a mock", but it definitely need
 						// improvement! It mirrors the createInitCodeChunk() code's cases.
 						if (returnType.isPrimitive() || returnType.isArray() || Number.class.isAssignableFrom(returnType) || Collection.class.isAssignableFrom(returnType)
-								|| Map.class.isAssignableFrom(returnType) || !(mockingStrategy.mustMock(returnValue) || mockingStrategy.shouldMock(returnType))) {
+								|| Map.class.isAssignableFrom(returnType) || !(mockingStrategy.mustStub(returnValue) || mockingStrategy.shouldStub(returnType))) {
 							currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertEquals"));
 							expressionRenderer = new StructuredTextRenderer("assertEquals(%s, %s);", expectedValueNameRenderer, returnValueNameRenderer);
 							currentMethodPart.addExpressionRenderer(expressionRenderer);
@@ -209,7 +209,7 @@ instantiationMethodPart, methodArgs, argTypes, argIDs, importsContainer, mocking
 			}
 			// TODO - check if the target is a MustMock, but at the moment CallInvocationData does not serialise the target
 			// class, so I can't determine if it should be a MustMock.
-			if (mockingStrategy.shouldMock(targetClazz)) {
+			if (mockingStrategy.shouldStub(targetClazz)) {
 				expectationParts.add(getStrictExpectationPart(callData));
 			}
 		}
@@ -256,10 +256,10 @@ instantiationMethodPart, methodArgs, argTypes, argIDs, importsContainer, mocking
 		// TODO - handle null pointers: id == 0 for non-static invocations to null pointers too!
 		final boolean isStaticMethod = Modifier.isStatic(callData.modifiers);
 		final int identityHashCode = isStaticMethod ? testClassWriter.identityHashCodeGenerator.generateIdentityHashCodeForStaticClass(declaringType) : id;
-		final NewGeneratedVariableNameRenderer mockedFieldNameRenderer = renderersStrategy.getMockedFieldNameRenderer(targetClazzOrDeclaringType, identityHashCode);
+		final NewGeneratedVariableNameRenderer mockedFieldNameRenderer = renderersStrategy.getStubbedFieldNameRenderer(targetClazzOrDeclaringType, identityHashCode);
 		// TODO - invoke addMock with a different Class<?> than targetClazzOrDeclaringType if targetClazzOrDeclaringType is
 		// not visible (e.g.: private class), like we already do for expected return values.
-		renderersStrategy.addMock(identityHashCode, targetClazzOrDeclaringType, mockedFieldNameRenderer, importsContainer, testClassWriter);
+		renderersStrategy.addStub(isStaticMethod, identityHashCode, targetClazzOrDeclaringType, mockedFieldNameRenderer, importsContainer, testClassWriter);
 		Object[] methodArgs = TrafficReader.getDeserialisedArgs(callData.serialisedArgs);
 		final StructuredTextRenderer invocationParameters =
 				renderersStrategy.buildInvocationParameters(codeChunk, methodArgs, argTypes, callData.argIDs, importsContainer, mockingStrategy, testClassWriter);

@@ -157,8 +157,8 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			addDeclaredIdentityHashCode(argID);
 		} else {
 			// Using mocks:
-			if (mockingStrategy.mustMock(arg) || mockingStrategy.shouldMock(argClass)) {
-				renderersStrategy.addMock(argID, argClass, renderersStrategy.getMockedFieldNameRenderer(argClass, argID), importsContainer, testClassWriter);
+			if (mockingStrategy.mustStub(arg) || mockingStrategy.shouldStub(argClass)) {
+				renderersStrategy.addStub(false, argID, argClass, renderersStrategy.getStubbedFieldNameRenderer(argClass, argID), importsContainer, testClassWriter);
 			} else {
 				codeRenderers.add(renderersStrategy.addRealParameter(this, argClass, arg, argID, importsContainer, testClassWriter.identityHashCodeGenerator));
 			}

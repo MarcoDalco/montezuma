@@ -11,7 +11,7 @@ public class MockingStrategy {
 		this.dontMockRegexList = dontMockRegexList;
 	}
 
-	boolean shouldMock(final Class<?> targetClazz) {
+	boolean shouldStub(final Class<?> targetClazz) {
 		boolean shouldMock = true;
 		for (String dontMockPattern : dontMockRegexList) {
 			if (targetClazz.getCanonicalName().matches(dontMockPattern)) {
@@ -22,7 +22,7 @@ public class MockingStrategy {
 		return shouldMock;
 	}
 
-	boolean mustMock(final Object arg) {
+	boolean mustStub(final Object arg) {
 		return (arg instanceof MustMock);
 	}
 

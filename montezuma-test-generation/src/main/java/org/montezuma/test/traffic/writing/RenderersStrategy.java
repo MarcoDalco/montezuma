@@ -8,7 +8,7 @@ import java.util.List;
 
 public class RenderersStrategy {
 
-	NewGeneratedVariableNameRenderer getMockedFieldNameRenderer(Class<?> clazz, int id) {
+	NewGeneratedVariableNameRenderer getStubbedFieldNameRenderer(Class<?> clazz, int id) {
 		return new NewGeneratedVariableNameRenderer(id, clazz, "mocked");
 	}
 
@@ -25,13 +25,21 @@ public class RenderersStrategy {
 		return SerialisationRendererFactory.getSerialisationRenderer().getDeserialisationCodeChunkFor(codeChunk, object, importsContainer, identityHashCodeGenerator);
 	}
 
-	void addMock(int identityHashCode, Class<?> argClass, final NewGeneratedVariableNameRenderer newGeneratedVariableNameRenderer, ImportsContainer importsContainer, TestClassWriter testClassWriter) {
-		// TODO - add mocks to a "(Mocked)FieldContainer" instead of the testClassWriter
+	void addStub(boolean isStaticStub, int identityHashCode, Class<?> argClass, final NewGeneratedVariableNameRenderer newGeneratedVariableNameRenderer, ImportsContainer importsContainer, TestClassWriter testClassWriter) {
+		// TODO - add mocks to a "(Stubbed)FieldContainer" instead of the testClassWriter
 		// TODO - get the argClass simpleName lazily from the ImportContainer
-		// TODO - use @Injectable for stubbing instances, but @Mocked for stubbing static methods.
-		importsContainer.addImport(new Import("mockit.Mocked"));
+		final Import requiredImport;
+		final String annotation;
+		if (isStaticStub) {
+			requiredImport = new Import("mockit.Mocked");
+			annotation = "@Mocked";
+		} else {
+			requiredImport = new Import("mockit.Injectable");
+			annotation = "@Injectable";
+		}
+		importsContainer.addImport(requiredImport);
 		importsContainer.addImport(new Import(argClass.getCanonicalName()));
-		testClassWriter.addField(identityHashCode, new StructuredTextRenderer("@Mocked private %s %s;", new ClassNameRenderer(argClass, importsContainer), newGeneratedVariableNameRenderer));
+		testClassWriter.addField(identityHashCode, new StructuredTextRenderer(annotation + " private %s %s;", new ClassNameRenderer(argClass, importsContainer), newGeneratedVariableNameRenderer));
 		testClassWriter.addDeclaredIdentityHashCode(identityHashCode);
 	}
 
