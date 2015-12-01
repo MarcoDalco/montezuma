@@ -33,7 +33,7 @@ No exceptions are expected to appear in the console output during the following 
 ### RECORDING ###
 
 1. In Eclipse navigate to montezuma-cases/src/main/java/org/montezuma/test/traffic/recording/cases/RecordAll.java (or any in that same package), right-click on it and Run As... Java Application. It will run without recording execution data.
-2. Change the last Run Configuration (Menu Run --> Run Configurations...) to add VM arguments (Arguments tab --> VM arguments): add "-javaagent:/Users/username/.m2/repository/org/aspectj/aspectjweaver/1.8.6/aspectjweaver-1.8.6.jar" without double-quotes; change the path (username) and versions according to what you have on your PC. If you don't have the aspectjweaver jar, you can download it here: https://eclipse.org/aspectj/downloads.php . TODO: add aspectjweaver dependency to main pom.xml
+2. Change the last Run Configuration (Menu Run --> Run Configurations...) to add VM arguments (Arguments tab --> VM arguments): add "-javaagent:/Users/username/.m2/repository/org/aspectj/aspectjweaver/1.8.6/aspectjweaver-1.8.6.jar" without double-quotes; change the path (username) and versions according to what you have on your PC.
 3. Run the RecordAll.java class again. It should run recording the execution data. To check that, check the montezuma-cases/recordings directory. It should now not be empty any more.
 
 
