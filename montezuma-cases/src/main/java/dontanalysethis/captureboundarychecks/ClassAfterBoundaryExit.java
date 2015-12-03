@@ -1,7 +1,5 @@
 package dontanalysethis.captureboundarychecks;
 
-import analysethis.captureboundarychecks.SecondClassToAnalyse;
-
 public class ClassAfterBoundaryExit {
 
 	public String exitBoundaryGoingForward(String string) {

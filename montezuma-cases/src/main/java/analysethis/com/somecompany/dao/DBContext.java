@@ -23,7 +23,7 @@ public class DBContext {
 		return "This is the compiled statement";
 	}
 
-	public static String fromStaticToInstance(PreparedStatement preparedStatement) {
+	public static String fromStaticToInstance(@SuppressWarnings("unused") PreparedStatement preparedStatement) {
 		return new DBContext("TURN ").value;
 	}
 }
