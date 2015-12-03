@@ -29,7 +29,7 @@ public class BigDecimalUtils {
 			try {
 				return new BigDecimal(value, BigDecimalUtils.DEFAULT_BIGDECIMAL_MATH_CONTEXT);
 			}
-			catch (@SuppressWarnings("unused") NumberFormatException e) {}
+			catch (NumberFormatException e) {}
 		}
 		return defaultValue;
 	}

@@ -26,9 +26,7 @@ import java.lang.reflect.TypeVariable;
 import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 @Aspect
 public class RecordingAspect {
@@ -59,7 +57,6 @@ public class RecordingAspect {
 	private static final boolean 	log 																					= true;
 
 	// @formatter:off
-	// TODO - replace Stack with something not synchronised, like some simple Queue
 	private final ThreadLocal<LinkedList<InvocationData>>	threadLocalStackOfExecutionInvocationData
 		= new ThreadLocal<LinkedList<InvocationData>>() {
 				@Override
@@ -74,7 +71,6 @@ public class RecordingAspect {
 					return SerialisationFactory.getSerialiser();
 				}
 			};
-	// TODO - replace Stack with something not synchronised, like some simple Queue
 	// TODO - change generics of threadLocalWasOutsideScopeStack so that you can just replace the topmost element, like to an AtomicInteger, but without thread context switching costs
 	private final ThreadLocal<LinkedList<Boolean>>					threadLocalWasOutsideScopeStack
 		= new ThreadLocal<LinkedList<Boolean>>() {

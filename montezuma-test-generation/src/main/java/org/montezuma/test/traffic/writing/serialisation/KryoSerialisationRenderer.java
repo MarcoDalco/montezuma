@@ -12,10 +12,8 @@ import org.montezuma.test.traffic.writing.IdentityHashCodeGenerator;
 import org.montezuma.test.traffic.writing.Import;
 import org.montezuma.test.traffic.writing.ImportsContainer;
 import org.montezuma.test.traffic.writing.InitCodeChunk;
-import org.montezuma.test.traffic.writing.StructuredTextRenderer;
 import org.montezuma.test.traffic.writing.NewGeneratedVariableNameRenderer;
-import org.montezuma.test.traffic.writing.TestClassWriter;
-import org.montezuma.test.traffic.writing.TestMethodsWriter;
+import org.montezuma.test.traffic.writing.StructuredTextRenderer;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
