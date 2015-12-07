@@ -20,14 +20,11 @@ public class ClassVisibilityCaseTrafficRecorder {
 				RecordingAspect.turnOn();
 
 				ClassVisibilityCaseMainClass cut1 = new ClassVisibilityCaseMainClass();
-				ClassVisibilityCaseMainClass cut2 = new ClassVisibilityCaseMainClass();
-				ClassVisibilityCaseMainClass cut3 = new ClassVisibilityCaseMainClass();
-				ClassVisibilityCaseMainClass cut4 = new ClassVisibilityCaseMainClass();
 
 				final VisibleClass result1 = cut1.getNewSubClassForClass();
-				final VisibleInterface result2 = cut2.getNewSubClassForInterface();
-				final String result3 = cut3.getValueFromNewSubClassForClass();
-				final String result4 = cut4.getValueFromNewSubClassForInterface();
+				final VisibleInterface result2 = cut1.getNewSubClassForInterface();
+				final String result3 = cut1.getValueFromNewSubClassForClass();
+				final String result4 = cut1.getValueFromNewSubClassForInterface();
 				RecordingAspect.turnOff();
 				System.out.println(result1);
 				System.out.println(result2);

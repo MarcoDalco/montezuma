@@ -1,6 +1,8 @@
 package dontanalisethis.untestable.until.privateclassreferencesareworkedaround;
 
 public class ClassVisibilityCaseExternalInvokedClass {
+	private final InvisibleClass INVISIBLE_CLASS = new InvisibleClass();
+
 	private class InvisibleClass extends VisibleClass implements VisibleInterface {
 
 		@Override
@@ -15,11 +17,11 @@ public class ClassVisibilityCaseExternalInvokedClass {
 
 	}
 
-	public VisibleClass getNewSubClassForClass() {
-		return new InvisibleClass();
+	public VisibleClass getSubClassForClass() {
+		return INVISIBLE_CLASS;
 	}
 
-	public VisibleInterface getNewSubClassForInterface() {
-		return new InvisibleClass();
+	public VisibleInterface getSubClassForInterface() {
+		return INVISIBLE_CLASS;
 	}
 }

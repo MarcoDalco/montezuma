@@ -5,19 +5,21 @@ import dontanalisethis.untestable.until.privateclassreferencesareworkedaround.Vi
 import dontanalisethis.untestable.until.privateclassreferencesareworkedaround.VisibleInterface;
 
 public class ClassVisibilityCaseMainClass {
+	private final ClassVisibilityCaseExternalInvokedClass CLASS_VISIBILITY_CASE_EXTERNAL_INVOKED_CLASS = new ClassVisibilityCaseExternalInvokedClass();
+
 	public VisibleClass getNewSubClassForClass() {
-		return new ClassVisibilityCaseExternalInvokedClass().getNewSubClassForClass();
+		return CLASS_VISIBILITY_CASE_EXTERNAL_INVOKED_CLASS.getSubClassForClass();
 	}
 
 	public VisibleInterface getNewSubClassForInterface() {
-		return new ClassVisibilityCaseExternalInvokedClass().getNewSubClassForInterface();
+		return CLASS_VISIBILITY_CASE_EXTERNAL_INVOKED_CLASS.getSubClassForInterface();
 	}
 	
 	public String getValueFromNewSubClassForClass() {
-		return new ClassVisibilityCaseExternalInvokedClass().getNewSubClassForClass().getNameForClassCase();
+		return CLASS_VISIBILITY_CASE_EXTERNAL_INVOKED_CLASS.getSubClassForClass().getNameForClassCase();
 	}
 
 	public String getValueFromNewSubClassForInterface() {
-		return new ClassVisibilityCaseExternalInvokedClass().getNewSubClassForInterface().getNameForInterfaceCase();
+		return CLASS_VISIBILITY_CASE_EXTERNAL_INVOKED_CLASS.getSubClassForInterface().getNameForInterfaceCase();
 	}
 }
