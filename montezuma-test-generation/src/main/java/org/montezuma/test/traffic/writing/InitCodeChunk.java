@@ -2,8 +2,10 @@ package org.montezuma.test.traffic.writing;
 
 public abstract class InitCodeChunk extends CodeChunk {
 	public final int	identityHashCode;
+	InitCodeChunk chunkOverridingDeclaration;
 
-	public InitCodeChunk(int identityHashCode) {
+	public InitCodeChunk(int identityHashCode, ObjectDeclarationScope parentObjectDeclarationScope) {
+		super(parentObjectDeclarationScope);
 		this.identityHashCode = identityHashCode;
 	}
 
@@ -22,5 +24,35 @@ public abstract class InitCodeChunk extends CodeChunk {
 	public void preprocess() {
 		generateRequiredInits();
 		super.preprocess();
+	}
+
+	@Override
+	public void render(StructuredTextFileWriter structuredTextFileWriter) {
+		if (chunkOverridingDeclaration != null)
+			return;
+
+		super.render(structuredTextFileWriter);
+	}
+
+	@Override
+	public VariableDeclarationRenderer getVisibleDeclarationRendererInScopeOrSubscopes(int identityHashCode) {
+		if (chunkOverridingDeclaration != null) {
+			return chunkOverridingDeclaration.getVisibleDeclarationRenderer(identityHashCode);
+		}
+
+		return super.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode);
+	}
+
+	@Override
+	public VariableDeclarationRenderer getVisibleDeclarationRenderer(int identityHashCode) {
+		if (chunkOverridingDeclaration != null) {
+			return chunkOverridingDeclaration.getVisibleDeclarationRenderer(identityHashCode);
+		}
+
+		return super.getVisibleDeclarationRenderer(identityHashCode);
+	}
+
+	boolean shouldBeRendered() {
+		return (chunkOverridingDeclaration == null);
 	}
 }

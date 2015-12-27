@@ -5,9 +5,9 @@ public class StructuredTextRenderer implements ExpressionRenderer {
 	private String								formattedText;
 	private ExpressionRenderer[]	expressionRenderers;
 
-	public StructuredTextRenderer(String formattedText, ExpressionRenderer... classNameRenderers) {
+	public StructuredTextRenderer(String formattedText, ExpressionRenderer... expressionRenderers) {
 		this.formattedText = formattedText;
-		this.expressionRenderers = classNameRenderers;
+		this.expressionRenderers = expressionRenderers;
 	}
 
 	@Override

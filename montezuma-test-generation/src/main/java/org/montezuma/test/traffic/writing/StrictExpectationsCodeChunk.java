@@ -4,7 +4,9 @@ import java.util.Collections;
 import java.util.List;
 
 public class StrictExpectationsCodeChunk extends CodeChunk {
-	public StrictExpectationsCodeChunk() {}
+	public StrictExpectationsCodeChunk(ObjectDeclarationScope parentObjectDeclarationScope) {
+		super(parentObjectDeclarationScope);
+	}
 
 	@Override
 	public String toString() {
@@ -26,6 +28,7 @@ public class StrictExpectationsCodeChunk extends CodeChunk {
 	}
 
 	public boolean canCombineWith(CodeChunk previous) {
+		// Should we check that they have the same parentObjectDeclarationScope? It should not be necessary, as already ensured otherwise.
 		return (previous instanceof StrictExpectationsCodeChunk); // By default!!
 	}
 
@@ -34,7 +37,7 @@ public class StrictExpectationsCodeChunk extends CodeChunk {
 			throw new IllegalStateException("BUG - this should have been invoked with a StrictExpectationCodeChunk instead of just this kind of parameter:" + codeChunk);
 		}
 
-		StrictExpectationsCodeChunk newChunk = new StrictExpectationsCodeChunk();
+		StrictExpectationsCodeChunk newChunk = new StrictExpectationsCodeChunk(parentObjectDeclarationScope);
 
 		newChunk.mergeAllFrom(this);
 		newChunk.mergeAllFrom((StrictExpectationsCodeChunk) codeChunk);

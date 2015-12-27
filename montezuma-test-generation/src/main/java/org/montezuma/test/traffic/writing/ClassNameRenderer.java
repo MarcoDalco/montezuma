@@ -15,4 +15,7 @@ public class ClassNameRenderer implements ExpressionRenderer {
 		return importsContainer.imports(canonicalName) ? clazz.getSimpleName() : clazz.getCanonicalName();
 	}
 
+	Class<?> getRenderedClass() {
+		return clazz;
+	}
 }

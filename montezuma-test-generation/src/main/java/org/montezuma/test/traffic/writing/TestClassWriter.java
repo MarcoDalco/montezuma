@@ -20,7 +20,7 @@ public class TestClassWriter implements ObjectDeclarationScope {
 	private List<TestMethod>									testMethods				= new ArrayList<>();
 	private final StructuredTextFileWriter		structuredFileWriter;
 	int																				testNumber				= 0;
-	private Set<Integer>											declaredIdentityHashCodes	= new HashSet<>();
+	private Map<Integer, VariableDeclarationRenderer>											declaredVariables	= new HashMap<>();
 	// The IdentityHashCodeGenerator must not generate duplicate IDs within the same test class, can do it in different
 	// test classes; that's why it's here.
 	public final IdentityHashCodeGenerator		identityHashCodeGenerator	= new IdentityHashCodeGenerator();
@@ -110,12 +110,27 @@ public class TestClassWriter implements ObjectDeclarationScope {
 	}
 
 	@Override
-	public void addDeclaredIdentityHashCode(int identityHashCode) {
-		declaredIdentityHashCodes.add(identityHashCode);
+	public void addDeclaredObject(int identityHashCode, VariableDeclarationRenderer variableDeclarationRenderer) {
+		declaredVariables.put(identityHashCode, variableDeclarationRenderer);
 	}
 
 	@Override
 	public boolean declaresIdentityHashCode(int identityHashCode) {
-		return declaredIdentityHashCodes.contains(identityHashCode);
+		return declaredVariables.containsKey(identityHashCode);
+	}
+
+	@Override
+	public boolean declaresOrCanSeeIdentityHashCode(int identityHashCode) {
+		return declaresIdentityHashCode(identityHashCode);
+	}
+
+	@Override
+	public VariableDeclarationRenderer getVisibleDeclarationRendererInScopeOrSubscopes(int identityHashCode) {
+		return getVisibleDeclarationRenderer(identityHashCode);
+	}
+
+	@Override
+	public VariableDeclarationRenderer getVisibleDeclarationRenderer(int identityHashCode) {
+		return declaredVariables.get(identityHashCode);
 	}
 }

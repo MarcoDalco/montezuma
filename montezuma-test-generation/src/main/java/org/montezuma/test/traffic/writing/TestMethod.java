@@ -2,9 +2,11 @@ package org.montezuma.test.traffic.writing;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class TestMethod implements TextRenderer, ObjectDeclarationScope {
@@ -12,7 +14,12 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 	public CodeChunk					instantiationMethodPart;
 	public List<CodeChunk>		codeChunks	= new ArrayList<>();
 	public CodeChunk					closure;
-	private Set<Integer>			declaredIdentityHashCodes	= new HashSet<>();
+	private Map<Integer, VariableDeclarationRenderer>			declaredVariables	= new HashMap<>();
+	final ObjectDeclarationScope parentObjectDeclarationScope;
+	
+	public TestMethod(ObjectDeclarationScope parentObjectDeclarationScope) {
+		this.parentObjectDeclarationScope = parentObjectDeclarationScope;
+	}
 
 	@Override
 	public void render(StructuredTextFileWriter structuredTextFileWriter) {
@@ -20,6 +27,8 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 		opening.declaredThrowables.addAll(allDeclaredThrowables);
 
 		opening.getRenderer().render(structuredTextFileWriter);
+		
+//		deduplicateVariableDeclarations();
 		LinkedHashMap<Integer, InitCodeChunk> requiredInits = collectAllTheRequiredInits();
 		for (CodeChunk codeChunk : requiredInits.values()) {
 			structuredTextFileWriter.appendChunk(2, codeChunk);
@@ -36,12 +45,12 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 	}
 
 	private LinkedHashMap<Integer, InitCodeChunk> collectAllTheRequiredInits() {
-		LinkedHashMap<Integer, InitCodeChunk> inits = new LinkedHashMap<Integer, InitCodeChunk>();
+		LinkedHashMap<Integer, InitCodeChunk> inits = new LinkedHashMap<>();
 
 		if (instantiationMethodPart != null)
 			inits.putAll(instantiationMethodPart.collectAllTheRequiredInits());
 		for (CodeChunk chunk : codeChunks) {
-			inits.putAll(chunk.collectAllTheRequiredInits());
+			CodeChunk.mergeRequiredInits(inits, chunk);
 		}
 
 		return inits;
@@ -83,12 +92,12 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 	}
 
 	public TestMethod cloneOpening(String methodName) {
-		TestMethod newMethod = new TestMethod();
+		TestMethod newMethod = new TestMethod(parentObjectDeclarationScope);
 
 		newMethod.opening = new TestMethodOpening(opening, methodName);
 		if (instantiationMethodPart != null) {
 			newMethod.instantiationMethodPart = new CodeChunk(instantiationMethodPart);
-			declaredIdentityHashCodes = new HashSet<>(instantiationMethodPart.declaredIdentityHashCodes);
+			declaredVariables = new HashMap<>(instantiationMethodPart.declarations);
 		}
 
 		return newMethod;
@@ -105,13 +114,13 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 	}
 
 	@Override
-	public void addDeclaredIdentityHashCode(int identityHashCode) {
-		declaredIdentityHashCodes.add(identityHashCode);
+	public void addDeclaredObject(int identityHashCode, VariableDeclarationRenderer variableDeclarationRenderer) {
+		declaredVariables.put(identityHashCode, variableDeclarationRenderer);
 	}
 
 	@Override
 	public boolean declaresIdentityHashCode(int identityHashCode) {
-		if (declaredIdentityHashCodes.contains(identityHashCode))
+		if (declaredVariables.containsKey(identityHashCode))
 			return true;
 
 		if ((instantiationMethodPart != null) && (instantiationMethodPart.declaresIdentityHashCode(identityHashCode)))
@@ -125,5 +134,41 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 				return true;
 
 			return false;
+	}
+
+	@Override
+	public boolean declaresOrCanSeeIdentityHashCode(int identityHashCode) {
+		if (declaresIdentityHashCode(identityHashCode))
+			return true;
+
+		return parentObjectDeclarationScope.declaresOrCanSeeIdentityHashCode(identityHashCode);
+	}
+
+	@Override
+	public VariableDeclarationRenderer getVisibleDeclarationRendererInScopeOrSubscopes(int identityHashCode) {
+		VariableDeclarationRenderer renderer;
+		if (null != (renderer = declaredVariables.get(identityHashCode)))
+			return renderer;
+
+		if ((instantiationMethodPart != null) && ((renderer = instantiationMethodPart.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode)) != null))
+				return renderer;
+
+		for (CodeChunk codeChunk : codeChunks)
+			if (null != (renderer = codeChunk.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode)))
+				return renderer;
+
+		if ((closure != null) && (null != (renderer = closure.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode))))
+				return renderer;
+
+		return null;
+	}
+
+	@Override
+	public VariableDeclarationRenderer getVisibleDeclarationRenderer(int identityHashCode) {
+		VariableDeclarationRenderer renderer = getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode);
+		if (renderer != null)
+			return renderer;
+
+		return parentObjectDeclarationScope.getVisibleDeclarationRenderer(identityHashCode);
 	}
 }

@@ -1,9 +1,11 @@
 package org.montezuma.test.traffic.writing;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
@@ -14,9 +16,12 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 	public List<CodeChunk>												methodPartsBeforeLines	= new ArrayList<>();
 	public List<ExpressionRenderer>								codeRenderers						= new ArrayList<>();
 	public List<CodeChunk>												methodPartsAfterLines		= new ArrayList<>();
-	public Set<Integer>														declaredIdentityHashCodes	= new HashSet<>();
+	public Map<Integer, VariableDeclarationRenderer>	declarations	= new HashMap<>();
+	public final ObjectDeclarationScope	parentObjectDeclarationScope;
 
-	public CodeChunk() {}
+	public CodeChunk(ObjectDeclarationScope	parentObjectDeclarationScope) {
+		this.parentObjectDeclarationScope =parentObjectDeclarationScope;
+	}
 
 	public CodeChunk(CodeChunk original) {
 		requiredImports.add(original.requiredImports);
@@ -26,6 +31,7 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 		methodPartsBeforeLines.addAll(original.methodPartsBeforeLines);
 		codeRenderers.addAll(original.codeRenderers); // Got to clone, instead?
 		methodPartsAfterLines.addAll(original.methodPartsAfterLines);
+		parentObjectDeclarationScope = original.parentObjectDeclarationScope;
 	}
 
 	protected TextRenderer getRenderer() {
@@ -119,10 +125,38 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 		requiredImports.add(codeChunk.requiredImports);
 		requiredMocks.addAll(codeChunk.requiredMocks);
 		declaredThrowables.addAll(codeChunk.declaredThrowables);
-		requiredInits.putAll(codeChunk.requiredInits);
+		// FIXME - At the moment it's overriding inits of the same objects (same identityHashCodes), but some of those Inits need to be preproceesed for other objects to use them (NewVariableNameRenderer), and merging them causes the overridden ones not to be preprocessed.
+		mergeRequiredInits(requiredInits, codeChunk);
 		methodPartsBeforeLines.addAll(codeChunk.methodPartsBeforeLines);
 		codeRenderers.addAll(codeChunk.codeRenderers);
 		methodPartsAfterLines.addAll(codeChunk.methodPartsAfterLines);
+	}
+
+	static void mergeRequiredInits(LinkedHashMap<Integer, InitCodeChunk> requiredInits, CodeChunk codeChunk) {
+		for (CodeChunk codeChunk2 : codeChunk.methodPartsBeforeLines)
+			mergeRequiredInits(requiredInits, codeChunk2.requiredInits);
+
+		mergeRequiredInits(requiredInits, codeChunk.requiredInits);
+
+		for (CodeChunk codeChunk2 : codeChunk.methodPartsAfterLines)
+			mergeRequiredInits(requiredInits, codeChunk2.requiredInits);
+//		codeChunk.requiredInits.clear();
+	}
+
+	private static void mergeRequiredInits(LinkedHashMap<Integer, InitCodeChunk> requiredInits, LinkedHashMap<Integer, InitCodeChunk> codeChunkRequiredInits) {
+		for (Map.Entry<Integer, InitCodeChunk> chunkInitEntry : codeChunkRequiredInits.entrySet()) {
+			Integer key = chunkInitEntry.getKey();
+			InitCodeChunk chunkInitValue = chunkInitEntry.getValue();
+
+			InitCodeChunk requiredInitValue = requiredInits.get(key);
+			if (requiredInitValue == null) {
+				requiredInits.put(key, chunkInitValue);
+			} else {
+				chunkInitValue.chunkOverridingDeclaration = requiredInitValue;
+			}
+		}
+
+		codeChunkRequiredInits.clear();
 	}
 
 	public static List<CodeChunk> tryCombine(List<CodeChunk> codeChunks) {
@@ -153,7 +187,8 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 			inits.putAll(codeChunk.collectAllTheRequiredInits());
 		}
 
-		inits.putAll(requiredInits);
+		// FIXME - At the moment it's overriding inits of the same objects (same identityHashCodes), but some of those Inits need to be preproceesed for other objects to use them (NewVariableNameRenderer), and merging them causes the overridden ones not to be preprocessed.
+		mergeRequiredInits(inits, this);
 		requiredInits.clear();
 
 		for (CodeChunk codeChunk : methodPartsAfterLines) {
@@ -174,13 +209,13 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 	}
 
 	@Override
-	public void addDeclaredIdentityHashCode(int identityHashCode) {
-		declaredIdentityHashCodes.add(identityHashCode);
+	public void addDeclaredObject(int identityHashCode, VariableDeclarationRenderer variableDeclarationRenderer) {
+		declarations.put(identityHashCode, variableDeclarationRenderer);
 	}
 
 	@Override
 	public boolean declaresIdentityHashCode(int identityHashCode) {
-		if (declaredIdentityHashCodes.contains(identityHashCode))
+		if (declarations.containsKey(identityHashCode))
 			return true;
 
 		for (CodeChunk codeChunk : requiredInits.values())
@@ -194,5 +229,45 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 				return true;
 
 		return false;
+	}
+
+	@Override
+	public boolean declaresOrCanSeeIdentityHashCode(int identityHashCode) {
+		if (declaresIdentityHashCode(identityHashCode))
+			return true;
+
+		return parentObjectDeclarationScope.declaresOrCanSeeIdentityHashCode(identityHashCode);
+	}
+
+	@Override
+	public VariableDeclarationRenderer getVisibleDeclarationRendererInScopeOrSubscopes(int identityHashCode) {
+		VariableDeclarationRenderer renderer;
+		if (null != (renderer = declarations.get(identityHashCode)))
+			return renderer;
+
+		for (CodeChunk codeChunk : requiredInits.values())
+			if (null != (renderer = codeChunk.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode)))
+				return renderer;
+		for (CodeChunk codeChunk : methodPartsBeforeLines)
+			if (null != (renderer = codeChunk.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode)))
+				return renderer;
+		for (CodeChunk codeChunk : methodPartsAfterLines)
+			if (null != (renderer = codeChunk.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode)))
+				return renderer;
+
+		return null;
+	}
+
+	@Override
+	public VariableDeclarationRenderer getVisibleDeclarationRenderer(int identityHashCode) {
+		VariableDeclarationRenderer renderer;
+		if (null != (renderer = getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode)))
+			return renderer;
+
+		return parentObjectDeclarationScope.getVisibleDeclarationRenderer(identityHashCode);
+	}
+
+	boolean shouldBeRendered() {
+		return true;
 	}
 }

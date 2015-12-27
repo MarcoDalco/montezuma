@@ -34,6 +34,9 @@ public class StructuredTextFileWriter {
 	}
 
 	public void appendChunk(int i, CodeChunk codeChunk) {
+		if (!codeChunk.shouldBeRendered())
+			return;
+
 		for (CodeChunk chunk : codeChunk.requiredInits.values()) {
 			appendChunk(i, chunk);
 		}

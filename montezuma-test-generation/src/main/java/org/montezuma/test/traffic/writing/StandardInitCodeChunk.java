@@ -22,8 +22,8 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 	private final RenderersStrategy	renderersStrategy;
 	private final TestClassWriter		testClassWriter;
 
-	StandardInitCodeChunk(int identityHashCode, Object arg, Class<?> argClass, int argID, String variableNamePrefix, ImportsContainer importsContainer, MockingStrategy mockingStrategy, RenderersStrategy renderersStrategy, TestClassWriter testClassWriter) {
-		super(identityHashCode);
+	StandardInitCodeChunk(int identityHashCode, Object arg, Class<?> argClass, int argID, String variableNamePrefix, ImportsContainer importsContainer, MockingStrategy mockingStrategy, RenderersStrategy renderersStrategy, TestClassWriter testClassWriter, ObjectDeclarationScope parentObjectDeclarationScope) {
+		super(identityHashCode, parentObjectDeclarationScope);
 		this.arg = arg;
 		this.argClass = argClass;
 		this.argID = argID;
@@ -44,13 +44,14 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 		// maincodeChunk.requiredInits.add(variableCodeChunk);
 		if ((arg instanceof Number) || (arg instanceof Boolean)) {
 			if (argClass.equals(BigDecimal.class)) {
-				codeRenderers.add(new StructuredTextRenderer("final %s %s = %s;", new ClassNameRenderer(argClass, importsContainer), new NewGeneratedVariableNameRenderer(argID, argClass, variableNamePrefix), new ExpressionRenderer() {
+				VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;", argClass, new ClassNameRenderer(argClass, importsContainer), new NewGeneratedVariableNameRenderer(argID, argClass, importsContainer, this, variableNamePrefix), new ExpressionRenderer() {
 					@Override
 					public String render() {
 						return getBigDecimalInitialiser(arg);
 					}
-				}));
-				addDeclaredIdentityHashCode(argID);
+				});
+				codeRenderers.add(variableDeclarationRenderer);
+				addDeclaredObject(argID, variableDeclarationRenderer);
 			} else {
 				final ExpressionRenderer initExpressionRenderer;
 				if (argClass.equals(int.class) || argClass.equals(Integer.class)) {
@@ -89,28 +90,28 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 						}
 					};
 				}
-				final String actualArgType = argClass.getCanonicalName();
-				final String declaredArgClassName = (actualArgType.startsWith("java") ? argClass.getSimpleName() : actualArgType);
-				codeRenderers.add(
-						new StructuredTextRenderer("final " + declaredArgClassName + " %s = %s;",
-								new NewGeneratedVariableNameRenderer(argID, argClass, variableNamePrefix), initExpressionRenderer)
-				);
-				addDeclaredIdentityHashCode(argID);
+				// TODO - TOCHECK - check how the class name is now rendered in case its package is java*
+				// final String actualArgType = argClass.getCanonicalName();
+				// final String declaredArgClassName = (actualArgType.startsWith("java") ? argClass.getSimpleName() : actualArgType);
+				VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;",
+						argClass, new ClassNameRenderer(argClass, importsContainer), new NewGeneratedVariableNameRenderer(argID, argClass, importsContainer, this, variableNamePrefix), initExpressionRenderer);
+				codeRenderers.add(variableDeclarationRenderer);
+				addDeclaredObject(argID, variableDeclarationRenderer);
 			}
 		} else if (argClass == String.class) {
-			codeRenderers.add(
-					new StructuredTextRenderer("final %s %s = \"%s\";",
-							new ClassNameRenderer(argClass, importsContainer),
-							new NewGeneratedVariableNameRenderer(argID, argClass, variableNamePrefix),
-							new ExpressionRenderer() {
-								@Override
-								public String render() {
-									return ((String) arg).replaceAll("\\\\", "\\\\\\\\").replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r").replaceAll("\"", "\\\\\"");
-								}
-							}
-					)
+			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = \"%s\";",
+					argClass,
+					new ClassNameRenderer(argClass, importsContainer),
+					new NewGeneratedVariableNameRenderer(argID, argClass, importsContainer, this, variableNamePrefix),
+					new ExpressionRenderer() {
+						@Override
+						public String render() {
+							return ((String) arg).replaceAll("\\\\", "\\\\\\\\").replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r").replaceAll("\"", "\\\\\"");
+						}
+					}
 			);
-			addDeclaredIdentityHashCode(argID);
+			codeRenderers.add(variableDeclarationRenderer);
+			addDeclaredObject(argID, variableDeclarationRenderer);
 		} else if (argClass.isAssignableFrom(List.class) && argClass.getPackage().getName().startsWith("java.util")) {
 			@SuppressWarnings("unchecked") final List<Object> rebuiltRuntimeList = (List<Object>) arg;
 			final int listSize = rebuiltRuntimeList.size();
@@ -124,10 +125,11 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 				i++;
 			}
 			final ClassNameRenderer declaredClassNameRenderer = new ClassNameRenderer(argClass, importsContainer);
-			final NewGeneratedVariableNameRenderer listNameRenderer = new NewGeneratedVariableNameRenderer(argID, argClass, variableNamePrefix);
+			final NewGeneratedVariableNameRenderer listNameRenderer = new NewGeneratedVariableNameRenderer(argID, argClass, importsContainer, this, variableNamePrefix);
 			final ClassNameRenderer actualClassNameRenderer = new ClassNameRenderer(arg.getClass(), importsContainer);
-			codeRenderers.add(new StructuredTextRenderer("final %s %s = new %s();", declaredClassNameRenderer, listNameRenderer, actualClassNameRenderer));
-			addDeclaredIdentityHashCode(argID);
+			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s();", argClass, declaredClassNameRenderer, listNameRenderer, actualClassNameRenderer);
+			codeRenderers.add(variableDeclarationRenderer);
+			addDeclaredObject(argID, variableDeclarationRenderer);
 			buildList(this, rebuiltRuntimeList, listElementTypes, listElementIDs, /* this could be an ExistingVariableNameRenderer */ listNameRenderer);
 		} else if (argClass.isAssignableFrom(Set.class)) {} else if (argClass.isAssignableFrom(Map.class)) {} else if (argClass.isArray()) {
 			final Object[] serialisedObjectsArray = (Object[]) arg;
@@ -152,13 +154,16 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			StructuredTextRenderer arrayObjectsRenderer =
 					renderersStrategy.buildInvocationParameters(this, rebuiltRuntimeArray, arrayArgTypes, arrayArgIDs, importsContainer, mockingStrategy, testClassWriter);
 			final ClassNameRenderer classNameRenderer = new ClassNameRenderer(argClass, importsContainer);
-			codeRenderers.add(new StructuredTextRenderer(
-					"final %s %s = new %s {%s};", classNameRenderer, new NewGeneratedVariableNameRenderer(argID, argClass, variableNamePrefix), classNameRenderer, arrayObjectsRenderer));
-			addDeclaredIdentityHashCode(argID);
+			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer(
+					"final %s %s = new %s {%s};", argClass, classNameRenderer, new NewGeneratedVariableNameRenderer(argID, argClass, importsContainer, this, variableNamePrefix), classNameRenderer, arrayObjectsRenderer);
+			codeRenderers.add(variableDeclarationRenderer);
+			addDeclaredObject(argID, variableDeclarationRenderer);
 		} else {
 			// Using mocks:
 			if (mockingStrategy.mustStub(arg) || mockingStrategy.shouldStub(argClass)) {
-				renderersStrategy.addStub(false, argID, argClass, renderersStrategy.getStubbedFieldNameRenderer(argClass, argID), importsContainer, testClassWriter);
+				NewGeneratedVariableNameRenderer stubbedFieldNameRenderer = renderersStrategy.getStubbedFieldNameRenderer(argClass, importsContainer, testClassWriter, argID);
+				VariableDeclarationRenderer mockedVariableDeclarationRenderer = renderersStrategy.addStub(false, argID, argClass, stubbedFieldNameRenderer, importsContainer, testClassWriter);
+				addDeclaredObject(argID, mockedVariableDeclarationRenderer);
 			} else {
 				codeRenderers.add(renderersStrategy.addRealParameter(this, argClass, arg, argID, importsContainer, testClassWriter.identityHashCodeGenerator));
 			}
@@ -180,27 +185,32 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 		return bigIntInit;
 	}
 
-	private void buildList(InitCodeChunk maincodeChunk, List<Object> rebuiltRuntimeList, String[] listElementTypes, int[] listElementIDs, NewGeneratedVariableNameRenderer listNameRenderer) {
+	private void buildList(InitCodeChunk mainCodeChunk, List<Object> rebuiltRuntimeList, String[] listElementTypes, int[] listElementIDs, NewGeneratedVariableNameRenderer listNameRenderer) {
 		int i = 0;
 		for (Iterator<?> runtimeObjectsIterator = rebuiltRuntimeList.iterator(); runtimeObjectsIterator.hasNext(); i++) {
 			Object element = runtimeObjectsIterator.next();
 
 			if (element == null) {
-				maincodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(null);", listNameRenderer));
+				mainCodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(null);", listNameRenderer));
 			} else {
 				final Class<?> elementClass = (element instanceof MustMock ? ((MustMock) element).clazz : element.getClass());
 				final int elementID = listElementIDs[i];
 
-				final InitCodeChunk variableCodeChunk = createInitCodeChunk(element, elementClass, elementID, "given");
-				maincodeChunk.requiredInits.put(elementID, variableCodeChunk);
-				maincodeChunk.addDeclaredIdentityHashCode(elementID);
+				// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL or is it correct? I'm now thinking the latter.
+				InitCodeChunk variableCodeChunk = mainCodeChunk.requiredInits.get(elementID);
+				if (variableCodeChunk == null) {
+					variableCodeChunk = createInitCodeChunk(element, elementClass, elementID, "given", mainCodeChunk);
+					mainCodeChunk.requiredInits.put(elementID, variableCodeChunk);
+				}
+				// TODO - TOCHECK - The following should not be necessary, unless assumed by some other code to be there already, before variableCodeChunk is evaluated
+				// maincodeChunk.addDeclaredObject(elementID, variableDeclarationRenderer); // Is it correct, here?
 
-				maincodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(%s);", listNameRenderer, new ExistingVariableNameRenderer(elementID)));
+				mainCodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(%s);", listNameRenderer, new ExistingVariableNameRenderer(elementID, elementClass, importsContainer, mainCodeChunk)));
 			}
 		}
 	}
 
-	private InitCodeChunk createInitCodeChunk(final Object arg, final Class<?> argClass, final int argID, final String variableNamePrefix) {
-		return new StandardInitCodeChunk(argID, arg, argClass, argID, variableNamePrefix, importsContainer, mockingStrategy, renderersStrategy, testClassWriter);
+	private InitCodeChunk createInitCodeChunk(final Object arg, final Class<?> argClass, final int argID, final String variableNamePrefix, ObjectDeclarationScope parentObjectDeclarationScope) {
+		return new StandardInitCodeChunk(argID, arg, argClass, argID, variableNamePrefix, importsContainer, mockingStrategy, renderersStrategy, testClassWriter, parentObjectDeclarationScope);
 	}
 }

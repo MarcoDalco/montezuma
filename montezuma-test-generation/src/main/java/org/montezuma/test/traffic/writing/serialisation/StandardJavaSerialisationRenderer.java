@@ -6,6 +6,7 @@ import org.montezuma.test.traffic.writing.ExpressionRenderer;
 import org.montezuma.test.traffic.writing.IdentityHashCodeGenerator;
 import org.montezuma.test.traffic.writing.Import;
 import org.montezuma.test.traffic.writing.ImportsContainer;
+import org.montezuma.test.traffic.writing.ObjectDeclarationScope;
 
 import java.io.IOException;
 
@@ -13,7 +14,7 @@ public class StandardJavaSerialisationRenderer implements SerialisationRenderer 
 	private Serialiser	serialiser	= SerialisationRendererFactory.getSerialiser();
 
 	@Override
-	public ExpressionRenderer getDeserialisationCodeChunkFor(CodeChunk codeChunkNeedingDeserialisation, Object object, ImportsContainer importsContainer, IdentityHashCodeGenerator identityHashCodeGenerator) {
+	public ExpressionRenderer getDeserialisationCodeChunkFor(CodeChunk codeChunkNeedingDeserialisation, Object object, ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope, IdentityHashCodeGenerator identityHashCodeGenerator) {
 		try {
 			return internalGetDeserialisationCodeChunkFor(codeChunkNeedingDeserialisation, object, importsContainer);
 		}

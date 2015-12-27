@@ -2,13 +2,11 @@ package org.montezuma.test.traffic.writing;
 
 
 public class NewGeneratedVariableNameRenderer extends NewVariableNameRenderer {
-	private final Class<?>							varClass;
 	private final String								namePrefix;
 	private String					name;
 
-	public NewGeneratedVariableNameRenderer(int identityHashCode, Class<?> varClass, String namePrefix) {
-		super(identityHashCode);
-		this.varClass = varClass;
+	public NewGeneratedVariableNameRenderer(int identityHashCode, Class<?> varClass, ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope, String namePrefix) {
+		super(identityHashCode, varClass, importsContainer, objectDeclarationScope);
 		this.namePrefix = namePrefix;
 	}
 

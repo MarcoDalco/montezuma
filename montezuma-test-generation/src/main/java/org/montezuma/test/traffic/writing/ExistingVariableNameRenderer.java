@@ -1,15 +1,19 @@
 package org.montezuma.test.traffic.writing;
 
-public class ExistingVariableNameRenderer implements ExpressionRenderer {
-	public final int										identityHashCode;
+public class ExistingVariableNameRenderer extends NewVariableNameRenderer {
 
-	public ExistingVariableNameRenderer(int identityHashCode) {
-		this.identityHashCode = identityHashCode;
+	public ExistingVariableNameRenderer(int identityHashCode, Class<?> varClass, ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope) {
+		super(identityHashCode, varClass, importsContainer, objectDeclarationScope);
 	}
 
 	@Override
-	public String render() {
-		return NewVariableNameRenderer.variableNamesRenderers.get(identityHashCode).getName();
+	protected String getName() {
+	return NewVariableNameRenderer.variableNamesRenderers.get(identityHashCode).getName();
 	}
+
+//	@Override
+//	public String render() {
+//		return NewVariableNameRenderer.variableNamesRenderers.get(identityHashCode).getName();
+//	}
 
 }
