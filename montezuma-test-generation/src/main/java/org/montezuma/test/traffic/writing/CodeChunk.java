@@ -152,6 +152,12 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 			if (requiredInitValue == null) {
 				requiredInits.put(key, chunkInitValue);
 			} else {
+				assert((chunkInitValue instanceof StandardInitCodeChunk) == (requiredInitValue instanceof StandardInitCodeChunk));
+				if (chunkInitValue instanceof StandardInitCodeChunk) {
+					StandardInitCodeChunk s1 = (StandardInitCodeChunk) chunkInitValue;
+					StandardInitCodeChunk s2 = (StandardInitCodeChunk) requiredInitValue;
+					assert(s1.argClass == s2.argClass);
+				}
 				chunkInitValue.chunkOverridingDeclaration = requiredInitValue;
 			}
 		}

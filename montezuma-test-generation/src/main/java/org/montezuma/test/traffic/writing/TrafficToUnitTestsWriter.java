@@ -71,12 +71,12 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 	private void generateTestClasses(int testClassNumber, Map<Integer, List<InvocationData>> invocationDataListsMap, Class<?> clazz, List<String> dontMockRegexList, String outputClassPath) throws IOException, ClassNotFoundException, NoSuchMethodException, SecurityException {
 		final String className = clazz.getSimpleName();
 		final String testClassName = className + testClassNumber + "Test";
-		final String packageName = clazz.getPackage().getName();
 
-		TestClassWriter classWriter = new TestClassWriter(packageName, testClassName);
-		classWriter.addImport("mockit.integration.junit4.JMockit");
+		TestClassWriter classWriter = new TestClassWriter(clazz, testClassName);
 		classWriter.addImport("org.junit.Test");
 		classWriter.addImport("org.junit.runner.RunWith");
+		String mockingFrameworkRunwithClassCanonicalName = MockingFrameworkFactory.getMockingFramework().getRunwithClassCanonicalName();
+		classWriter.addImport(mockingFrameworkRunwithClassCanonicalName);
 		for (Map.Entry<Integer, List<InvocationData>> invocationDataListEntry : invocationDataListsMap.entrySet()) {
 			TestMethodsWriter methodsWriter =
 					new TestMethodsWriter(invocationDataListEntry.getValue(), clazz, invocationDataListEntry.getKey(), classWriter, dontMockRegexList, new ImmutablesChecker(), classWriter.importsContainer);

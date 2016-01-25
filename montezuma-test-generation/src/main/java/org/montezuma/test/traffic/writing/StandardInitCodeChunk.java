@@ -13,7 +13,7 @@ import java.util.Set;
 
 public final class StandardInitCodeChunk extends InitCodeChunk {
 	private final Object		arg;
-	private final Class<?>	argClass;
+	final Class<?>	argClass;
 	private final int				argID;
 	private final String		variableNamePrefix;
 	private final ImportsContainer	importsContainer;
@@ -161,9 +161,11 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 		} else {
 			// Using mocks:
 			if (mockingStrategy.mustStub(arg) || mockingStrategy.shouldStub(argClass)) {
-				NewGeneratedVariableNameRenderer stubbedFieldNameRenderer = renderersStrategy.getStubbedFieldNameRenderer(argClass, importsContainer, testClassWriter, argID);
-				VariableDeclarationRenderer mockedVariableDeclarationRenderer = renderersStrategy.addStub(false, argID, argClass, stubbedFieldNameRenderer, importsContainer, testClassWriter);
-				addDeclaredObject(argID, mockedVariableDeclarationRenderer);
+				// TO CHECK - getting the visible superclass MIGHT not be necessary.
+				final Class<?> declaredClass = ReflectionUtils.getVisibleSuperClass(argClass, testClassWriter.testClass);
+				NewGeneratedVariableNameRenderer stubbedFieldNameRenderer = renderersStrategy.getStubbedFieldNameRenderer(declaredClass, importsContainer, testClassWriter, argID);
+				VariableDeclarationRenderer mockedVariableDeclarationRenderer = MockingFrameworkFactory.getMockingFramework().addStub(false, argID, declaredClass, stubbedFieldNameRenderer, importsContainer, testClassWriter);
+//				addDeclaredObject(argID, mockedVariableDeclarationRenderer);
 			} else {
 				codeRenderers.add(renderersStrategy.addRealParameter(this, argClass, arg, argID, importsContainer, testClassWriter.identityHashCodeGenerator));
 			}
@@ -198,7 +200,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 
 				// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL or is it correct? I'm now thinking the latter.
 				InitCodeChunk variableCodeChunk = mainCodeChunk.requiredInits.get(elementID);
-				if (variableCodeChunk == null) {
+				if ((variableCodeChunk == null) || !(MockingFrameworkFactory.getMockingFramework().canStubMultipleTypeWithOneStub() || ((variableCodeChunk instanceof StandardInitCodeChunk) && (argClass.isAssignableFrom(((StandardInitCodeChunk) variableCodeChunk).argClass))))) {
 					variableCodeChunk = createInitCodeChunk(element, elementClass, elementID, "given", mainCodeChunk);
 					mainCodeChunk.requiredInits.put(elementID, variableCodeChunk);
 				}

@@ -13,9 +13,10 @@ import java.util.TreeSet;
 
 public class TestClassWriter implements ObjectDeclarationScope {
 
-	private String														packageName;
-	private String														testClassName;
-	protected ImportsContainer								importsContainer	= new ImportsContainer();
+	final private String											packageName;
+	final private String											testClassName;
+	final Class<?>														testClass;
+	ImportsContainer													importsContainer					= new ImportsContainer();
 	private Map<Integer, ExpressionRenderer>	fieldRenderers		= new HashMap<>();
 	private List<TestMethod>									testMethods				= new ArrayList<>();
 	private final StructuredTextFileWriter		structuredFileWriter;
@@ -26,9 +27,10 @@ public class TestClassWriter implements ObjectDeclarationScope {
 	public final IdentityHashCodeGenerator		identityHashCodeGenerator	= new IdentityHashCodeGenerator();
 	static final String												FILE_SEPARATOR		= System.getProperty("file.separator");
 
-	public TestClassWriter(String packageName, String testClassName) {
-		this.packageName = packageName;
+	public TestClassWriter(Class<?> clazz, String testClassName) {
+		this.packageName = clazz.getPackage().getName();
 		this.testClassName = testClassName;
+		this.testClass = clazz;
 		this.structuredFileWriter = new StructuredTextFileWriter();
 	}
 
@@ -80,7 +82,8 @@ public class TestClassWriter implements ObjectDeclarationScope {
 	}
 
 	private void appendClassDeclaration() {
-		structuredFileWriter.appendLine(0, "@RunWith(JMockit.class)");
+		String mockingFrameworkRunwithClassName = MockingFrameworkFactory.getMockingFramework().getRunwithClassName();
+		structuredFileWriter.appendLine(0, "@RunWith(" + mockingFrameworkRunwithClassName + ".class)");
 		structuredFileWriter.appendLine(0, "public class " + testClassName + " {");
 	}
 

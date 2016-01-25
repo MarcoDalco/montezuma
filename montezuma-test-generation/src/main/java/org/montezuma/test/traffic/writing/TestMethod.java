@@ -93,11 +93,12 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 
 	public TestMethod cloneOpening(String methodName) {
 		TestMethod newMethod = new TestMethod(parentObjectDeclarationScope);
+		newMethod.declaredVariables = new HashMap<>(declaredVariables);
 
 		newMethod.opening = new TestMethodOpening(opening, methodName);
 		if (instantiationMethodPart != null) {
 			newMethod.instantiationMethodPart = new CodeChunk(instantiationMethodPart);
-			declaredVariables = new HashMap<>(instantiationMethodPart.declarations);
+			newMethod.instantiationMethodPart.declarations = new HashMap<>(instantiationMethodPart.declarations);
 		}
 
 		return newMethod;

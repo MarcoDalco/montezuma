@@ -8,11 +8,9 @@ import org.montezuma.test.traffic.serialisers.Deserialiser;
 import org.montezuma.test.traffic.serialisers.SerialisationFactory;
 
 import java.io.IOException;
-import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -113,7 +111,7 @@ public class TestMethodsWriter {
 				// Mind you: all the objects held by the returned value might need to be handled the same way, recursively: new
 				// identityHashCode, to be recreated independently
 
-				Method invokedMethod = this.testClass.getDeclaredMethod(methodName, buildParameterTypes(argTypes));
+				Method invokedMethod = this.testClass.getDeclaredMethod(methodName, ReflectionUtils.buildParameterTypes(argTypes));
 				final Class<?> returnType = invokedMethod.getReturnType();
 				int returnValueIdentityHascode = testClassWriter.identityHashCodeGenerator.generateIdentityHashCode();
 				final NewGeneratedVariableNameRenderer returnValueNameRenderer =
@@ -144,7 +142,7 @@ public class TestMethodsWriter {
 				{
 					Object returnValue = deserialiser.deserialise(serialisedReturnValue);
 					final int expectedReturnValueID = /* testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); */ shouldAssertSame ? returnValueIdentityHascode : returnValueID;
-					ExpressionRenderer expectedValueNameRenderer = buildExpectedReturnValue(currentMethodPart, returnValue, returnType, expectedReturnValueID, currentMethodPart);
+					ExpressionRenderer expectedValueNameRenderer = renderersStrategy.buildExpectedReturnValue(currentMethodPart, returnValue, returnType, expectedReturnValueID, currentMethodPart, importsContainer, mockingStrategy, renderersStrategy, testClassWriter);
 					final ExpressionRenderer expressionRenderer;
 					if (expectedValueNameRenderer instanceof NewVariableNameRenderer) {
 						// TODO - when the returned values are primitive wrappers (instances of java.lang.Number descendants), cast
@@ -216,7 +214,7 @@ public class TestMethodsWriter {
 			// TODO - check if the target is a MustMock, but at the moment CallInvocationData does not serialise the target
 			// class, so I can't determine if it should be a MustMock.
 			if (mockingStrategy.shouldStub(targetClazz)) {
-				expectationParts.add(getStrictExpectationPart(callData, objectDeclarationScope));
+				expectationParts.add(MockingFrameworkFactory.getMockingFramework().getStrictExpectationPart(callData, objectDeclarationScope, testClassWriter, renderersStrategy, importsContainer, mockingStrategy, deserialiser));
 			}
 		}
 
@@ -228,118 +226,6 @@ public class TestMethodsWriter {
 		mainMethodPart.addExpressionRenderer(ExpressionRenderer.stringRenderer("} // Closing test"));
 		testMethod.closure = mainMethodPart;
 		return testMethod;
-	}
-
-	private CodeChunk getStrictExpectationPart(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
-		this.testClassWriter.addImport("mockit.StrictExpectations");
-		final StrictExpectationsCodeChunk codeChunk = new StrictExpectationsCodeChunk(objectDeclarationScope);
-		String methodSignature = callData.signature;
-		final int indexOfSeparatorBetweenMethodNameAndArgs = methodSignature.indexOf(Common.METHOD_NAME_TO_ARGS_SEPARATOR);
-		final String argTypesSubstring = methodSignature.substring(1 + indexOfSeparatorBetweenMethodNameAndArgs);
-		final String[] argTypes = (argTypesSubstring.length() == 0 ? new String[] {} : argTypesSubstring.split(Common.ARGS_SEPARATOR));
-		Class<?>[] parameterTypes = buildParameterTypes(argTypes);
-
-		String methodName = methodSignature.substring(0, indexOfSeparatorBetweenMethodNameAndArgs);
-		final Class<?> declaringType = callData.declaringType;
-		final boolean isConstructorInvocation = methodName.equals("<init>");
-		// TODO - as part of the work to declare only visible classes: limiting the targetClazzOrDeclaredType to callData.declaringType would be correct, but at the moment, this could override the need for the object-on-which-the-method-is-invoked to have a more specific type definition (subclass or subinterface of callData.declaringType), so until a more sophisticated mechanism is in place to determine the actual type of a stub, this should not be in place - although it doesn't seem to mess up the generated tests.
-		// Class<?> targetClazzOrDeclaringType = callData.declaringType; (and remove the ternary operator assigned just below, as redundant.
-		Class<?> targetClazzOrDeclaringType = callData.targetClazz;
-		targetClazzOrDeclaringType = (targetClazzOrDeclaringType == null ? declaringType : targetClazzOrDeclaringType);
-		// "getMethod" returns the method corresponding to that signature, even if declared in superclasses or
-		// (super)interfaces, but not private ones, and I'm not sure how it matches non-public ones not accessible from this
-		// very class/package,
-		// while "getDeclaredMethod" returns only methods declared by that specified class, but considers private methods
-		// too. Private methods should not be tested or intercepted, hence the choice to use "getMethod" instead, but look
-		// out for "NoSuchMethodException" exceptions
-		// TODO - This getMethod/getDeclaredMethod inversion is actually a workaround as AspectJ is returning
-		// java.sql.PreparedStatement as the Declaring Class of "close()", when it's actually java.sql.Statement from
-		// "Autocloseable". Understand and fix better.
-		final Executable declaredMethod = (isConstructorInvocation ? targetClazzOrDeclaringType.getDeclaredConstructor(parameterTypes) : declaringType.getMethod(methodName, parameterTypes));
-		@SuppressWarnings("unchecked") final Class<? extends Throwable>[] exceptionTypes = (Class<? extends Throwable>[]) declaredMethod.getExceptionTypes();
-		List<Class<? extends Throwable>> exceptionTypesList = Arrays.asList(exceptionTypes);
-		codeChunk.declaredThrowables.addAll(exceptionTypesList);
-
-		final int id = isConstructorInvocation ? callData.returnValueID : callData.id;
-		// TODO - handle null pointers: id == 0 for non-static invocations to null pointers too!
-		final boolean isStaticMethod = Modifier.isStatic(callData.modifiers);
-		final int identityHashCode = isStaticMethod ? testClassWriter.identityHashCodeGenerator.generateIdentityHashCodeForStaticClass(declaringType) : id;
-		final NewGeneratedVariableNameRenderer mockedFieldNameRenderer = renderersStrategy.getStubbedFieldNameRenderer(targetClazzOrDeclaringType, importsContainer, testClassWriter, identityHashCode);
-		// TODO - invoke addMock with a different Class<?> than targetClazzOrDeclaringType if targetClazzOrDeclaringType is
-		// not visible (e.g.: private class), like we already do for expected return values.
-		if (!testClassWriter.declaresIdentityHashCode(identityHashCode))
-			renderersStrategy.addStub(isStaticMethod || isConstructorInvocation, identityHashCode, targetClazzOrDeclaringType, mockedFieldNameRenderer, importsContainer, testClassWriter);
-		Object[] methodArgs = TrafficReader.getDeserialisedArgs(callData.serialisedArgs);
-		final StructuredTextRenderer invocationParameters =
-				renderersStrategy.buildInvocationParameters(codeChunk, methodArgs, argTypes, callData.argIDs, importsContainer, mockingStrategy, testClassWriter);
-		final ExpressionRenderer invocationExpressionRenderer =
-				isConstructorInvocation ?
-						new StructuredTextRenderer("new %s(%s);",
-								new ClassNameRenderer(declaringType, importsContainer),
-								invocationParameters)
-						: new StructuredTextRenderer("%s.%s(%s);",
-								isStaticMethod ?
-										new ClassNameRenderer(declaringType, importsContainer)
-										: new ExistingVariableNameRenderer(callData.id, declaringType, importsContainer, testClassWriter),
-								ExpressionRenderer.stringRenderer(methodName),
-								invocationParameters);
-		final ExpressionRenderer timesExpressionRenderer = ExpressionRenderer.stringRenderer(" times = 1;");
-		final byte[] serialisedReturnValue = callData.serialisedReturnValue;
-		// TODO - implement behaviour of when a Throwable is thrown rather than a result returned: serialisedReturnValue is
-		// null, but returnValueID and serialisedThrowable aren't. Return the throwable.
-		final Class<?> returnType = (isConstructorInvocation ? targetClazzOrDeclaringType : ((Method) declaredMethod).getReturnType());
-		final ExpressionRenderer resultExpressionRenderer =
-				(serialisedReturnValue == null ? ExpressionRenderer.nullRenderer() : new StructuredTextRenderer(" result = %s;", buildExpectedReturnValue(
-						codeChunk, serialisedReturnValue, returnType, callData.returnValueID, objectDeclarationScope)));
-		codeChunk.addExpressionRenderer(new StructuredTextRenderer("%s%s%s", invocationExpressionRenderer, timesExpressionRenderer, resultExpressionRenderer));
-
-		return codeChunk;
-	}
-
-	protected Class<?>[] buildParameterTypes(final String[] argTypes) throws ClassNotFoundException {
-		Class<?>[] parameterTypes = new Class<?>[argTypes.length];
-		for (int i = 0; i < argTypes.length; i++) {
-			final String argTypeString = argTypes[i];
-			Class<?> argClass = Common.primitiveClasses.get(argTypeString);
-			if (argClass == null) {
-				argClass = Class.forName(argTypeString);
-			}
-			parameterTypes[i] = argClass;
-		}
-		return parameterTypes;
-	}
-
-	private ExpressionRenderer buildExpectedReturnValue(CodeChunk codeChunk, byte[] serialisedReturnValue, Class<?> returnValueDeclaredType, int identityHashCode, ObjectDeclarationScope objectDeclarationScope) throws ClassNotFoundException, IOException {
-		Object returnValue = deserialiser.deserialise(serialisedReturnValue);
-		return buildExpectedReturnValue(codeChunk, returnValue, returnValueDeclaredType, identityHashCode, objectDeclarationScope);
-	}
-
-	private ExpressionRenderer buildExpectedReturnValue(CodeChunk codeChunk, Object returnValue, Class<?> returnValueDeclaredType, int identityHashCode, ObjectDeclarationScope objectDeclarationScope) throws ClassNotFoundException, IOException {
-		if (returnValue == null) {
-			return ExpressionRenderer.stringRenderer("null");
-		}
-
-		final Object arg = returnValue;
-		final Class<?> argClass = returnValueDeclaredType;
-		final int argID = identityHashCode;
-
-		// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL.
-		if (codeChunk.declaresOrCanSeeIdentityHashCode(identityHashCode))
-			return new ExistingVariableNameRenderer(identityHashCode, argClass, importsContainer, objectDeclarationScope);
-
-		InitCodeChunk returnValueInitCodeChunk = codeChunk.requiredInits.get(identityHashCode);
-		if (returnValueInitCodeChunk == null) {
-			returnValueInitCodeChunk = new StandardInitCodeChunk(argID, arg, argClass, argID, "expected", importsContainer, mockingStrategy, renderersStrategy, testClassWriter, codeChunk);
-			codeChunk.requiredInits.put(identityHashCode, returnValueInitCodeChunk);
-		}
-
-		// final Class<? extends Object> returnValueClass = (returnValue instanceof MustMock ? ((MustMock)
-		// returnValue).clazz : returnValue.getClass());
-		// TODO - To be checked with downcast invocations, i.e. when the object - say it's returned by an expected
-		// invocation - is then cast by the cut to a more specific type and a method from that type is invoked. That would
-		// be a good reason to use returnValueClass (returnValue.getClass()), but such class might not be visible (private
-		// inner class).
-		return new NewGeneratedVariableNameRenderer(identityHashCode, returnValueDeclaredType, importsContainer, returnValueInitCodeChunk, "expected");
 	}
 
 }

@@ -3,6 +3,7 @@ package org.montezuma.test.traffic.writing;
 import org.montezuma.test.traffic.MustMock;
 import org.montezuma.test.traffic.writing.serialisation.SerialisationRendererFactory;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,27 +26,6 @@ public class RenderersStrategy {
 		return SerialisationRendererFactory.getSerialisationRenderer().getDeserialisationCodeChunkFor(codeChunk, object, importsContainer, objectDeclarationScope, identityHashCodeGenerator);
 	}
 
-	VariableDeclarationRenderer addStub(boolean isStaticStub, int identityHashCode, Class<?> argClass, final NewGeneratedVariableNameRenderer newGeneratedVariableNameRenderer, ImportsContainer importsContainer, TestClassWriter testClassWriter) {
-		// TODO - add mocks to a "(Stubbed)FieldContainer" instead of the testClassWriter
-		// TODO - get the argClass simpleName lazily from the ImportContainer
-		final Import requiredImport;
-		final String annotation;
-		if (isStaticStub) {
-			requiredImport = new Import("mockit.Mocked");
-			annotation = "@Mocked";
-		} else {
-			requiredImport = new Import("mockit.Injectable");
-			annotation = "@Injectable";
-		}
-		importsContainer.addImport(requiredImport);
-		importsContainer.addImport(new Import(argClass.getCanonicalName()));
-		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer(annotation + " private %s %s;", argClass, new ClassNameRenderer(argClass, importsContainer), newGeneratedVariableNameRenderer);
-		testClassWriter.addField(identityHashCode, variableDeclarationRenderer);
-		testClassWriter.addDeclaredObject(identityHashCode, variableDeclarationRenderer);
-		
-		return variableDeclarationRenderer;
-	}
-
 	StructuredTextRenderer buildInvocationParameters(CodeChunk mainCodeChunk, Object[] args, String[] argTypes, int[] argIDs, ImportsContainer importsContainer, MockingStrategy mockingStrategy, TestClassWriter testClassWriter) {
 	
 		List<ExpressionRenderer> expressionRenderers = new ArrayList<>();
@@ -62,7 +42,8 @@ public class RenderersStrategy {
 	
 				// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL or is it correct? I'm now thinking the latter.
 				InitCodeChunk variableCodeChunk = mainCodeChunk.requiredInits.get(argID);
-				if (variableCodeChunk == null) {
+				if ((variableCodeChunk == null) ||
+						!(MockingFrameworkFactory.getMockingFramework().canStubMultipleTypeWithOneStub() || ((variableCodeChunk instanceof StandardInitCodeChunk) && (argClass.isAssignableFrom(((StandardInitCodeChunk) variableCodeChunk).argClass))))) {
 					variableCodeChunk = createInitCodeChunk(arg, argClass, argID, "given", importsContainer, mockingStrategy, testClassWriter, mainCodeChunk);
 					mainCodeChunk.requiredInits.put(argID, variableCodeChunk);
 				}
@@ -88,6 +69,35 @@ public class RenderersStrategy {
 
 	private InitCodeChunk createInitCodeChunk(final Object arg, final Class<?> argClass, final int argID, final String variableNamePrefix, ImportsContainer importsContainer, MockingStrategy mockingStrategy, TestClassWriter testClassWriter, ObjectDeclarationScope parentObjectDeclarationScope) {
 		return new StandardInitCodeChunk(argID, arg, argClass, argID, variableNamePrefix, importsContainer, mockingStrategy, this, testClassWriter, parentObjectDeclarationScope);
+	}
+
+	ExpressionRenderer buildExpectedReturnValue(CodeChunk codeChunk, Object returnValue, Class<?> returnValueDeclaredType, int identityHashCode, ObjectDeclarationScope objectDeclarationScope, ImportsContainer importsContainer, MockingStrategy mockingStrategy, RenderersStrategy renderersStrategy, TestClassWriter testClassWriter) throws ClassNotFoundException, IOException {
+		if (returnValue == null) {
+			return ExpressionRenderer.stringRenderer("null");
+		}
+	
+		final Object arg = returnValue;
+		final Class<?> argClass = returnValueDeclaredType;
+		final int argID = identityHashCode;
+	
+		// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL.
+		// TODO - when not mocked, should this be a reconstructed object, instead?
+		if (codeChunk.declaresOrCanSeeIdentityHashCode(identityHashCode))
+			return new ExistingVariableNameRenderer(identityHashCode, argClass, importsContainer, objectDeclarationScope);
+	
+		InitCodeChunk returnValueInitCodeChunk = codeChunk.requiredInits.get(identityHashCode);
+		if (returnValueInitCodeChunk == null) {
+			returnValueInitCodeChunk = new StandardInitCodeChunk(argID, arg, argClass, argID, "expected", importsContainer, mockingStrategy, renderersStrategy, testClassWriter, codeChunk);
+			codeChunk.requiredInits.put(identityHashCode, returnValueInitCodeChunk);
+		}
+	
+		// final Class<? extends Object> returnValueClass = (returnValue instanceof MustMock ? ((MustMock)
+		// returnValue).clazz : returnValue.getClass());
+		// TODO - To be checked with downcast invocations, i.e. when the object - say it's returned by an expected
+		// invocation - is then cast by the 'cut' to a more specific type and a method from that type is invoked. That would
+		// be a good reason to use returnValueClass (returnValue.getClass()), but such class might not be visible (private
+		// inner class).
+		return new NewGeneratedVariableNameRenderer(identityHashCode, returnValueDeclaredType, importsContainer, returnValueInitCodeChunk, "expected");
 	}
 
 }
