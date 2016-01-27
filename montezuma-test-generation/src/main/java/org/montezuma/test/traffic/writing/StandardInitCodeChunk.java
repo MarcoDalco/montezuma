@@ -164,8 +164,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 				// TO CHECK - getting the visible superclass MIGHT not be necessary.
 				final Class<?> declaredClass = ReflectionUtils.getVisibleSuperClass(argClass, testClassWriter.testClass);
 				NewGeneratedVariableNameRenderer stubbedFieldNameRenderer = renderersStrategy.getStubbedFieldNameRenderer(declaredClass, importsContainer, testClassWriter, argID);
-				VariableDeclarationRenderer mockedVariableDeclarationRenderer = MockingFrameworkFactory.getMockingFramework().addStub(false, argID, declaredClass, stubbedFieldNameRenderer, importsContainer, testClassWriter);
-//				addDeclaredObject(argID, mockedVariableDeclarationRenderer);
+				MockingFrameworkFactory.getMockingFramework().addStub(false, argID, declaredClass, stubbedFieldNameRenderer, importsContainer, testClassWriter);
 			} else {
 				codeRenderers.add(renderersStrategy.addRealParameter(this, argClass, arg, argID, importsContainer, testClassWriter.identityHashCodeGenerator));
 			}
