@@ -6,6 +6,7 @@ import org.montezuma.test.traffic.InvocationData;
 import org.montezuma.test.traffic.TrafficReader;
 import org.montezuma.test.traffic.serialisers.Deserialiser;
 import org.montezuma.test.traffic.serialisers.SerialisationFactory;
+import org.montezuma.test.traffic.writing.VariableDeclarationRenderer.ComputableClassNameRendererPlaceholder;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -114,10 +115,10 @@ public class TestMethodsWriter {
 				Method invokedMethod = this.testClass.getDeclaredMethod(methodName, ReflectionUtils.buildParameterTypes(argTypes));
 				final Class<?> returnType = invokedMethod.getReturnType();
 				int returnValueIdentityHascode = testClassWriter.identityHashCodeGenerator.generateIdentityHashCode();
-				final NewGeneratedVariableNameRenderer returnValueNameRenderer =
-						new NewGeneratedVariableNameRenderer(returnValueIdentityHascode, returnType, importsContainer, currentMethodPart, "returned");
-				if (!currentMethodPart.declaresOrCanSeeIdentityHashCode(returnValueIdentityHascode)) {
-					VariableDeclarationRenderer returnValueDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;", returnType, new ClassNameRenderer(returnType, importsContainer), returnValueNameRenderer, invocationRenderer);
+//				final NewGeneratedVariableNameRenderer returnValueNameRenderer =
+//						new NewGeneratedVariableNameRenderer(returnValueIdentityHascode, returnType, importsContainer, currentMethodPart, "returned");
+				if (!currentMethodPart.declaresOrCanSeeIdentityHashCode(returnValueIdentityHascode, returnType)) {
+					VariableDeclarationRenderer returnValueDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;", returnValueIdentityHascode, currentMethodPart, "returned", returnType, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, invocationRenderer);
 					currentMethodPart.addExpressionRenderer(returnValueDeclarationRenderer);
 					currentMethodPart.addDeclaredObject(returnValueIdentityHascode, returnValueDeclarationRenderer);
 				}
@@ -132,11 +133,11 @@ public class TestMethodsWriter {
 				// currentMethodPart.addExpressionRenderer(instantiationRenderer);
 				// TODO - TOCHECK - that where it matters it asserts both Equals and Same. If it doesn't, it's caused by another "TOCHECK" change
 				ObjectDeclarationScope objectDeclarationScope;
-				final boolean shouldAssertSame = (objectDeclarationScope = currentTestMethod).declaresIdentityHashCode(returnValueID) || (objectDeclarationScope = this.testClassWriter).declaresIdentityHashCode(returnValueID);
+				final boolean shouldAssertSame = (objectDeclarationScope = currentTestMethod).declaresIdentityHashCode(returnValueID, returnType) || (objectDeclarationScope = this.testClassWriter).declaresIdentityHashCode(returnValueID, returnType);
 				if (shouldAssertSame) {
 					ExpressionRenderer expectedValueNameRenderer = new ExistingVariableNameRenderer(returnValueID, returnType, importsContainer, objectDeclarationScope);
 					currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertSame"));
-					currentMethodPart.addExpressionRenderer(new StructuredTextRenderer("assertSame(%s, %s);", expectedValueNameRenderer, returnValueNameRenderer));
+					currentMethodPart.addExpressionRenderer(new StructuredTextRenderer("assertSame(%s, %s);", expectedValueNameRenderer, new ExistingVariableNameRenderer(returnValueIdentityHascode, returnType, importsContainer, currentMethodPart)));
 				}
 				// In any case:
 				{
@@ -144,7 +145,7 @@ public class TestMethodsWriter {
 					final int expectedReturnValueID = /* testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); */ shouldAssertSame ? returnValueIdentityHascode : returnValueID;
 					ExpressionRenderer expectedValueNameRenderer = renderersStrategy.buildExpectedReturnValue(currentMethodPart, returnValue, returnType, expectedReturnValueID, currentMethodPart, importsContainer, mockingStrategy, renderersStrategy, testClassWriter);
 					final ExpressionRenderer expressionRenderer;
-					if (expectedValueNameRenderer instanceof NewVariableNameRenderer) {
+					if (expectedValueNameRenderer instanceof VariableNameRenderer) {
 						// TODO - when the returned values are primitive wrappers (instances of java.lang.Number descendants), cast
 						// the first argument to their original class (the primitive or the wrapper/Object) basing on the return
 						// value of the signature of the method corresponding to this 'cut' invocation
@@ -154,7 +155,7 @@ public class TestMethodsWriter {
 						if (returnType.isPrimitive() || returnType.isArray() || Number.class.isAssignableFrom(returnType) || Collection.class.isAssignableFrom(returnType)
 								|| Map.class.isAssignableFrom(returnType) || !(mockingStrategy.mustStub(returnValue) || mockingStrategy.shouldStub(returnType))) {
 							currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertEquals"));
-							expressionRenderer = new StructuredTextRenderer("assertEquals(%s, %s);", expectedValueNameRenderer, returnValueNameRenderer);
+							expressionRenderer = new StructuredTextRenderer("assertEquals(%s, %s);", expectedValueNameRenderer, new ExistingVariableNameRenderer(returnValueIdentityHascode, returnType, importsContainer, currentMethodPart));
 							currentMethodPart.addExpressionRenderer(expressionRenderer);
 						}
 					} else {
@@ -190,10 +191,11 @@ public class TestMethodsWriter {
 		final StructuredTextRenderer invocationParametersRenderer =
 				renderersStrategy.buildInvocationParameters(instantiationMethodPart, methodArgs, argTypes, argIDs, importsContainer, mockingStrategy, testClassWriter);
 
-		final ClassNameRenderer classNameRenderer = new ClassNameRenderer(testClass, importsContainer);
-		NewVariableNameRenderer cutVariableNameRenderer = new NewVariableNameRenderer(identityHashCode, testClass, importsContainer, instantiationMethodPart) { @Override protected String getName() { return "cut"; } };
 		VariableDeclarationRenderer declarationRenderer = new VariableDeclarationRenderer(
-				"final %s %s = new %s(%s);" + StructuredTextFileWriter.EOL, testClass, classNameRenderer, cutVariableNameRenderer, classNameRenderer, invocationParametersRenderer);
+				"final %s %s = new %s(%s);" + StructuredTextFileWriter.EOL, identityHashCode, instantiationMethodPart, new NewVariableNameRenderer(identityHashCode, testClass) {
+					@Override public String render() { return getName(testClass); }
+					@Override protected String getName(Class<?> desiredClass) { return "cut"; }
+					}, testClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, invocationParametersRenderer);
 		instantiationMethodPart.addExpressionRenderer(declarationRenderer);
 		instantiationMethodPart.addDeclaredObject(identityHashCode, declarationRenderer);
 

@@ -118,22 +118,23 @@ public class TestClassWriter implements ObjectDeclarationScope {
 	}
 
 	@Override
-	public boolean declaresIdentityHashCode(int identityHashCode) {
-		return declaredVariables.containsKey(identityHashCode);
+	public boolean declaresIdentityHashCode(int identityHashCode, Class<?> requiredClass) {
+		VariableDeclarationRenderer variableDeclarationRenderer = declaredVariables.get(identityHashCode);
+		return ((variableDeclarationRenderer != null) && (variableDeclarationRenderer.declaresClass(requiredClass)));
 	}
 
 	@Override
-	public boolean declaresOrCanSeeIdentityHashCode(int identityHashCode) {
-		return declaresIdentityHashCode(identityHashCode);
+	public boolean declaresOrCanSeeIdentityHashCode(int identityHashCode, Class<?> requiredClass) {
+		return declaresIdentityHashCode(identityHashCode, requiredClass);
 	}
 
 	@Override
-	public VariableDeclarationRenderer getVisibleDeclarationRendererInScopeOrSubscopes(int identityHashCode) {
-		return getVisibleDeclarationRenderer(identityHashCode);
+	public VariableDeclarationRenderer getVisibleDeclarationRendererInScopeOrSubscopes(int identityHashCode, Class<?> requiredClass) {
+		return getVisibleDeclarationRenderer(identityHashCode, requiredClass);
 	}
 
 	@Override
-	public VariableDeclarationRenderer getVisibleDeclarationRenderer(int identityHashCode) {
+	public VariableDeclarationRenderer getVisibleDeclarationRenderer(int identityHashCode, Class<?> requiredClass) {
 		return declaredVariables.get(identityHashCode);
 	}
 }

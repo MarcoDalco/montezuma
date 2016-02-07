@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public interface MockingFramework {
 
-	VariableDeclarationRenderer addStub(boolean isStaticStub, int identityHashCode, Class<?> argClass, NewGeneratedVariableNameRenderer newGeneratedVariableNameRenderer, ImportsContainer importsContainer, TestClassWriter testClassWriter);
+	VariableDeclarationRenderer addStub(boolean isStaticStub, int identityHashCode, Class<?> argClass, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, TestClassWriter testClassWriter);
 
 	CodeChunk getStrictExpectationPart(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException;
 

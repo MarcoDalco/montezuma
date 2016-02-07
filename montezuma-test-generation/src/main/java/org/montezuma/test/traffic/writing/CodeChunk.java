@@ -220,57 +220,60 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 	}
 
 	@Override
-	public boolean declaresIdentityHashCode(int identityHashCode) {
-		if (declarations.containsKey(identityHashCode))
-			return true;
+	public boolean declaresIdentityHashCode(int identityHashCode, Class<?> requiredClass) {
+		{
+			VariableDeclarationRenderer variableDeclarationRenderer = declarations.get(identityHashCode);
+			if ((variableDeclarationRenderer != null) && (variableDeclarationRenderer.declaresClass(requiredClass)))
+				return true;
+		}
 
 		for (CodeChunk codeChunk : requiredInits.values())
-			if (codeChunk.declaresIdentityHashCode(identityHashCode))
+			if (codeChunk.declaresIdentityHashCode(identityHashCode, requiredClass))
 				return true;
 		for (CodeChunk codeChunk : methodPartsBeforeLines)
-			if (codeChunk.declaresIdentityHashCode(identityHashCode))
+			if (codeChunk.declaresIdentityHashCode(identityHashCode, requiredClass))
 				return true;
 		for (CodeChunk codeChunk : methodPartsAfterLines)
-			if (codeChunk.declaresIdentityHashCode(identityHashCode))
+			if (codeChunk.declaresIdentityHashCode(identityHashCode, requiredClass))
 				return true;
 
 		return false;
 	}
 
 	@Override
-	public boolean declaresOrCanSeeIdentityHashCode(int identityHashCode) {
-		if (declaresIdentityHashCode(identityHashCode))
+	public boolean declaresOrCanSeeIdentityHashCode(int identityHashCode, Class<?> requiredClass) {
+		if (declaresIdentityHashCode(identityHashCode, requiredClass))
 			return true;
 
-		return parentObjectDeclarationScope.declaresOrCanSeeIdentityHashCode(identityHashCode);
+		return parentObjectDeclarationScope.declaresOrCanSeeIdentityHashCode(identityHashCode, requiredClass);
 	}
 
 	@Override
-	public VariableDeclarationRenderer getVisibleDeclarationRendererInScopeOrSubscopes(int identityHashCode) {
+	public VariableDeclarationRenderer getVisibleDeclarationRendererInScopeOrSubscopes(int identityHashCode, Class<?> requiredClass) {
 		VariableDeclarationRenderer renderer;
 		if (null != (renderer = declarations.get(identityHashCode)))
 			return renderer;
 
 		for (CodeChunk codeChunk : requiredInits.values())
-			if (null != (renderer = codeChunk.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode)))
+			if (null != (renderer = codeChunk.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode, requiredClass)))
 				return renderer;
 		for (CodeChunk codeChunk : methodPartsBeforeLines)
-			if (null != (renderer = codeChunk.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode)))
+			if (null != (renderer = codeChunk.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode, requiredClass)))
 				return renderer;
 		for (CodeChunk codeChunk : methodPartsAfterLines)
-			if (null != (renderer = codeChunk.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode)))
+			if (null != (renderer = codeChunk.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode, requiredClass)))
 				return renderer;
 
 		return null;
 	}
 
 	@Override
-	public VariableDeclarationRenderer getVisibleDeclarationRenderer(int identityHashCode) {
+	public VariableDeclarationRenderer getVisibleDeclarationRenderer(int identityHashCode, Class<?> requiredClass) {
 		VariableDeclarationRenderer renderer;
-		if (null != (renderer = getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode)))
+		if (null != (renderer = getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode, requiredClass)))
 			return renderer;
 
-		return parentObjectDeclarationScope.getVisibleDeclarationRenderer(identityHashCode);
+		return parentObjectDeclarationScope.getVisibleDeclarationRenderer(identityHashCode, requiredClass);
 	}
 
 	boolean shouldBeRendered() {

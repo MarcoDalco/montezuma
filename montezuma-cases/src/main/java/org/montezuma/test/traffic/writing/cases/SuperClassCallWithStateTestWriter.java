@@ -14,7 +14,7 @@ public class SuperClassCallWithStateTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
 		new TrafficToUnitTestsWriter().generateTestsFor(
-				SomeClass.class, TrafficToUnitTestsWriter.getDontMockClasses(), SuperClassCallWithStateTrafficRecorder.SUPERCLASS_CALL_RECORDING_SUBDIR, CasesCommon.TEST_CLASS_PATH);
+				SomeClass.class, TrafficToUnitTestsWriter.getDontMockClasses(), SuperClassCallWithStateTrafficRecorder.SUPERCLASS_CALL_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
 	}
 
 }

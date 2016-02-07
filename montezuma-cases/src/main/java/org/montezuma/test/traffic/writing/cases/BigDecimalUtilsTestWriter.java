@@ -14,7 +14,7 @@ public class BigDecimalUtilsTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
 		new TrafficToUnitTestsWriter().generateTestsFor(
-				BigDecimalUtils.class, TrafficToUnitTestsWriter.getDontMockClasses(), BigDecimalUtilsTrafficRecorder.BIGDECIMAL_UTILS_RECORDING_SUBDIR, CasesCommon.TEST_CLASS_PATH);
+				BigDecimalUtils.class, TrafficToUnitTestsWriter.getDontMockClasses(), BigDecimalUtilsTrafficRecorder.BIGDECIMAL_UTILS_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
 	}
 
 }

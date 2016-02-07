@@ -14,7 +14,7 @@ public class PassThroughClassTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
 		new TrafficToUnitTestsWriter().generateTestsFor(
-				MonitoredClass.class, TrafficToUnitTestsWriter.getDontMockClasses(), PassThroughClassTrafficRecorder.PASSTHROUGH_CLASS_RECORDING_SUBDIR, CasesCommon.TEST_CLASS_PATH);
+				MonitoredClass.class, TrafficToUnitTestsWriter.getDontMockClasses(), PassThroughClassTrafficRecorder.PASSTHROUGH_CLASS_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
 	}
 
 }

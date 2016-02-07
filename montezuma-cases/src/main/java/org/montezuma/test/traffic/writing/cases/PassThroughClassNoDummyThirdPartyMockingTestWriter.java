@@ -18,7 +18,7 @@ public class PassThroughClassNoDummyThirdPartyMockingTestWriter {
 		final List<String> dontMockClasses = new ArrayList<>();
 		dontMockClasses.add(".*DummyThirdParty");
 		dontMockClasses.addAll(TrafficToUnitTestsWriter.getDontMockClasses());
-		new TrafficToUnitTestsWriter().generateTestsFor(MonitoredClass.class, dontMockClasses, PassThroughClassTrafficRecorder.PASSTHROUGH_CLASS_RECORDING_SUBDIR, CasesCommon.TEST_CLASS_PATH);
+		new TrafficToUnitTestsWriter().generateTestsFor(MonitoredClass.class, dontMockClasses, PassThroughClassTrafficRecorder.PASSTHROUGH_CLASS_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
 	}
 
 }

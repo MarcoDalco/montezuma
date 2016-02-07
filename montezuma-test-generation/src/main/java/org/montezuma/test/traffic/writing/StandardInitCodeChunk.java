@@ -3,6 +3,7 @@ package org.montezuma.test.traffic.writing;
 import org.montezuma.test.traffic.MustMock;
 import org.montezuma.test.traffic.serialisers.Deserialiser;
 import org.montezuma.test.traffic.serialisers.SerialisationFactory;
+import org.montezuma.test.traffic.writing.VariableDeclarationRenderer.ComputableClassNameRendererPlaceholder;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -44,7 +45,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 		// maincodeChunk.requiredInits.add(variableCodeChunk);
 		if ((arg instanceof Number) || (arg instanceof Boolean)) {
 			if (argClass.equals(BigDecimal.class)) {
-				VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;", argClass, new ClassNameRenderer(argClass, importsContainer), new NewGeneratedVariableNameRenderer(argID, argClass, importsContainer, this, variableNamePrefix), new ExpressionRenderer() {
+				VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;", argID, this, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, new ExpressionRenderer() {
 					@Override
 					public String render() {
 						return getBigDecimalInitialiser(arg);
@@ -94,16 +95,17 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 				// final String actualArgType = argClass.getCanonicalName();
 				// final String declaredArgClassName = (actualArgType.startsWith("java") ? argClass.getSimpleName() : actualArgType);
 				VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;",
-						argClass, new ClassNameRenderer(argClass, importsContainer), new NewGeneratedVariableNameRenderer(argID, argClass, importsContainer, this, variableNamePrefix), initExpressionRenderer);
+						argID, this, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, initExpressionRenderer);
 				codeRenderers.add(variableDeclarationRenderer);
 				addDeclaredObject(argID, variableDeclarationRenderer);
 			}
 		} else if (argClass == String.class) {
 			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = \"%s\";",
+					argID,
+					this,
+					variableNamePrefix,
 					argClass,
-					new ClassNameRenderer(argClass, importsContainer),
-					new NewGeneratedVariableNameRenderer(argID, argClass, importsContainer, this, variableNamePrefix),
-					new ExpressionRenderer() {
+					importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, new ExpressionRenderer() {
 						@Override
 						public String render() {
 							return ((String) arg).replaceAll("\\\\", "\\\\\\\\").replaceAll("\n", "\\\\n").replaceAll("\r", "\\\\r").replaceAll("\"", "\\\\\"");
@@ -124,13 +126,11 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 																																																	// real object ID?
 				i++;
 			}
-			final ClassNameRenderer declaredClassNameRenderer = new ClassNameRenderer(argClass, importsContainer);
-			final NewGeneratedVariableNameRenderer listNameRenderer = new NewGeneratedVariableNameRenderer(argID, argClass, importsContainer, this, variableNamePrefix);
 			final ClassNameRenderer actualClassNameRenderer = new ClassNameRenderer(arg.getClass(), importsContainer);
-			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s();", argClass, declaredClassNameRenderer, listNameRenderer, actualClassNameRenderer);
+			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s();", argID, this, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, actualClassNameRenderer);
 			codeRenderers.add(variableDeclarationRenderer);
 			addDeclaredObject(argID, variableDeclarationRenderer);
-			buildList(this, rebuiltRuntimeList, listElementTypes, listElementIDs, /* this could be an ExistingVariableNameRenderer */ listNameRenderer);
+			buildList(this, rebuiltRuntimeList, listElementTypes, listElementIDs, new ExistingVariableNameRenderer(argID, argClass, importsContainer, this));
 		} else if (argClass.isAssignableFrom(Set.class)) {} else if (argClass.isAssignableFrom(Map.class)) {} else if (argClass.isArray()) {
 			final Object[] serialisedObjectsArray = (Object[]) arg;
 			final Object[] rebuiltRuntimeArray = new Object[serialisedObjectsArray.length];
@@ -153,9 +153,8 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			}
 			StructuredTextRenderer arrayObjectsRenderer =
 					renderersStrategy.buildInvocationParameters(this, rebuiltRuntimeArray, arrayArgTypes, arrayArgIDs, importsContainer, mockingStrategy, testClassWriter);
-			final ClassNameRenderer classNameRenderer = new ClassNameRenderer(argClass, importsContainer);
 			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer(
-					"final %s %s = new %s {%s};", argClass, classNameRenderer, new NewGeneratedVariableNameRenderer(argID, argClass, importsContainer, this, variableNamePrefix), classNameRenderer, arrayObjectsRenderer);
+					"final %s %s = new %s {%s};", argID, this, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, arrayObjectsRenderer);
 			codeRenderers.add(variableDeclarationRenderer);
 			addDeclaredObject(argID, variableDeclarationRenderer);
 		} else {
@@ -163,8 +162,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			if (mockingStrategy.mustStub(arg) || mockingStrategy.shouldStub(argClass)) {
 				// TO CHECK - getting the visible superclass MIGHT not be necessary.
 				final Class<?> declaredClass = ReflectionUtils.getVisibleSuperClass(argClass, testClassWriter.testClass);
-				NewGeneratedVariableNameRenderer stubbedFieldNameRenderer = renderersStrategy.getStubbedFieldNameRenderer(declaredClass, importsContainer, testClassWriter, argID);
-				MockingFrameworkFactory.getMockingFramework().addStub(false, argID, declaredClass, stubbedFieldNameRenderer, importsContainer, testClassWriter);
+				MockingFrameworkFactory.getMockingFramework().addStub(false, argID, declaredClass, renderersStrategy, importsContainer, testClassWriter);
 			} else {
 				codeRenderers.add(renderersStrategy.addRealParameter(this, argClass, arg, argID, importsContainer, testClassWriter.identityHashCodeGenerator));
 			}
@@ -186,7 +184,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 		return bigIntInit;
 	}
 
-	private void buildList(InitCodeChunk mainCodeChunk, List<Object> rebuiltRuntimeList, String[] listElementTypes, int[] listElementIDs, NewGeneratedVariableNameRenderer listNameRenderer) {
+	private void buildList(InitCodeChunk mainCodeChunk, List<Object> rebuiltRuntimeList, String[] listElementTypes, int[] listElementIDs, ExistingVariableNameRenderer listNameRenderer) {
 		int i = 0;
 		for (Iterator<?> runtimeObjectsIterator = rebuiltRuntimeList.iterator(); runtimeObjectsIterator.hasNext(); i++) {
 			Object element = runtimeObjectsIterator.next();

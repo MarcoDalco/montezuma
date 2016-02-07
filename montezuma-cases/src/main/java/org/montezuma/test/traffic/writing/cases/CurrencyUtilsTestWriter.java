@@ -14,7 +14,7 @@ public class CurrencyUtilsTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
 		new TrafficToUnitTestsWriter().generateTestsFor(
-				CurrencyUtils.class, TrafficToUnitTestsWriter.getDontMockClasses(), CurrencyUtilsTrafficRecorder.CURRENCY_UTILS_RECORDING_SUBDIR, CasesCommon.TEST_CLASS_PATH);
+				CurrencyUtils.class, TrafficToUnitTestsWriter.getDontMockClasses(), CurrencyUtilsTrafficRecorder.CURRENCY_UTILS_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
 	}
 
 }

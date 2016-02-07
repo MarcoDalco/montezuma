@@ -1,7 +1,7 @@
 package org.montezuma.test.traffic.writing;
 
 public class ClassNameRenderer implements ExpressionRenderer {
-	private final Class<?>	clazz;
+	public final Class<?>	clazz;
 	private final ImportsContainer	importsContainer;
 
 	public ClassNameRenderer(Class<?> clazz, ImportsContainer importsContainer) {
@@ -11,7 +11,7 @@ public class ClassNameRenderer implements ExpressionRenderer {
 
 	@Override
 	public String render() {
-		final String canonicalName = clazz.getCanonicalName();
+		final String canonicalName = getRenderedClass().getCanonicalName();
 		return importsContainer.imports(canonicalName) ? clazz.getSimpleName() : clazz.getCanonicalName();
 	}
 

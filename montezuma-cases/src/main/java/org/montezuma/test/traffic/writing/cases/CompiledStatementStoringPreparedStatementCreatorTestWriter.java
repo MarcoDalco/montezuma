@@ -15,7 +15,7 @@ public class CompiledStatementStoringPreparedStatementCreatorTestWriter {
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
 		new TrafficToUnitTestsWriter().generateTestsFor(
 				CompiledStatementStoringPreparedStatementCreator.class, TrafficToUnitTestsWriter.getDontMockClasses(),
-				CompiledStatementStoringPreparedStatementCreatorTrafficRecorder.COMPILED_STATEMENT_RECORDING_SUBDIR, CasesCommon.TEST_CLASS_PATH);
+				CompiledStatementStoringPreparedStatementCreatorTrafficRecorder.COMPILED_STATEMENT_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
 	}
 
 }

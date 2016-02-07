@@ -14,7 +14,7 @@ public class UtilsConsumerTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
 		new TrafficToUnitTestsWriter().generateTestsFor(
-				UtilsConsumer.class, TrafficToUnitTestsWriter.getDontMockClasses(), UtilsConsumerTrafficRecorder.UTILS_CONSUMER_RECORDING_SUBDIR, CasesCommon.TEST_CLASS_PATH);
+				UtilsConsumer.class, TrafficToUnitTestsWriter.getDontMockClasses(), UtilsConsumerTrafficRecorder.UTILS_CONSUMER_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
 	}
 
 }

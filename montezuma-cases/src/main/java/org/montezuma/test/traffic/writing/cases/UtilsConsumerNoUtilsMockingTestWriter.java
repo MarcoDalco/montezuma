@@ -18,7 +18,7 @@ public class UtilsConsumerNoUtilsMockingTestWriter {
 		final List<String> dontMockClasses = new ArrayList<>();
 		dontMockClasses.add(".*BigDecimalUtils");
 		dontMockClasses.addAll(TrafficToUnitTestsWriter.getDontMockClasses());
-		new TrafficToUnitTestsWriter().generateTestsFor(UtilsConsumer.class, dontMockClasses, UtilsConsumerTrafficRecorder.UTILS_CONSUMER_RECORDING_SUBDIR, CasesCommon.TEST_CLASS_PATH);
+		new TrafficToUnitTestsWriter().generateTestsFor(UtilsConsumer.class, dontMockClasses, UtilsConsumerTrafficRecorder.UTILS_CONSUMER_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
 	}
 
 }

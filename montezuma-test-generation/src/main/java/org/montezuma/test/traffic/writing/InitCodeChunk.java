@@ -35,21 +35,21 @@ public abstract class InitCodeChunk extends CodeChunk {
 	}
 
 	@Override
-	public VariableDeclarationRenderer getVisibleDeclarationRendererInScopeOrSubscopes(int identityHashCode) {
+	public VariableDeclarationRenderer getVisibleDeclarationRendererInScopeOrSubscopes(int identityHashCode, Class<?> requiredClass) {
 		if (chunkOverridingDeclaration != null) {
-			return chunkOverridingDeclaration.getVisibleDeclarationRenderer(identityHashCode);
+			return chunkOverridingDeclaration.getVisibleDeclarationRenderer(identityHashCode, requiredClass);
 		}
 
-		return super.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode);
+		return super.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode, requiredClass);
 	}
 
 	@Override
-	public VariableDeclarationRenderer getVisibleDeclarationRenderer(int identityHashCode) {
+	public VariableDeclarationRenderer getVisibleDeclarationRenderer(int identityHashCode, Class<?> requiredClass) {
 		if (chunkOverridingDeclaration != null) {
-			return chunkOverridingDeclaration.getVisibleDeclarationRenderer(identityHashCode);
+			return chunkOverridingDeclaration.getVisibleDeclarationRenderer(identityHashCode, requiredClass);
 		}
 
-		return super.getVisibleDeclarationRenderer(identityHashCode);
+		return super.getVisibleDeclarationRenderer(identityHashCode, requiredClass);
 	}
 
 	boolean shouldBeRendered() {

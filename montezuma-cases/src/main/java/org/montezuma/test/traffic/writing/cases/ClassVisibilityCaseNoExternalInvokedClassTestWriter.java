@@ -16,9 +16,9 @@ public class ClassVisibilityCaseNoExternalInvokedClassTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
 		final List<String> dontMockClasses = new ArrayList<>();
-		dontMockClasses.add(".*ClassVisibilityCaseExternalInvokedClass");
+		dontMockClasses.add(".*ClassVisibilityCaseExternalInvokedClass.*");
 		dontMockClasses.addAll(TrafficToUnitTestsWriter.getDontMockClasses());
-		new TrafficToUnitTestsWriter().generateTestsFor(ClassVisibilityCaseMainClass.class, dontMockClasses, ClassVisibilityCaseTrafficRecorder.CLASS_VISIBILITY_CASE_RECORDING_SUBDIR, CasesCommon.TEST_CLASS_PATH);
+		new TrafficToUnitTestsWriter().generateTestsFor(ClassVisibilityCaseMainClass.class, dontMockClasses, ClassVisibilityCaseTrafficRecorder.CLASS_VISIBILITY_CASE_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
 	}
 
 }

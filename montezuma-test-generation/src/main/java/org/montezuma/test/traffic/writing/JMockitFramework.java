@@ -4,6 +4,7 @@ import org.montezuma.test.traffic.CallInvocationData;
 import org.montezuma.test.traffic.Common;
 import org.montezuma.test.traffic.TrafficReader;
 import org.montezuma.test.traffic.serialisers.Deserialiser;
+import org.montezuma.test.traffic.writing.VariableDeclarationRenderer.ComputableClassNameRendererPlaceholder;
 
 import java.io.IOException;
 import java.lang.reflect.Executable;
@@ -30,7 +31,7 @@ public class JMockitFramework implements MockingFramework {
 	}
 
 	@Override
-	public VariableDeclarationRenderer addStub(boolean isStaticStub, int identityHashCode, Class<?> argClass, final NewGeneratedVariableNameRenderer newGeneratedVariableNameRenderer, ImportsContainer importsContainer, TestClassWriter testClassWriter) {
+	public VariableDeclarationRenderer addStub(boolean isStaticStub, int identityHashCode, Class<?> declaredClass, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, TestClassWriter testClassWriter) {
 		// TODO - add mocks to a "(Stubbed)FieldContainer" instead of the testClassWriter
 		// TODO - get the argClass simpleName lazily from the ImportContainer
 		final Import requiredImport;
@@ -43,8 +44,11 @@ public class JMockitFramework implements MockingFramework {
 			annotation = "@Injectable";
 		}
 		importsContainer.addImport(requiredImport);
-		importsContainer.addImport(new Import(argClass.getCanonicalName()));
-		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer(annotation + " private %s %s;", argClass, new ClassNameRenderer(argClass, importsContainer), newGeneratedVariableNameRenderer);
+		importsContainer.addImport(new Import(declaredClass.getCanonicalName()));
+		if (testClassWriter.declaresIdentityHashCode(identityHashCode, declaredClass))
+			return testClassWriter.getVisibleDeclarationRenderer(identityHashCode, declaredClass);
+
+		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer(annotation + " private %s %s;", identityHashCode, testClassWriter, "mocked", declaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance);
 		testClassWriter.addField(identityHashCode, variableDeclarationRenderer);
 		testClassWriter.addDeclaredObject(identityHashCode, variableDeclarationRenderer);
 		
@@ -87,11 +91,8 @@ public class JMockitFramework implements MockingFramework {
 		final boolean isStaticMethod = Modifier.isStatic(callData.modifiers);
 		final int identityHashCode = isStaticMethod ? testClassWriter.identityHashCodeGenerator.generateIdentityHashCodeForStaticClass(declaringType) : id;
 		Class<?> declaredClass = ReflectionUtils.getVisibleSuperClass(targetClazzOrDeclaringType, testClassWriter.testClass);
-		final NewGeneratedVariableNameRenderer mockedFieldNameRenderer = renderersStrategy.getStubbedFieldNameRenderer(declaredClass, importsContainer, testClassWriter, identityHashCode);
-		// TODO - invoke addMock with a different Class<?> than targetClazzOrDeclaringType if targetClazzOrDeclaringType is
-		// not visible (e.g.: private class), like we already do for expected return values.
-		if (!testClassWriter.declaresIdentityHashCode(identityHashCode))
-			MockingFrameworkFactory.getMockingFramework().addStub(isStaticMethod || isConstructorInvocation, identityHashCode, declaredClass, mockedFieldNameRenderer, importsContainer, testClassWriter);
+		if (!testClassWriter.declaresIdentityHashCode(identityHashCode, declaringType))
+			MockingFrameworkFactory.getMockingFramework().addStub(isStaticMethod || isConstructorInvocation, identityHashCode, declaredClass, renderersStrategy, importsContainer, testClassWriter);
 		Object[] methodArgs = TrafficReader.getDeserialisedArgs(callData.serialisedArgs);
 		final StructuredTextRenderer invocationParameters =
 				renderersStrategy.buildInvocationParameters(codeChunk, methodArgs, argTypes, callData.argIDs, importsContainer, mockingStrategy, testClassWriter);
@@ -103,7 +104,7 @@ public class JMockitFramework implements MockingFramework {
 						: new StructuredTextRenderer("%s.%s(%s);",
 								isStaticMethod ?
 										new ClassNameRenderer(declaringType, importsContainer)
-										: new ExistingVariableNameRenderer(callData.id, declaringType, importsContainer, testClassWriter),
+										: new ExistingVariableNameRenderer(callData.id, /* TO CHECK - it might need to be the targetClass or its most visible superclass. Perhaps declaredClass */ declaringType, importsContainer, testClassWriter),
 								ExpressionRenderer.stringRenderer(methodName),
 								invocationParameters);
 		final ExpressionRenderer timesExpressionRenderer = ExpressionRenderer.stringRenderer(" times = 1;");

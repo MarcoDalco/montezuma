@@ -14,7 +14,7 @@ public class BoundaryChecksCallbackTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
 		new TrafficToUnitTestsWriter().generateTestsFor(
-				B.class, TrafficToUnitTestsWriter.getDontMockClasses(), BoundaryChecksCallbackTrafficRecorder.BOUNDARY_CHECKS_RECORDING_SUBDIR, CasesCommon.TEST_CLASS_PATH);
+				B.class, TrafficToUnitTestsWriter.getDontMockClasses(), BoundaryChecksCallbackTrafficRecorder.BOUNDARY_CHECKS_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
 	}
 
 }

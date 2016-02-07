@@ -1,6 +1,8 @@
 package org.montezuma.test.traffic.writing;
 
 import org.montezuma.test.traffic.MustMock;
+import org.montezuma.test.traffic.writing.VariableDeclarationRenderer.ComputableClassNameRenderer;
+import org.montezuma.test.traffic.writing.VariableDeclarationRenderer.ComputableClassNameRendererPlaceholder;
 import org.montezuma.test.traffic.writing.serialisation.SerialisationRendererFactory;
 
 import java.io.IOException;
@@ -9,15 +11,11 @@ import java.util.List;
 
 public class RenderersStrategy {
 
-	NewGeneratedVariableNameRenderer getStubbedFieldNameRenderer(Class<?> clazz, ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope, int id) {
-		return new NewGeneratedVariableNameRenderer(id, clazz, importsContainer, objectDeclarationScope, "mocked");
-	}
-
 	StructuredTextRenderer addRealParameter(CodeChunk codeChunk, Class<?> argClass, Object arg, int argID, ImportsContainer importsContainer, IdentityHashCodeGenerator identityHashCodeGenerator) {
-		final ClassNameRenderer classNameRenderer = new ClassNameRenderer(argClass, importsContainer);
+		final Class<?> declaredClass = /* TO CHECK - maybe Object.class instead of argClass, so that the actual declared type gets determined by the subsequent use? */ argClass;
+		ExpressionRenderer deserialisationRenderer = getDeserialisationRenderer(codeChunk, arg, importsContainer, codeChunk, identityHashCodeGenerator);
 		final VariableDeclarationRenderer renderer =
-				new VariableDeclarationRenderer("final %s %s = (%s) %s;", argClass, classNameRenderer, new NewGeneratedVariableNameRenderer(argID, argClass, importsContainer, codeChunk, "given"), classNameRenderer, getDeserialisationRenderer(
-						codeChunk, arg, importsContainer, codeChunk, identityHashCodeGenerator));
+				new VariableDeclarationRenderer("final %s %s = (%s) %s;", argID, codeChunk, "given", declaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, deserialisationRenderer);
 		codeChunk.addDeclaredObject(argID, renderer);
 		return renderer;
 	}
@@ -53,7 +51,7 @@ public class RenderersStrategy {
 				// and valueOf(Long). It will require this method to take the Declaring Type as an extra parameter.
 				// In the above process, consider the class type of each argument as given in the argTypes String array,
 				// i.e.: int.class versus Integer.class
-				expressionRenderers.add(new NewGeneratedVariableNameRenderer(argID, argClass, importsContainer, variableCodeChunk, "given"));
+				expressionRenderers.add(new ExistingVariableNameRenderer(argID, argClass, importsContainer, variableCodeChunk));
 				argumentNames.append("%s");
 			}
 			argumentNames.append(argSeparator);
@@ -77,17 +75,16 @@ public class RenderersStrategy {
 		}
 	
 		final Object arg = returnValue;
-		final Class<?> argClass = returnValueDeclaredType;
 		final int argID = identityHashCode;
 	
 		// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL.
 		// TODO - when not mocked, should this be a reconstructed object, instead?
-		if (codeChunk.declaresOrCanSeeIdentityHashCode(identityHashCode))
-			return new ExistingVariableNameRenderer(identityHashCode, argClass, importsContainer, objectDeclarationScope);
+		if (codeChunk.declaresOrCanSeeIdentityHashCode(identityHashCode, returnValueDeclaredType))
+			return new ExistingVariableNameRenderer(identityHashCode, returnValueDeclaredType, importsContainer, objectDeclarationScope);
 	
 		InitCodeChunk returnValueInitCodeChunk = codeChunk.requiredInits.get(identityHashCode);
 		if (returnValueInitCodeChunk == null) {
-			returnValueInitCodeChunk = new StandardInitCodeChunk(argID, arg, argClass, argID, "expected", importsContainer, mockingStrategy, renderersStrategy, testClassWriter, codeChunk);
+			returnValueInitCodeChunk = new StandardInitCodeChunk(argID, arg, returnValueDeclaredType, argID, "expected", importsContainer, mockingStrategy, renderersStrategy, testClassWriter, codeChunk);
 			codeChunk.requiredInits.put(identityHashCode, returnValueInitCodeChunk);
 		}
 	
@@ -97,7 +94,7 @@ public class RenderersStrategy {
 		// invocation - is then cast by the 'cut' to a more specific type and a method from that type is invoked. That would
 		// be a good reason to use returnValueClass (returnValue.getClass()), but such class might not be visible (private
 		// inner class).
-		return new NewGeneratedVariableNameRenderer(identityHashCode, returnValueDeclaredType, importsContainer, returnValueInitCodeChunk, "expected");
+		return new ExistingVariableNameRenderer(identityHashCode, returnValueDeclaredType, importsContainer, returnValueInitCodeChunk);
 	}
 
 }

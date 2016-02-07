@@ -2,8 +2,8 @@ package org.montezuma.test.traffic.writing;
 
 public class StructuredTextRenderer implements ExpressionRenderer {
 
-	private String								formattedText;
-	private ExpressionRenderer[]	expressionRenderers;
+	protected final String						formattedText;
+	protected ExpressionRenderer[]	expressionRenderers;
 
 	public StructuredTextRenderer(String formattedText, ExpressionRenderer... expressionRenderers) {
 		this.formattedText = formattedText;

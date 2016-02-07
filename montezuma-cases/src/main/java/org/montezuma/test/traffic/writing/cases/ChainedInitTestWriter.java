@@ -14,7 +14,7 @@ public class ChainedInitTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
 		new TrafficToUnitTestsWriter().generateTestsFor(
-				ChainedInit.class, TrafficToUnitTestsWriter.getDontMockClasses(), ChainedInitTrafficRecorder.CHAINEDINIT_RECORDING_SUBDIR, CasesCommon.TEST_CLASS_PATH);
+				ChainedInit.class, TrafficToUnitTestsWriter.getDontMockClasses(), ChainedInitTrafficRecorder.CHAINEDINIT_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
 	}
 
 }

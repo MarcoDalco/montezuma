@@ -1,24 +1,25 @@
 package org.montezuma.test.traffic.writing.serialisation;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
 
 import org.montezuma.test.traffic.serialisers.Serialiser;
 import org.montezuma.test.traffic.serialisers.kryo.KryoRegisteredSerialiser;
 import org.montezuma.test.traffic.writing.ClassNameRenderer;
 import org.montezuma.test.traffic.writing.CodeChunk;
+import org.montezuma.test.traffic.writing.ExistingVariableNameRenderer;
 import org.montezuma.test.traffic.writing.ExpressionRenderer;
 import org.montezuma.test.traffic.writing.IdentityHashCodeGenerator;
 import org.montezuma.test.traffic.writing.Import;
 import org.montezuma.test.traffic.writing.ImportsContainer;
 import org.montezuma.test.traffic.writing.InitCodeChunk;
-import org.montezuma.test.traffic.writing.NewGeneratedVariableNameRenderer;
 import org.montezuma.test.traffic.writing.ObjectDeclarationScope;
 import org.montezuma.test.traffic.writing.StructuredTextRenderer;
 import org.montezuma.test.traffic.writing.VariableDeclarationRenderer;
+import org.montezuma.test.traffic.writing.VariableDeclarationRenderer.ComputableClassNameRendererPlaceholder;
 
-import com.esotericsoftware.kryo.Kryo;
-import com.esotericsoftware.kryo.io.Input;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 
 public class KryoSerialisationRenderer implements SerialisationRenderer {
 	private Serialiser	serialiser	= SerialisationRendererFactory.getSerialiser();
@@ -38,18 +39,17 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 		codeChunkNeedingDeserialisation.requiredImports.addImport(new Import("org.montezuma.test.traffic.serialisers.kryo.KryoRegisteredSerialiser"));
 
 		final int kryoInstanceID = identityHashCodeGenerator.generateIdentityHashCode();
-		NewGeneratedVariableNameRenderer kryoVariableNameRenderer = new NewGeneratedVariableNameRenderer(kryoInstanceID, Kryo.class, importsContainer, objectDeclarationScope, "k");
+		ExistingVariableNameRenderer existingKryoVariableNameRenderer = new ExistingVariableNameRenderer(kryoInstanceID, Kryo.class, importsContainer, objectDeclarationScope);
 		InitCodeChunk initCodeChunk = new InitCodeChunk(kryoInstanceID, codeChunkNeedingDeserialisation) {
 			@Override
 			public void generateRequiredInits() {
 				// FIXME: if required twice in a method, this causes a compile error, as it declares Kryo twice.
-				ClassNameRenderer kryoClassNameRenderer = new ClassNameRenderer(Kryo.class, importsContainer);
-				VariableDeclarationRenderer kryoVariableDeclarationRenderer = new VariableDeclarationRenderer("%s %s = new %s();", Kryo.class, kryoClassNameRenderer, kryoVariableNameRenderer, kryoClassNameRenderer);
+				VariableDeclarationRenderer kryoVariableDeclarationRenderer = new VariableDeclarationRenderer("%s %s = new %s();", kryoInstanceID, objectDeclarationScope, "k", Kryo.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance);
 				codeRenderers.add(kryoVariableDeclarationRenderer);
 				addDeclaredObject(kryoInstanceID, kryoVariableDeclarationRenderer);
 
 				ClassNameRenderer kryoRegisteredSerialiserClassNameRenderer = new ClassNameRenderer(KryoRegisteredSerialiser.class, importsContainer);
-				codeRenderers.add(new StructuredTextRenderer("%s.setDefaultSerializer(%s.class);", kryoVariableNameRenderer, kryoRegisteredSerialiserClassNameRenderer));
+				codeRenderers.add(new StructuredTextRenderer("%s.setDefaultSerializer(%s.class);", existingKryoVariableNameRenderer, kryoRegisteredSerialiserClassNameRenderer));
 			}
 		};
 		codeChunkNeedingDeserialisation.requiredInits.put(kryoInstanceID, initCodeChunk);
@@ -59,26 +59,24 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 		codeChunkNeedingDeserialisation.declaredThrowables.add(ClassNotFoundException.class);
 		codeChunkNeedingDeserialisation.declaredThrowables.add(IOException.class);
 		final int createdObjectID = identityHashCodeGenerator.generateIdentityHashCode();
-		NewGeneratedVariableNameRenderer tmpObjectVariableNameRenderer = new NewGeneratedVariableNameRenderer(createdObjectID, Object.class, importsContainer, codeChunkNeedingDeserialisation, "deser");
-		ClassNameRenderer baisClassNameRenderer = new ClassNameRenderer(ByteArrayInputStream.class, importsContainer);
+		ExistingVariableNameRenderer existingTmpObjectVariableNameRenderer = new ExistingVariableNameRenderer(createdObjectID, Object.class, importsContainer, codeChunkNeedingDeserialisation);
 		final int baisID = identityHashCodeGenerator.generateIdentityHashCode();
-		NewGeneratedVariableNameRenderer baisVarNameRenderer = new NewGeneratedVariableNameRenderer(baisID, ByteArrayInputStream.class, importsContainer, codeChunkNeedingDeserialisation, "tmp");
+		ExistingVariableNameRenderer existingBaisVarNameRenderer = new ExistingVariableNameRenderer(baisID, ByteArrayInputStream.class, importsContainer, codeChunkNeedingDeserialisation);
 		ExpressionRenderer baObjectInitCode = ExpressionRenderer.stringRenderer(getSerialisedObjectSourceCode(object));
-		ClassNameRenderer kryoInputClassNameRenderer = new ClassNameRenderer(Input.class, importsContainer);
 		final int inputID = identityHashCodeGenerator.generateIdentityHashCode();
-		NewGeneratedVariableNameRenderer kryoInputVarNameRenderer = new NewGeneratedVariableNameRenderer(inputID, Input.class, importsContainer, codeChunkNeedingDeserialisation, "tmp");
-		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s", Object.class, new ClassNameRenderer(Object.class, importsContainer), tmpObjectVariableNameRenderer);
-		VariableDeclarationRenderer baisVariableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s(%s)", ByteArrayInputStream.class, baisClassNameRenderer, baisVarNameRenderer, baisClassNameRenderer, baObjectInitCode);
-		VariableDeclarationRenderer kryoInputVariableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s(%s)", Input.class, kryoInputClassNameRenderer, kryoInputVarNameRenderer, kryoInputClassNameRenderer, baisVarNameRenderer);
+		ExistingVariableNameRenderer existingKryoInputVarNameRenderer = new ExistingVariableNameRenderer(inputID, Input.class, importsContainer, codeChunkNeedingDeserialisation);
+		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s", createdObjectID, objectDeclarationScope, "deser", Object.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance);
+		VariableDeclarationRenderer baisVariableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s(%s)", baisID, objectDeclarationScope, "tmp", ByteArrayInputStream.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, baObjectInitCode);
+		VariableDeclarationRenderer kryoInputVariableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s(%s)", inputID, objectDeclarationScope, "tmp", Input.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, existingBaisVarNameRenderer);
 		ExpressionRenderer renderer =
 				new StructuredTextRenderer(
-						"%s;\n" + "try (%s;\n" + "     %s) {\n" + "  %s = %s.readClassAndObject(%s);\n" + "}", variableDeclarationRenderer, baisVariableDeclarationRenderer, kryoInputVariableDeclarationRenderer, tmpObjectVariableNameRenderer, kryoVariableNameRenderer, kryoInputVarNameRenderer);
+						"%s;\n" + "try (%s;\n" + "     %s) {\n" + "  %s = %s.readClassAndObject(%s);\n" + "}", variableDeclarationRenderer, baisVariableDeclarationRenderer, kryoInputVariableDeclarationRenderer, existingTmpObjectVariableNameRenderer, existingKryoVariableNameRenderer, existingKryoInputVarNameRenderer);
 		codeChunkNeedingDeserialisation.codeRenderers.add(renderer);
 		codeChunkNeedingDeserialisation.addDeclaredObject(createdObjectID, variableDeclarationRenderer);
 		codeChunkNeedingDeserialisation.addDeclaredObject(inputID, kryoInputVariableDeclarationRenderer);
 		codeChunkNeedingDeserialisation.addDeclaredObject(baisID, baisVariableDeclarationRenderer);
 
-		return tmpObjectVariableNameRenderer;
+		return existingTmpObjectVariableNameRenderer;
 	}
 
 	protected String getSerialisedObjectSourceCode(Object object) throws IOException {
