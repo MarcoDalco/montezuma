@@ -1,7 +1,5 @@
 package org.montezuma.test.traffic.writing;
 
-import javax.management.DescriptorKey;
-
 public abstract class InitCodeChunk extends CodeChunk {
 	public final int	identityHashCode;
 	InitCodeChunk chunkOverridingDeclaration;

@@ -1,7 +1,6 @@
 package org.montezuma.test.traffic.writing;
 
 import org.montezuma.test.traffic.MustMock;
-import org.montezuma.test.traffic.writing.VariableDeclarationRenderer.ComputableClassNameRenderer;
 import org.montezuma.test.traffic.writing.VariableDeclarationRenderer.ComputableClassNameRendererPlaceholder;
 import org.montezuma.test.traffic.writing.serialisation.SerialisationRendererFactory;
 

@@ -1,8 +1,5 @@
 package org.montezuma.test.traffic.writing;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public abstract class NewVariableNameRenderer extends VariableNameRenderer {
 	protected final Class<?>											varClass;
 

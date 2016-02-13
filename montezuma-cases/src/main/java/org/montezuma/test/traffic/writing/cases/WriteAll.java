@@ -1,7 +1,6 @@
 package org.montezuma.test.traffic.writing.cases;
 
 import org.montezuma.test.traffic.CasesCommon;
-import org.montezuma.test.traffic.Common;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
