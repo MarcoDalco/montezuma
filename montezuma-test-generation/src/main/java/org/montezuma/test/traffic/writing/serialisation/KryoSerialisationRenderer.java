@@ -53,6 +53,7 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 			}
 		};
 		codeChunkNeedingDeserialisation.requiredInits.put(kryoInstanceID, initCodeChunk);
+		initCodeChunk.generateRequiredInits();
 
 		codeChunkNeedingDeserialisation.requiredImports.addImport(new Import("java.io.ByteArrayInputStream"));
 		codeChunkNeedingDeserialisation.requiredImports.addImport(new Import("com.esotericsoftware.kryo.io.Input"));

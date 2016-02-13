@@ -90,6 +90,8 @@ public class TestMethodsWriter {
 					continue;
 			}
 			CodeChunk currentMethodPart = new CodeChunk(currentTestMethod);
+			currentTestMethod.codeChunks.add(currentMethodPart);
+
 			final List<CodeChunk> expectationChunks = buildExpectations(invocationData.calls, currentMethodPart);
 			currentMethodPart.methodPartsBeforeLines.addAll(expectationChunks);
 			final byte[] serialisedReturnValue = invocationData.serialisedReturnValue;
@@ -142,30 +144,30 @@ public class TestMethodsWriter {
 				// In any case:
 				{
 					Object returnValue = deserialiser.deserialise(serialisedReturnValue);
-					final int expectedReturnValueID = /* testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); */ shouldAssertSame ? returnValueIdentityHascode : returnValueID;
-					ExpressionRenderer expectedValueNameRenderer = renderersStrategy.buildExpectedReturnValue(currentMethodPart, returnValue, returnType, expectedReturnValueID, currentMethodPart, importsContainer, mockingStrategy, renderersStrategy, testClassWriter);
-					final ExpressionRenderer expressionRenderer;
-					if (expectedValueNameRenderer instanceof VariableNameRenderer) {
-						// TODO - when the returned values are primitive wrappers (instances of java.lang.Number descendants), cast
-						// the first argument to their original class (the primitive or the wrapper/Object) basing on the return
-						// value of the signature of the method corresponding to this 'cut' invocation
-						// TODO - better check for "don't assertEquals if it's a mock"
-						// The following 'if' condition means "don't assertEquals if it's a mock", but it definitely need
-						// improvement! It mirrors the createInitCodeChunk() code's cases.
-						if (returnType.isPrimitive() || returnType.isArray() || Number.class.isAssignableFrom(returnType) || Collection.class.isAssignableFrom(returnType)
-								|| Map.class.isAssignableFrom(returnType) || !(mockingStrategy.mustStub(returnValue) || mockingStrategy.shouldStub(returnType))) {
-							currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertEquals"));
-							expressionRenderer = new StructuredTextRenderer("assertEquals(%s, %s);", expectedValueNameRenderer, new ExistingVariableNameRenderer(returnValueIdentityHascode, returnType, importsContainer, currentMethodPart));
-							currentMethodPart.addExpressionRenderer(expressionRenderer);
-						}
-					} else {
+					if (returnValue == null) {
 						currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertNull"));
+						final ExpressionRenderer expressionRenderer;
 						expressionRenderer = new StructuredTextRenderer("assertNull(%s);", invocationRenderer);
 						currentMethodPart.addExpressionRenderer(expressionRenderer);
+					} else {
+						if (returnType.isPrimitive() || returnType.isArray() || Number.class.isAssignableFrom(returnType) || Collection.class.isAssignableFrom(returnType)
+								|| Map.class.isAssignableFrom(returnType) || !(mockingStrategy.mustStub(returnValue) || mockingStrategy.shouldStub(returnType))) {
+							final int expectedReturnValueID = /* testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); */ shouldAssertSame ? returnValueIdentityHascode : returnValueID;
+							VariableNameRenderer expectedValueNameRenderer = renderersStrategy.buildExpectedReturnValue(currentMethodPart, returnValue, returnType, expectedReturnValueID, currentMethodPart, importsContainer, mockingStrategy, renderersStrategy, testClassWriter);
+
+							// TODO - when the returned values are primitive wrappers (instances of java.lang.Number descendants), cast
+							// the first argument to their original class (the primitive or the wrapper/Object) basing on the return
+							// value of the signature of the method corresponding to this 'cut' invocation
+							// TODO - better check for "don't assertEquals if it's a mock"
+							// The following 'if' condition means "don't assertEquals if it's a mock", but it definitely need
+							// improvement! It mirrors the createInitCodeChunk() code's cases.
+							currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertEquals"));
+							final ExpressionRenderer expressionRenderer = new StructuredTextRenderer("assertEquals(%s, %s);", expectedValueNameRenderer, new ExistingVariableNameRenderer(returnValueIdentityHascode, returnType, importsContainer, currentMethodPart));
+							currentMethodPart.addExpressionRenderer(expressionRenderer);
+						}
 					}
 				}
 			}
-			currentTestMethod.codeChunks.add(currentMethodPart);
 			justInstantiated = false;
 		}
 		if (testClassWriter.testNumber > initialTestNumber) {

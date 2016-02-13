@@ -20,7 +20,7 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 	public final ObjectDeclarationScope	parentObjectDeclarationScope;
 
 	public CodeChunk(ObjectDeclarationScope	parentObjectDeclarationScope) {
-		this.parentObjectDeclarationScope =parentObjectDeclarationScope;
+		this.parentObjectDeclarationScope = parentObjectDeclarationScope;
 	}
 
 	public CodeChunk(CodeChunk original) {
@@ -39,12 +39,17 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 	}
 
 	public void preprocess() {
+		// TODO - clean requiredInits after preprocessing? Or after rendering (method below)?
 		for (CodeChunk codeChunk : requiredInits.values()) {
 			codeChunk.preprocess();
 		}
 
 		for (CodeChunk codeChunk : methodPartsBeforeLines) {
 			codeChunk.preprocess();
+		}
+
+		for (VariableDeclarationRenderer variableDeclarationRenderer : declarations.values()) {
+			variableDeclarationRenderer.preprocess();
 		}
 
 		for (CodeChunk codeChunk : methodPartsAfterLines) {

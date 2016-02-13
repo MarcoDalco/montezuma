@@ -30,7 +30,9 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 		
 //		deduplicateVariableDeclarations();
 		LinkedHashMap<Integer, InitCodeChunk> requiredInits = collectAllTheRequiredInits();
-		for (CodeChunk codeChunk : requiredInits.values()) {
+		for (InitCodeChunk codeChunk : requiredInits.values()) {
+			int identityHashCode = codeChunk.identityHashCode;
+			addDeclaredObject(identityHashCode, codeChunk.declarations.get(identityHashCode));
 			structuredTextFileWriter.appendChunk(2, codeChunk);
 		}
 		if (instantiationMethodPart != null)

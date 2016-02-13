@@ -200,6 +200,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 				if ((variableCodeChunk == null) || !(MockingFrameworkFactory.getMockingFramework().canStubMultipleTypeWithOneStub() || ((variableCodeChunk instanceof StandardInitCodeChunk) && (argClass.isAssignableFrom(((StandardInitCodeChunk) variableCodeChunk).argClass))))) {
 					variableCodeChunk = createInitCodeChunk(element, elementClass, elementID, "given", mainCodeChunk);
 					mainCodeChunk.requiredInits.put(elementID, variableCodeChunk);
+					variableCodeChunk.generateRequiredInits();
 				}
 				// TODO - TOCHECK - The following should not be necessary, unless assumed by some other code to be there already, before variableCodeChunk is evaluated
 				// maincodeChunk.addDeclaredObject(elementID, variableDeclarationRenderer); // Is it correct, here?

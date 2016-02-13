@@ -44,6 +44,7 @@ public class RenderersStrategy {
 						!(MockingFrameworkFactory.getMockingFramework().canStubMultipleTypeWithOneStub() || ((variableCodeChunk instanceof StandardInitCodeChunk) && (argClass.isAssignableFrom(((StandardInitCodeChunk) variableCodeChunk).argClass))))) {
 					variableCodeChunk = createInitCodeChunk(arg, argClass, argID, "given", importsContainer, mockingStrategy, testClassWriter, mainCodeChunk);
 					mainCodeChunk.requiredInits.put(argID, variableCodeChunk);
+					variableCodeChunk.generateRequiredInits();
 				}
 	
 				// TODO - consider argTypes[i] for potential cast to specify the correct signature in case the target class has
@@ -69,11 +70,7 @@ public class RenderersStrategy {
 		return new StandardInitCodeChunk(argID, arg, argClass, argID, variableNamePrefix, importsContainer, mockingStrategy, this, testClassWriter, parentObjectDeclarationScope);
 	}
 
-	ExpressionRenderer buildExpectedReturnValue(CodeChunk codeChunk, Object returnValue, Class<?> returnValueDeclaredType, int identityHashCode, ObjectDeclarationScope objectDeclarationScope, ImportsContainer importsContainer, MockingStrategy mockingStrategy, RenderersStrategy renderersStrategy, TestClassWriter testClassWriter) throws ClassNotFoundException, IOException {
-		if (returnValue == null) {
-			return ExpressionRenderer.stringRenderer("null");
-		}
-	
+	VariableNameRenderer buildExpectedReturnValue(CodeChunk codeChunk, Object returnValue, Class<?> returnValueDeclaredType, int identityHashCode, ObjectDeclarationScope objectDeclarationScope, ImportsContainer importsContainer, MockingStrategy mockingStrategy, RenderersStrategy renderersStrategy, TestClassWriter testClassWriter) throws ClassNotFoundException, IOException {
 		final Object arg = returnValue;
 		final int argID = identityHashCode;
 	
@@ -86,6 +83,7 @@ public class RenderersStrategy {
 		if (returnValueInitCodeChunk == null) {
 			returnValueInitCodeChunk = new StandardInitCodeChunk(argID, arg, returnValueDeclaredType, argID, "expected", importsContainer, mockingStrategy, renderersStrategy, testClassWriter, codeChunk);
 			codeChunk.requiredInits.put(identityHashCode, returnValueInitCodeChunk);
+			returnValueInitCodeChunk.generateRequiredInits();
 		}
 	
 		// final Class<? extends Object> returnValueClass = (returnValue instanceof MustMock ? ((MustMock)

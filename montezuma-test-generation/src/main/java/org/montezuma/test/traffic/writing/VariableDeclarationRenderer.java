@@ -28,16 +28,6 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 		this.importsContainer = importsContainer;
 	}
 
-	private void replaceExpressionRendererPlaceholders(Class<?> desiredClass, ImportsContainer importsContainer, NewVariableNameRenderer variableNameRenderer) {
-		for (int i=0; i<expressionRenderers.length; i++) {
-			if (expressionRenderers[i] == ComputableClassNameRendererPlaceholder.instance)
-				expressionRenderers[i] = new ComputableClassNameRenderer(desiredClass, importsContainer);
-			else
-			if (expressionRenderers[i] == NewVariableNameRendererPlaceholder.instance)
-				expressionRenderers[i] = variableNameRenderer;
-		}
-	}
-
 	public static class NewVariableNameRendererPlaceholder extends NewVariableNameRenderer {
 		private NewVariableNameRendererPlaceholder() {
 			super(-1, null);
@@ -195,6 +185,14 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 			return getName(varClass);
 		}
 
+	}
+
+	public void preprocess() {
+		for (Class<?> desiredClass : desiredClasses) {
+			if (!desiredClass.isPrimitive() && !desiredClass.isArray() && !desiredClass.getPackage().equals(Package.getPackage("java.lang"))) {
+				importsContainer.addImport(new Import(desiredClass.getCanonicalName()));
+			}
+		}
 	}
 
 }
