@@ -45,7 +45,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 		// maincodeChunk.requiredInits.add(variableCodeChunk);
 		if ((arg instanceof Number) || (arg instanceof Boolean)) {
 			if (argClass.equals(BigDecimal.class)) {
-				VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;", argID, this, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, new ExpressionRenderer() {
+				VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;", argID, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, new ExpressionRenderer() {
 					@Override
 					public String render() {
 						return getBigDecimalInitialiser(arg);
@@ -95,14 +95,13 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 				// final String actualArgType = argClass.getCanonicalName();
 				// final String declaredArgClassName = (actualArgType.startsWith("java") ? argClass.getSimpleName() : actualArgType);
 				VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;",
-						argID, this, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, initExpressionRenderer);
+						argID, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, initExpressionRenderer);
 				codeRenderers.add(variableDeclarationRenderer);
 				addDeclaredObject(argID, variableDeclarationRenderer);
 			}
 		} else if (argClass == String.class) {
 			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = \"%s\";",
 					argID,
-					this,
 					variableNamePrefix,
 					argClass,
 					importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, new ExpressionRenderer() {
@@ -127,7 +126,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 				i++;
 			}
 			final ClassNameRenderer actualClassNameRenderer = new ClassNameRenderer(arg.getClass(), importsContainer);
-			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s();", argID, this, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, actualClassNameRenderer);
+			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s();", argID, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, actualClassNameRenderer);
 			codeRenderers.add(variableDeclarationRenderer);
 			addDeclaredObject(argID, variableDeclarationRenderer);
 			buildList(this, rebuiltRuntimeList, listElementTypes, listElementIDs, new ExistingVariableNameRenderer(argID, argClass, importsContainer, this));
@@ -154,7 +153,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			StructuredTextRenderer arrayObjectsRenderer =
 					renderersStrategy.buildInvocationParameters(this, rebuiltRuntimeArray, arrayArgTypes, arrayArgIDs, importsContainer, mockingStrategy, testClassWriter);
 			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer(
-					"final %s %s = new %s {%s};", argID, this, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, arrayObjectsRenderer);
+					"final %s %s = new %s {%s};", argID, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, arrayObjectsRenderer);
 			codeRenderers.add(variableDeclarationRenderer);
 			addDeclaredObject(argID, variableDeclarationRenderer);
 		} else {

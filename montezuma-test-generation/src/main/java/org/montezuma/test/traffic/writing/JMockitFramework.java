@@ -48,7 +48,7 @@ public class JMockitFramework implements MockingFramework {
 		if (testClassWriter.declaresIdentityHashCode(identityHashCode, declaredClass))
 			return testClassWriter.getVisibleDeclarationRenderer(identityHashCode, declaredClass);
 
-		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer(annotation + " private %s %s;", identityHashCode, testClassWriter, "mocked", declaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance);
+		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer(annotation + " private %s %s;", identityHashCode, "mocked", declaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance);
 		testClassWriter.addField(identityHashCode, variableDeclarationRenderer);
 		testClassWriter.addDeclaredObject(identityHashCode, variableDeclarationRenderer);
 		

@@ -14,7 +14,7 @@ public class RenderersStrategy {
 		final Class<?> declaredClass = /* TO CHECK - maybe Object.class instead of argClass, so that the actual declared type gets determined by the subsequent use? */ argClass;
 		ExpressionRenderer deserialisationRenderer = getDeserialisationRenderer(codeChunk, arg, importsContainer, codeChunk, identityHashCodeGenerator);
 		final VariableDeclarationRenderer renderer =
-				new VariableDeclarationRenderer("final %s %s = (%s) %s;", argID, codeChunk, "given", declaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, deserialisationRenderer);
+				new VariableDeclarationRenderer("final %s %s = (%s) %s;", argID, "given", declaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, deserialisationRenderer);
 		codeChunk.addDeclaredObject(argID, renderer);
 		return renderer;
 	}

@@ -44,7 +44,7 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 			@Override
 			public void generateRequiredInits() {
 				// FIXME: if required twice in a method, this causes a compile error, as it declares Kryo twice.
-				VariableDeclarationRenderer kryoVariableDeclarationRenderer = new VariableDeclarationRenderer("%s %s = new %s();", kryoInstanceID, objectDeclarationScope, "k", Kryo.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance);
+				VariableDeclarationRenderer kryoVariableDeclarationRenderer = new VariableDeclarationRenderer("%s %s = new %s();", kryoInstanceID, "k", Kryo.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance);
 				codeRenderers.add(kryoVariableDeclarationRenderer);
 				addDeclaredObject(kryoInstanceID, kryoVariableDeclarationRenderer);
 
@@ -66,9 +66,9 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 		ExpressionRenderer baObjectInitCode = ExpressionRenderer.stringRenderer(getSerialisedObjectSourceCode(object));
 		final int inputID = identityHashCodeGenerator.generateIdentityHashCode();
 		ExistingVariableNameRenderer existingKryoInputVarNameRenderer = new ExistingVariableNameRenderer(inputID, Input.class, importsContainer, codeChunkNeedingDeserialisation);
-		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s", createdObjectID, objectDeclarationScope, "deser", Object.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance);
-		VariableDeclarationRenderer baisVariableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s(%s)", baisID, objectDeclarationScope, "tmp", ByteArrayInputStream.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, baObjectInitCode);
-		VariableDeclarationRenderer kryoInputVariableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s(%s)", inputID, objectDeclarationScope, "tmp", Input.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, existingBaisVarNameRenderer);
+		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s", createdObjectID, "deser", Object.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance);
+		VariableDeclarationRenderer baisVariableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s(%s)", baisID, "tmp", ByteArrayInputStream.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, baObjectInitCode);
+		VariableDeclarationRenderer kryoInputVariableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s(%s)", inputID, "tmp", Input.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, existingBaisVarNameRenderer);
 		ExpressionRenderer renderer =
 				new StructuredTextRenderer(
 						"%s;\n" + "try (%s;\n" + "     %s) {\n" + "  %s = %s.readClassAndObject(%s);\n" + "}", variableDeclarationRenderer, baisVariableDeclarationRenderer, kryoInputVariableDeclarationRenderer, existingTmpObjectVariableNameRenderer, existingKryoVariableNameRenderer, existingKryoInputVarNameRenderer);

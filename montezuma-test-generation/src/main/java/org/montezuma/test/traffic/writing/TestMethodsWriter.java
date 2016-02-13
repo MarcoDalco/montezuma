@@ -120,7 +120,7 @@ public class TestMethodsWriter {
 //				final NewGeneratedVariableNameRenderer returnValueNameRenderer =
 //						new NewGeneratedVariableNameRenderer(returnValueIdentityHascode, returnType, importsContainer, currentMethodPart, "returned");
 				if (!currentMethodPart.declaresOrCanSeeIdentityHashCode(returnValueIdentityHascode, returnType)) {
-					VariableDeclarationRenderer returnValueDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;", returnValueIdentityHascode, currentMethodPart, "returned", returnType, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, invocationRenderer);
+					VariableDeclarationRenderer returnValueDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;", returnValueIdentityHascode, "returned", returnType, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, invocationRenderer);
 					currentMethodPart.addExpressionRenderer(returnValueDeclarationRenderer);
 					currentMethodPart.addDeclaredObject(returnValueIdentityHascode, returnValueDeclarationRenderer);
 				}

@@ -18,10 +18,10 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 		this.importsContainer = importsContainer;
 	}
 
-	public VariableDeclarationRenderer(String formattedText, int identityHashCode, ObjectDeclarationScope objectDeclarationScope, String namePrefix, Class<?> desiredClass, ImportsContainer importsContainer, ComputableClassNameRendererPlaceholder classNameRenderer, NewVariableNameRendererPlaceholder newVariableNameRendererPlaceholder, ExpressionRenderer... renderers) {
+	public VariableDeclarationRenderer(String formattedText, int identityHashCode, String namePrefix, Class<?> desiredClass, ImportsContainer importsContainer, ComputableClassNameRendererPlaceholder classNameRenderer, NewVariableNameRendererPlaceholder newVariableNameRendererPlaceholder, ExpressionRenderer... renderers) {
 		super(formattedText, joinAndInitialiseExpressionRenderers(ComputableClassNameRendererPlaceholder.instance, NewVariableNameRendererPlaceholder.instance, renderers));
 
-		NewVariableNameRenderer variableNameRenderer = new NewGeneratedVariableNameRenderer(identityHashCode, desiredClass, importsContainer, objectDeclarationScope, namePrefix);
+		NewVariableNameRenderer variableNameRenderer = new NewGeneratedVariableNameRenderer(identityHashCode, desiredClass, importsContainer, namePrefix);
 
 		this.desiredClasses.add(desiredClass);
 		this.variableNameRenderer = variableNameRenderer;
@@ -140,15 +140,13 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 
 	class NewGeneratedVariableNameRenderer extends NewVariableNameRenderer {
 		protected final ImportsContainer			importsContainer;
-		private final ObjectDeclarationScope	objectDeclarationScope;
 		private final String									namePrefix;
 		private final Map<Class<?>, String>		names = new HashMap<>();
 
-		public NewGeneratedVariableNameRenderer(int identityHashCode, Class<?> varClass, ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope, String namePrefix) {
+		public NewGeneratedVariableNameRenderer(int identityHashCode, Class<?> varClass, ImportsContainer importsContainer, String namePrefix) {
 			super(identityHashCode, varClass);
 			this.importsContainer = importsContainer;
 			this.namePrefix = namePrefix;
-			this.objectDeclarationScope = objectDeclarationScope;
 		}
 
 		@Override
