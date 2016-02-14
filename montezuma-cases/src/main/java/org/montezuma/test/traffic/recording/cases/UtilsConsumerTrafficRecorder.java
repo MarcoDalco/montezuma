@@ -25,8 +25,10 @@ public class UtilsConsumerTrafficRecorder {
 				UtilsConsumer cut = new UtilsConsumer();
 
 				final BigDecimal result1 = cut.doSomething("12");
+				final BigDecimal result2 = cut.doSomethingReturningNull();
 				RecordingAspect.turnOff();
 				System.out.println(result1);
+				System.out.println(result2);
 			}
 		}, UTILS_CONSUMER_RECORDING_SUBDIR);
 	}

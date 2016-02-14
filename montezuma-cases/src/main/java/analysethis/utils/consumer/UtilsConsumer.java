@@ -10,4 +10,8 @@ public class UtilsConsumer {
 		return new BigDecimalUtils().toBigDecimal(toParse);
 	}
 
+	public BigDecimal doSomethingReturningNull() {
+		return new BigDecimalUtils().toBigDecimal(null, null);
+	}
+
 }
