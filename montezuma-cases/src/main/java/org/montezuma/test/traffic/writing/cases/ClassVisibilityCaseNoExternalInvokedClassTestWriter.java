@@ -10,7 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
-import analysethis.untestable.until.privateclassreferencesareworkedaround.ClassVisibilityCaseMainClass;
+import analysethis.privateclassreferences.ClassVisibilityCaseMainClass;
 
 public class ClassVisibilityCaseNoExternalInvokedClassTestWriter {
 

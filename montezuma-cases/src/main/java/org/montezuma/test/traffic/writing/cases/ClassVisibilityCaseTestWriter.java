@@ -8,7 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
-import analysethis.untestable.until.privateclassreferencesareworkedaround.ClassVisibilityCaseMainClass;
+import analysethis.privateclassreferences.ClassVisibilityCaseMainClass;
 
 public class ClassVisibilityCaseTestWriter {
 

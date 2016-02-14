@@ -1,4 +1,4 @@
-package dontanalisethis.untestable.until.privateclassreferencesareworkedaround;
+package dontanalisethis.privateclassreferences;
 
 public class ClassVisibilityCaseExternalInvokedClass {
 	private final InvisibleClass INVISIBLE_CLASS = new InvisibleClass();

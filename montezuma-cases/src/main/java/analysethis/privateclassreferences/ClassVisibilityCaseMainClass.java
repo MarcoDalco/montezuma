@@ -1,8 +1,8 @@
-package analysethis.untestable.until.privateclassreferencesareworkedaround;
+package analysethis.privateclassreferences;
 
-import dontanalisethis.untestable.until.privateclassreferencesareworkedaround.ClassVisibilityCaseExternalInvokedClass;
-import dontanalisethis.untestable.until.privateclassreferencesareworkedaround.VisibleClass;
-import dontanalisethis.untestable.until.privateclassreferencesareworkedaround.VisibleInterface;
+import dontanalisethis.privateclassreferences.ClassVisibilityCaseExternalInvokedClass;
+import dontanalisethis.privateclassreferences.VisibleClass;
+import dontanalisethis.privateclassreferences.VisibleInterface;
 
 public class ClassVisibilityCaseMainClass {
 	private final ClassVisibilityCaseExternalInvokedClass CLASS_VISIBILITY_CASE_EXTERNAL_INVOKED_CLASS = new ClassVisibilityCaseExternalInvokedClass();

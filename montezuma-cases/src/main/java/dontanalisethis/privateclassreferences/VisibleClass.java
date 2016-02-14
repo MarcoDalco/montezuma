@@ -1,4 +1,4 @@
-package dontanalisethis.untestable.until.privateclassreferencesareworkedaround;
+package dontanalisethis.privateclassreferences;
 
 public class VisibleClass {
 	public String getNameForClassCase() {
