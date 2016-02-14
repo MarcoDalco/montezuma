@@ -1,4 +1,4 @@
-package analysethis.utils.time;
+package analysethis.untestable.until.timefunctionsareworkedaround;
 
 import java.util.Calendar;
 import java.util.Date;

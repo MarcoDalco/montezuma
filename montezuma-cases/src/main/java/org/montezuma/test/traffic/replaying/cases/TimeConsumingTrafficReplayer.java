@@ -1,13 +1,13 @@
 package org.montezuma.test.traffic.replaying.cases;
 
-import analysethis.utils.time.TimeConsumer;
-
 import org.montezuma.test.traffic.recording.cases.TimeConsumerTrafficRecorder;
 import org.montezuma.test.traffic.replaying.TrafficReplayer;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+
+import analysethis.untestable.until.timefunctionsareworkedaround.TimeConsumer;
 
 public class TimeConsumingTrafficReplayer extends TrafficReplayer {
 

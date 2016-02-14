@@ -1,13 +1,13 @@
 package org.montezuma.test.traffic.recording.cases;
 
-import analysethis.utils.time.TimeConsumer;
-
 import org.montezuma.test.traffic.recording.TrafficRecorder;
 import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
 
 import java.sql.SQLException;
 import java.util.Calendar;
 import java.util.Date;
+
+import analysethis.untestable.until.timefunctionsareworkedaround.TimeConsumer;
 
 public class TimeConsumerTrafficRecorder {
 	public static final String	TIME_CONSUMER_RECORDING_SUBDIR	= "timeconsumer";
