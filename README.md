@@ -49,7 +49,7 @@ No exceptions are expected to appear in the console output during the following 
 5. Run as Java Application montezuma-cases/src/main/java/org/montezuma/test/traffic/writing/cases/WriteAllMocking.java
 6. Refresh the montezuma-cases/src/generatedtests folder. A 'java' subfolder should appear.
 7. Right-click on the appeared 'java', click on Build Path --> Use as Source Folder. The new source folder will contain the generated test classes, possibly with compile-time errors.
-8. Right-click on the newly added java source folder (montezuma-cases/src/generatedtests/java) and Run As... Unit Tests. Confirm if asked to proceed regardless of the existing project errors. Unit tests should be run, some likely failing.
+8. Right-click on the newly added java source folder (montezuma-cases/src/generatedtests/java) and Run As... Unit Tests. Confirm if asked to proceed regardless of the existing project errors. Unit tests should be run, succeeding except for some of those in packages with "untestable.until" in their paths.
 
 
 ### TEST GENERATION OPTIONS COMPARISON (extra optional steps) ###
