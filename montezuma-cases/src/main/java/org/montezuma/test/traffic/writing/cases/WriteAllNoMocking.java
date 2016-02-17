@@ -16,6 +16,7 @@ public class WriteAllNoMocking {
 		CompiledStatementStoringPreparedStatementCreatorTestWriter.main(args);
 		CurrencyUtilsTestWriter.main(args);
 		PassThroughClassNoDummyThirdPartyMockingTestWriter.main(args);
+		StaticMethodCallTestWriter.main(args);
 		SuperClassCallWithStateTestWriter.main(args);
 		TimeConsumerTestWriter.main(args);
 		UtilsConsumerNoUtilsMockingTestWriter.main(args);

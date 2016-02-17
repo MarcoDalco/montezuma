@@ -16,6 +16,7 @@ public class WriteAllMocking {
 		CompiledStatementStoringPreparedStatementCreatorTestWriter.main(args);
 		CurrencyUtilsTestWriter.main(args);
 		PassThroughClassTestWriter.main(args);
+		StaticMethodCallTestWriter.main(args);
 		SuperClassCallWithStateTestWriter.main(args);
 		TimeConsumerTestWriter.main(args);
 		UtilsConsumerTestWriter.main(args);

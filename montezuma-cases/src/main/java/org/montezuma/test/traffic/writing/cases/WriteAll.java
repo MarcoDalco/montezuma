@@ -19,6 +19,7 @@ public class WriteAll {
 		CompiledStatementStoringPreparedStatementCreatorTestWriter.main(args);
 		CurrencyUtilsTestWriter.main(args);
 		PassThroughClassTestWriter.main(args);
+		StaticMethodCallTestWriter.main(args);
 		SuperClassCallWithStateTestWriter.main(args);
 		TimeConsumerTestWriter.main(args);
 		UtilsConsumerTestWriter.main(args);
@@ -33,6 +34,7 @@ public class WriteAll {
 		CompiledStatementStoringPreparedStatementCreatorTestWriter.main(args);
 		CurrencyUtilsTestWriter.main(args);
 		PassThroughClassNoDummyThirdPartyMockingTestWriter.main(args);
+		StaticMethodCallTestWriter.main(args);
 		SuperClassCallWithStateTestWriter.main(args);
 		TimeConsumerTestWriter.main(args);
 		UtilsConsumerNoUtilsMockingTestWriter.main(args);

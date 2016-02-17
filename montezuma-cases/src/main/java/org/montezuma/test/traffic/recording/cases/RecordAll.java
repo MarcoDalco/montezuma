@@ -14,6 +14,7 @@ public class RecordAll {
 		CompiledStatementStoringPreparedStatementCreatorTrafficRecorder.main(args);
 		CurrencyUtilsTrafficRecorder.main(args);
 		PassThroughClassTrafficRecorder.main(args);
+		StaticMethodCallTrafficRecorder.main(args);
 		SuperClassCallWithStateTrafficRecorder.main(args);
 		TimeConsumerTrafficRecorder.main(args);
 		UtilsConsumerTrafficRecorder.main(args);

@@ -129,7 +129,8 @@ public class TestClassWriter implements ObjectDeclarationScope {
 
 	@Override
 	public VariableDeclarationRenderer getVisibleDeclarationRendererInScopeOrSubscopes(int identityHashCode, Class<?> requiredClass) {
-		return getVisibleDeclarationRenderer(identityHashCode, requiredClass);
+		throw new UnsupportedOperationException("This used to be dead code: re-enable it if required.");
+//		return getVisibleDeclarationRenderer(identityHashCode, requiredClass);
 	}
 
 	@Override

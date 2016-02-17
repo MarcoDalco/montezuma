@@ -16,6 +16,7 @@ public class ReplayAll {
 		CompiledStatementStoringPreparedStatementCreatorTrafficReplayer.main(args);
 		CurrencyUtilsTrafficReplayer.main(args);
 		PassThroughClassTrafficReplayer.main(args);
+		StaticMethodCallTrafficReplayer.main(args);
 		SuperClassCallWithStateTrafficReplayer.main(args);
 		TimeConsumingTrafficReplayer.main(args);
 		UtilsConsumerTrafficReplayer.main(args);
