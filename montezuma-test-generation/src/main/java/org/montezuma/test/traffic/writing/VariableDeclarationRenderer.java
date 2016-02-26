@@ -37,12 +37,12 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 
 		@Override
 		protected String getName(Class<?> desiredClass) {
-			return null;
+			throw new UnsupportedOperationException("This should never be invoked");
 		}
 
 		@Override
 		public String render() {
-			return null;
+			throw new UnsupportedOperationException("This should never be invoked");
 		}
 	}
 
@@ -126,9 +126,10 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 			// An already-desired class is either the same as the requiredClass or is a sub-type (subclass or subinterface), so it already declares the requiredClass: nothing to do.
 			if (requiredClass.isAssignableFrom(alreadyDesiredClass))
 				return true;
+			// A more-specific-than-already-desired class is required, so let's remove it, for adding it later on.
 			if (alreadyDesiredClass.isAssignableFrom(requiredClass)) {
 				desiredClasses.remove(alreadyDesiredClass);
-				// Go to add the requiredClass
+				// Go to add the requiredClass. There cannot be any more-specialised classes, as they would have all been removed by the "remove" above.
 				break;
 			}
 		}

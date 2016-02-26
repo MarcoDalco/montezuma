@@ -86,8 +86,6 @@ public class TestMethodsWriter {
 				} else
 					throw new IllegalStateException("At the moment this just can't happen.");
 				justInstantiated = true;
-				if (isInitMethod)
-					continue;
 			}
 			CodeChunk currentMethodPart = new CodeChunk(currentTestMethod);
 			currentTestMethod.codeChunks.add(currentMethodPart);
