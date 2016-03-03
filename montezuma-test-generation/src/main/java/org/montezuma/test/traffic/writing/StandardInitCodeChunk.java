@@ -113,7 +113,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			);
 			codeRenderers.add(variableDeclarationRenderer);
 			addDeclaredObject(argID, variableDeclarationRenderer);
-		} else if (argClass.isAssignableFrom(List.class) && argClass.getPackage().getName().startsWith("java.util")) {
+		} else if (List.class.isAssignableFrom(argClass) && argClass.getPackage().getName().startsWith("java.util")) {
 			@SuppressWarnings("unchecked") final List<Object> rebuiltRuntimeList = (List<Object>) arg;
 			final int listSize = rebuiltRuntimeList.size();
 			String[] listElementTypes = new String[listSize];
