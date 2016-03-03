@@ -30,12 +30,11 @@ public class TrafficReader {
 		}
 	}
 
-	protected static Map<Integer, List<InvocationData>> loadInvocationDataForClass(final Class<?> class1, String recordingSubDir) throws FileNotFoundException, IOException, ClassNotFoundException {
-		File baseDir = new File(Common.BASE_RECORDING_PATH, recordingSubDir);
-		File[] recordingsForThatClass = baseDir.listFiles(new FilenameFilter() {
+	protected static Map<Integer, List<InvocationData>> loadInvocationDataForClass(final Class<?> clazz, File recordingDir) throws FileNotFoundException, IOException, ClassNotFoundException {
+		File[] recordingsForThatClass = recordingDir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.startsWith(class1.getName());
+				return name.startsWith(clazz.getName());
 			}
 		});
 		Map<Integer, List<InvocationData>> invocationLists = new HashMap<Integer, List<InvocationData>>();

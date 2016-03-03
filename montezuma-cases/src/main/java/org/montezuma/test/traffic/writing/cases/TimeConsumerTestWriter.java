@@ -13,8 +13,8 @@ import analysethis.untestable.until.timefunctionsareworkedaround.TimeConsumer;
 public class TimeConsumerTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
-		new TrafficToUnitTestsWriter().generateTestsFor(
-				TimeConsumer.class, TrafficToUnitTestsWriter.getDontMockClasses(), TimeConsumerTrafficRecorder.TIME_CONSUMER_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
+		CasesCommon.generateTestsFor(
+				TimeConsumer.class, TrafficToUnitTestsWriter.getDontMockClasses(), TimeConsumerTrafficRecorder.TIME_CONSUMER_RECORDING_SUBDIR, CasesCommon.parseArguments(args));
 	}
 
 }

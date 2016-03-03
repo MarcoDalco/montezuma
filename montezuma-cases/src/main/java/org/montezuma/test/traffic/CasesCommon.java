@@ -1,6 +1,13 @@
 package org.montezuma.test.traffic;
 
+import org.montezuma.test.traffic.writing.TrafficToUnitTestsWriter;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CasesCommon {
@@ -25,5 +32,10 @@ public class CasesCommon {
 		final String testClassPath = parsedArguments.get(TEST_CLASS_PATH_KEY);
 
 		return (testClassPath != null ? testClassPath : TEST_CLASS_PATH_DEFAULT);
+	}
+
+	public static void generateTestsFor(Class<?> clazz, List<String> dontMockClasses, String recordingSubdir, Map<String, String> args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
+		new TrafficToUnitTestsWriter().generateTestsFor(
+		clazz, dontMockClasses, new File(Common.BASE_RECORDING_PATH, recordingSubdir), CasesCommon.getClassPath(args));
 	}
 }

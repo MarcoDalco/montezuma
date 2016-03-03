@@ -3,6 +3,7 @@ package org.montezuma.test.traffic.writing;
 import org.montezuma.test.traffic.InvocationData;
 import org.montezuma.test.traffic.TrafficReader;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -35,8 +36,8 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 		return dontMockRegexList;
 	}
 
-	public void generateTestsFor(final Class<?> clazz, List<String> dontMockRegexList, String recordingSubDir, String outputClassPath) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-		final Map<Integer, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingSubDir);
+	public void generateTestsFor(final Class<?> clazz, List<String> dontMockRegexList, File recordingDir, String outputClassPath) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+		final Map<Integer, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingDir);
 		for (List<InvocationData> invocationDataList : invocationDataLists.values()) {
 			printInvocationDataSizes(invocationDataList);
 		}

@@ -18,7 +18,7 @@ public class ClassVisibilityCaseNoExternalInvokedClassTestWriter {
 		final List<String> dontMockClasses = new ArrayList<>();
 		dontMockClasses.add(".*ClassVisibilityCaseExternalInvokedClass.*");
 		dontMockClasses.addAll(TrafficToUnitTestsWriter.getDontMockClasses());
-		new TrafficToUnitTestsWriter().generateTestsFor(ClassVisibilityCaseMainClass.class, dontMockClasses, ClassVisibilityCaseTrafficRecorder.CLASS_VISIBILITY_CASE_RECORDING_SUBDIR, CasesCommon.getClassPath(CasesCommon.parseArguments(args)));
+		CasesCommon.generateTestsFor(ClassVisibilityCaseMainClass.class, dontMockClasses, ClassVisibilityCaseTrafficRecorder.CLASS_VISIBILITY_CASE_RECORDING_SUBDIR, CasesCommon.parseArguments(args));
 	}
 
 }
