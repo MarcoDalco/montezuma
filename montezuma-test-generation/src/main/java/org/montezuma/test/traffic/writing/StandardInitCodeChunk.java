@@ -7,6 +7,7 @@ import org.montezuma.test.traffic.writing.VariableDeclarationRenderer.Computable
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -129,8 +130,27 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s();", argID, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, actualClassNameRenderer);
 			codeRenderers.add(variableDeclarationRenderer);
 			addDeclaredObject(argID, variableDeclarationRenderer);
-			buildList(this, rebuiltRuntimeList, listElementTypes, listElementIDs, new ExistingVariableNameRenderer(argID, argClass, importsContainer, this));
-		} else if (argClass.isAssignableFrom(Set.class)) {} else if (argClass.isAssignableFrom(Map.class)) {} else if (argClass.isArray()) {
+			buildCollection(this, rebuiltRuntimeList, listElementTypes, listElementIDs, new ExistingVariableNameRenderer(argID, argClass, importsContainer, this));
+		} else if (Set.class.isAssignableFrom(argClass)) {
+			@SuppressWarnings("unchecked") final Set<Object> rebuiltRuntimeSet = (Set<Object>) arg;
+			final int setSize = rebuiltRuntimeSet.size();
+			String[] setElementTypes = new String[setSize];
+			int[] setElementIDs = new int[setSize];
+			int i = 0;
+			for (Object element : rebuiltRuntimeSet) {
+				setElementTypes[i] = element.getClass().getCanonicalName();
+				setElementIDs[i] = testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); // TODO: store the
+																																																	// real object ID?
+				i++;
+			}
+			final ClassNameRenderer actualClassNameRenderer = new ClassNameRenderer(arg.getClass(), importsContainer);
+			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s();", argID, variableNamePrefix, argClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, actualClassNameRenderer);
+			codeRenderers.add(variableDeclarationRenderer);
+			addDeclaredObject(argID, variableDeclarationRenderer);
+			buildCollection(this, rebuiltRuntimeSet, setElementTypes, setElementIDs, new ExistingVariableNameRenderer(argID, argClass, importsContainer, this));
+		} else if (argClass.isAssignableFrom(Map.class)) {
+			// Not implemented yet
+		} else if (argClass.isArray()) {
 			final Object[] serialisedObjectsArray = (Object[]) arg;
 			final Object[] rebuiltRuntimeArray = new Object[serialisedObjectsArray.length];
 			for (int i = 0; i < rebuiltRuntimeArray.length; i++) {
@@ -183,16 +203,16 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 		return bigIntInit;
 	}
 
-	private void buildList(InitCodeChunk mainCodeChunk, List<Object> rebuiltRuntimeList, String[] listElementTypes, int[] listElementIDs, ExistingVariableNameRenderer listNameRenderer) {
+	private void buildCollection(InitCodeChunk mainCodeChunk, Collection<Object> rebuiltRuntimeCollection, String[] elementTypes, int[] elementIDs, ExistingVariableNameRenderer collectionNameRenderer) {
 		int i = 0;
-		for (Iterator<?> runtimeObjectsIterator = rebuiltRuntimeList.iterator(); runtimeObjectsIterator.hasNext(); i++) {
+		for (Iterator<?> runtimeObjectsIterator = rebuiltRuntimeCollection.iterator(); runtimeObjectsIterator.hasNext(); i++) {
 			Object element = runtimeObjectsIterator.next();
 
 			if (element == null) {
-				mainCodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(null);", listNameRenderer));
+				mainCodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(null);", collectionNameRenderer));
 			} else {
 				final Class<?> elementClass = (element instanceof MustMock ? ((MustMock) element).clazz : element.getClass());
-				final int elementID = listElementIDs[i];
+				final int elementID = elementIDs[i];
 
 				// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL or is it correct? I'm now thinking the latter.
 				InitCodeChunk variableCodeChunk = mainCodeChunk.requiredInits.get(elementID);
@@ -204,7 +224,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 				// TODO - TOCHECK - The following should not be necessary, unless assumed by some other code to be there already, before variableCodeChunk is evaluated
 				// maincodeChunk.addDeclaredObject(elementID, variableDeclarationRenderer); // Is it correct, here?
 
-				mainCodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(%s);", listNameRenderer, new ExistingVariableNameRenderer(elementID, elementClass, importsContainer, mainCodeChunk)));
+				mainCodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(%s);", collectionNameRenderer, new ExistingVariableNameRenderer(elementID, elementClass, importsContainer, mainCodeChunk)));
 			}
 		}
 	}
