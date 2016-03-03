@@ -2,6 +2,7 @@ package org.montezuma.test.traffic.replaying.cases;
 
 import analysethis.utils.consumer.UtilsConsumer;
 
+import org.montezuma.test.traffic.CasesCommon;
 import org.montezuma.test.traffic.recording.cases.UtilsConsumerTrafficRecorder;
 import org.montezuma.test.traffic.replaying.TrafficReplayer;
 
@@ -16,8 +17,8 @@ public class UtilsConsumerTrafficReplayer extends TrafficReplayer {
 		System.out.println("Replaying:");
 
 		final Class<?> clazz = UtilsConsumer.class;
-		String recordingSuDdir = UtilsConsumerTrafficRecorder.UTILS_CONSUMER_RECORDING_SUBDIR;
-		replay(clazz, recordingSuDdir);
+		String recordingsSubDir = UtilsConsumerTrafficRecorder.UTILS_CONSUMER_RECORDING_SUBDIR;
+		replay(clazz, CasesCommon.getRecordingsDir(recordingsSubDir));
 	}
 
 }

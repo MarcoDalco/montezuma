@@ -5,6 +5,7 @@ import org.montezuma.test.traffic.InvocationData;
 import org.montezuma.test.traffic.MustMock;
 import org.montezuma.test.traffic.TrafficReader;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -29,8 +30,8 @@ public class TrafficReplayer extends TrafficReader {
 		primitiveTypes.put("double", double.class);
 	};
 
-	protected static void replay(final Class<?> clazz, String recordingSubDir) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-		final Map<Integer, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingSubDir);
+	protected static void replay(final Class<?> clazz, File recordingDir) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+		final Map<Integer, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingDir);
 		for (List<InvocationData> invocationDataList : invocationDataLists.values()) {
 			printInvocationDataSizes(invocationDataList);
 		}

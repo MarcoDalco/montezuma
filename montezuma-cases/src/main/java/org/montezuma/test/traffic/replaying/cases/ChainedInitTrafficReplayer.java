@@ -2,6 +2,7 @@ package org.montezuma.test.traffic.replaying.cases;
 
 import analysethis.returningpassedobjects.ChainedInit;
 
+import org.montezuma.test.traffic.CasesCommon;
 import org.montezuma.test.traffic.recording.cases.ChainedInitTrafficRecorder;
 import org.montezuma.test.traffic.replaying.TrafficReplayer;
 
@@ -16,8 +17,8 @@ public class ChainedInitTrafficReplayer extends TrafficReplayer {
 		System.out.println("Replaying:");
 
 		final Class<?> clazz = ChainedInit.class;
-		String recordingSuDdir = ChainedInitTrafficRecorder.CHAINEDINIT_RECORDING_SUBDIR;
-		replay(clazz, recordingSuDdir);
+		String recordingsSubDir = ChainedInitTrafficRecorder.CHAINEDINIT_RECORDING_SUBDIR;
+		replay(clazz, CasesCommon.getRecordingsDir(recordingsSubDir));
 	}
 
 }

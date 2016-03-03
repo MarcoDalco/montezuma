@@ -2,6 +2,7 @@ package org.montezuma.test.traffic.replaying.cases;
 
 import analysethis.captureboundarychecks.EntryClassToAnalyse;
 
+import org.montezuma.test.traffic.CasesCommon;
 import org.montezuma.test.traffic.recording.cases.BoundaryChecksTrafficRecorder;
 import org.montezuma.test.traffic.replaying.TrafficReplayer;
 
@@ -16,8 +17,8 @@ public class BoundaryChecksTrafficReplayer extends TrafficReplayer {
 		System.out.println("Replaying:");
 
 		final Class<?> clazz = EntryClassToAnalyse.class;
-		String recordingSuDdir = BoundaryChecksTrafficRecorder.BOUNDARY_CHECKS_RECORDING_SUBDIR;
-		replay(clazz, recordingSuDdir);
+		String recordingsSubDir = BoundaryChecksTrafficRecorder.BOUNDARY_CHECKS_RECORDING_SUBDIR;
+		replay(clazz, CasesCommon.getRecordingsDir(recordingsSubDir));
 	}
 
 }

@@ -2,6 +2,7 @@ package org.montezuma.test.traffic.replaying.cases;
 
 import analysethis.com.somecompany.dao.CompiledStatementStoringPreparedStatementCreator;
 
+import org.montezuma.test.traffic.CasesCommon;
 import org.montezuma.test.traffic.recording.cases.CompiledStatementStoringPreparedStatementCreatorTrafficRecorder;
 import org.montezuma.test.traffic.replaying.TrafficReplayer;
 
@@ -16,8 +17,8 @@ public class CompiledStatementStoringPreparedStatementCreatorTrafficReplayer ext
 		System.out.println("Replaying:");
 
 		final Class<?> clazz = CompiledStatementStoringPreparedStatementCreator.class;
-		String recordingSuDdir = CompiledStatementStoringPreparedStatementCreatorTrafficRecorder.COMPILED_STATEMENT_RECORDING_SUBDIR;
-		replay(clazz, recordingSuDdir);
+		String recordingsSubDir = CompiledStatementStoringPreparedStatementCreatorTrafficRecorder.COMPILED_STATEMENT_RECORDING_SUBDIR;
+		replay(clazz, CasesCommon.getRecordingsDir(recordingsSubDir));
 	}
 
 }

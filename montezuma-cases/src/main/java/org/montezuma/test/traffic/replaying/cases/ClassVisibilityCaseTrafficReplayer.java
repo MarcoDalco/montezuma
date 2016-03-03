@@ -1,5 +1,6 @@
 package org.montezuma.test.traffic.replaying.cases;
 
+import org.montezuma.test.traffic.CasesCommon;
 import org.montezuma.test.traffic.recording.cases.ClassVisibilityCaseTrafficRecorder;
 import org.montezuma.test.traffic.replaying.TrafficReplayer;
 
@@ -16,8 +17,8 @@ public class ClassVisibilityCaseTrafficReplayer extends TrafficReplayer {
 		System.out.println("Replaying:");
 
 		final Class<?> clazz = ClassVisibilityCaseMainClass.class;
-		String recordingSuDdir = ClassVisibilityCaseTrafficRecorder.CLASS_VISIBILITY_CASE_RECORDING_SUBDIR;
-		replay(clazz, recordingSuDdir);
+		String recordingsSubDir = ClassVisibilityCaseTrafficRecorder.CLASS_VISIBILITY_CASE_RECORDING_SUBDIR;
+		replay(clazz, CasesCommon.getRecordingsDir(recordingsSubDir));
 	}
 
 }

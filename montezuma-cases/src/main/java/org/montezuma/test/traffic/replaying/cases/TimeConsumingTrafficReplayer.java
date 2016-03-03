@@ -1,5 +1,6 @@
 package org.montezuma.test.traffic.replaying.cases;
 
+import org.montezuma.test.traffic.CasesCommon;
 import org.montezuma.test.traffic.recording.cases.TimeConsumerTrafficRecorder;
 import org.montezuma.test.traffic.replaying.TrafficReplayer;
 
@@ -16,8 +17,8 @@ public class TimeConsumingTrafficReplayer extends TrafficReplayer {
 		System.out.println("Replaying:");
 
 		final Class<?> clazz = TimeConsumer.class;
-		String recordingSuDdir = TimeConsumerTrafficRecorder.TIME_CONSUMER_RECORDING_SUBDIR;
-		replay(clazz, recordingSuDdir);
+		String recordingsSubDir = TimeConsumerTrafficRecorder.TIME_CONSUMER_RECORDING_SUBDIR;
+		replay(clazz, CasesCommon.getRecordingsDir(recordingsSubDir));
 	}
 
 }

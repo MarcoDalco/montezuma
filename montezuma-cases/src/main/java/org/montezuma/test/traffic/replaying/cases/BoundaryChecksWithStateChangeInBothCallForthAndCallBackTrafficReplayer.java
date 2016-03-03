@@ -2,6 +2,7 @@ package org.montezuma.test.traffic.replaying.cases;
 
 import analysethis.untestable.until.canruncodebetweenexpectedinvocationandreturningvalue.B;
 
+import org.montezuma.test.traffic.CasesCommon;
 import org.montezuma.test.traffic.recording.cases.BoundaryChecksWithStateChangeinBothCallForthAndCallBackTrafficRecorder;
 import org.montezuma.test.traffic.replaying.TrafficReplayer;
 
@@ -16,8 +17,8 @@ public class BoundaryChecksWithStateChangeInBothCallForthAndCallBackTrafficRepla
 		System.out.println("Replaying:");
 
 		final Class<?> clazz = B.class;
-		String recordingSuDdir = BoundaryChecksWithStateChangeinBothCallForthAndCallBackTrafficRecorder.BOUNDARY_CHECKS_RECORDING_SUBDIR;
-		replay(clazz, recordingSuDdir);
+		String recordingsSubDir = BoundaryChecksWithStateChangeinBothCallForthAndCallBackTrafficRecorder.BOUNDARY_CHECKS_RECORDING_SUBDIR;
+		replay(clazz, CasesCommon.getRecordingsDir(recordingsSubDir));
 	}
 
 }
