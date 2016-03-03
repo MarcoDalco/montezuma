@@ -23,8 +23,22 @@ public class KryoDeserialiser implements Deserialiser {
 
 	@Override
 	public Object deserialise(final byte[] serialisedArg) throws ClassNotFoundException, IOException {
-		try (final ByteArrayInputStream bais = new ByteArrayInputStream(serialisedArg); Input input = new Input(bais)) {
+		final ByteArrayInputStream bais = new ByteArrayInputStream(serialisedArg);
+		Input input = new Input(bais);
+		try {
 			return deserialise(input);
+		}
+		finally {
+			try {
+				input.close();
+			} catch (Throwable t) {
+				// Empty on purpose
+			}
+			try {
+				bais.close();
+			} catch (Throwable t) {
+				// Empty on purpose
+			}
 		}
 	}
 
@@ -40,8 +54,9 @@ public class KryoDeserialiser implements Deserialiser {
 
 	@Override
 	public List<Object> deserialiseAll(InputStream inputStream) throws ClassNotFoundException {
-		List<Object> objects = new ArrayList<>();
-		try (Input input = new Input(inputStream)) {
+		List<Object> objects = new ArrayList<Object>();
+		Input input = new Input(inputStream);
+		try {
 			while (true) {
 				final Object readObject = this.deserialise(input);
 				if (log) {
@@ -57,6 +72,13 @@ public class KryoDeserialiser implements Deserialiser {
 				throw eof;
 			}
 			// Fine, it's just the End of Stream. There is no better way to check it.
+		}
+		finally {
+			try {
+				input.close();
+			} catch (Throwable t) {
+				// Empty on purpose
+			}
 		}
 		return objects;
 	}

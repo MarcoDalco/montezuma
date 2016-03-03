@@ -19,7 +19,8 @@ public class KryoSerialiser implements Serialiser {
 		// Whatever the reason for the serialisation to fail, this try-catch-retry mechanism could succeed
 		// It might happen for example in case of OutOfMemory errors or perhaps concurrent changes to the serialised objects
 		for (int i = 0; i < 10; i++) {
-			try (final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+			final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+			try {
 				serialise(byteArrayOutputStream, object);
 				final byte[] serialisedObject = byteArrayOutputStream.toByteArray();
 				return serialisedObject;
@@ -33,14 +34,28 @@ public class KryoSerialiser implements Serialiser {
 					// Do nothing
 				}
 			}
+			finally {
+				try {
+					byteArrayOutputStream.close();
+				} catch (Throwable t) {
+					// Empty on purpose
+				}
+			}
 		}
 		throw new IllegalArgumentException("!!!!!!!!!!!!!!! Crossed the number of attempts to serialise an object", lastException);
 	}
 
 	@Override
 	public void serialise(OutputStream outputStream, Object object) throws IOException {
-		try (Output output = new Output(outputStream)) {
+		Output output = new Output(outputStream);
+		try {
 			kryo.writeClassAndObject(output, object);
+		} finally {
+			try {
+				output.close();
+			} finally {
+				// Empty on purpose
+			}
 		}
 	}
 }

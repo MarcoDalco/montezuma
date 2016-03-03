@@ -37,7 +37,7 @@ public class StandardJavaDeserialiser implements Deserialiser {
 
 	@Override
 	public List<Object> deserialiseAll(InputStream inputStream) throws ClassNotFoundException {
-		List<Object> objects = new ArrayList<>();
+		List<Object> objects = new ArrayList<Object>();
 		try {
 			while (true) {
 				final Object readObject = this.deserialise(inputStream);

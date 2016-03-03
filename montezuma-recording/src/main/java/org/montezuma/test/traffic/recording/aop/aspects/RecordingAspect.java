@@ -451,8 +451,16 @@ public class RecordingAspect {
 		String fileName = Common.BASE_RECORDING_PATH + "/" + recordingSubDir + "/" + clazz.getCanonicalName() + "@" + System.identityHashCode(thiz);
 		if (log)
 			System.out.println("WRITING TO " + fileName);
-		try (FileOutputStream fos = new FileOutputStream(fileName, true)) {
+		FileOutputStream fos = new FileOutputStream(fileName, true);
+		try {
 			serialiser.get().serialise(fos, data);
+		}
+		finally {
+			try {
+				fos.close();
+			} catch (Throwable t) {
+				// Intentionally empty
+			}
 		}
 		InvocationData.printSingleInvocationDataSize(data);
 		if (log)

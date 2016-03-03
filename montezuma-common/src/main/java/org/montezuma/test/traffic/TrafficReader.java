@@ -35,20 +35,28 @@ public class TrafficReader {
 		File[] recordingsForThatClass = baseDir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return name.startsWith(class1.getTypeName());
+				return name.startsWith(class1.getName());
 			}
 		});
-		Map<Integer, List<InvocationData>> invocationLists = new HashMap<>();
+		Map<Integer, List<InvocationData>> invocationLists = new HashMap<Integer, List<InvocationData>>();
 		for (File firstRecording : recordingsForThatClass) {
 			String fileName = firstRecording.getName();
 			String instanceId = fileName.substring(1 + fileName.lastIndexOf('@'));
-			List<InvocationData> invocations = new ArrayList<>();
-			try (FileInputStream fis = new FileInputStream(firstRecording)) {
+			List<InvocationData> invocations = new ArrayList<InvocationData>();
+			FileInputStream fis = new FileInputStream(firstRecording);
+			try {
 				@SuppressWarnings("unchecked") List<InvocationData> deserialisedObjects = (List<InvocationData>) deserialiser.deserialiseAll(fis);
 				for (Object o : deserialisedObjects) {
 					assert (o instanceof InvocationData);
 				}
 				invocations = deserialisedObjects;
+			}
+			finally {
+				try {
+					fis.close();
+				} catch (Throwable t) {
+					// Empty on purpose
+				}
 			}
 			invocationLists.put(Integer.valueOf(instanceId), invocations);
 		}

@@ -12,7 +12,7 @@ public class InvocationData implements Serializable {
 	public final String													signature;
 	public final byte[][]												serialisedArgs;
 	public final int[]													argIDs;
-	public final LinkedList<CallInvocationData>	calls							= new LinkedList<>();
+	public final LinkedList<CallInvocationData>	calls							= new LinkedList<CallInvocationData>();
 	public byte[]																serialisedReturnValue;
 	public byte[]																serialisedThrowable;
 	public int																	returnValueID;
