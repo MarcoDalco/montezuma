@@ -14,7 +14,7 @@ public abstract class InitCodeChunk extends CodeChunk {
 		return "InitCodeChunk [identityHashCode=" + identityHashCode + ", superClass:{" + super.toString() + "}]";
 	}
 
-	public abstract void generateRequiredInits();
+	public abstract void generateRequiredInits() throws ClassNotFoundException;
 
 	protected TextRenderer getRenderer() {
 		throw new RuntimeException("UNEXPECTED INVOCATION"); // TODO - Was "return this;": is it safe to remove?

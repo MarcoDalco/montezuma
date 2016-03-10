@@ -156,12 +156,13 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 			InitCodeChunk requiredInitValue = requiredInits.get(key);
 			if (requiredInitValue == null) {
 				requiredInits.put(key, chunkInitValue);
+//				chunkInitValue.parentObjectDeclarationScope = 
 			} else {
 				assert((chunkInitValue instanceof StandardInitCodeChunk) == (requiredInitValue instanceof StandardInitCodeChunk));
 				if (chunkInitValue instanceof StandardInitCodeChunk) {
 					StandardInitCodeChunk s1 = (StandardInitCodeChunk) chunkInitValue;
 					StandardInitCodeChunk s2 = (StandardInitCodeChunk) requiredInitValue;
-					assert(s1.argClass == s2.argClass);
+					assert(s1.argDeclaredClass == s2.argDeclaredClass);
 				}
 				chunkInitValue.chunkOverridingDeclaration = requiredInitValue;
 			}
@@ -221,6 +222,7 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 
 	@Override
 	public void addDeclaredObject(int identityHashCode, VariableDeclarationRenderer variableDeclarationRenderer) {
+		// Why not to check if that collection already contains an implementation for this VariableDeclarationRenderer and add its desiredClass to the existing renderer's desiredClasses?
 		declarations.put(identityHashCode, variableDeclarationRenderer);
 	}
 

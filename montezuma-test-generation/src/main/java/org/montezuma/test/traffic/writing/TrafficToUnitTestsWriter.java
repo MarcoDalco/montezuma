@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class TrafficToUnitTestsWriter extends TrafficReader {
 
-	private static Map<String, Class<?>>	primitiveTypes	= new HashMap<>();
+	static Map<String, Class<?>>	primitiveTypes	= new HashMap<>();
 	static {
 		primitiveTypes.put("boolean", boolean.class);
 		primitiveTypes.put("byte", byte.class);

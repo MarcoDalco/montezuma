@@ -7,5 +7,5 @@ import org.montezuma.test.traffic.writing.ImportsContainer;
 import org.montezuma.test.traffic.writing.ObjectDeclarationScope;
 
 public interface SerialisationRenderer {
-	public ExpressionRenderer getDeserialisationCodeChunkFor(CodeChunk codeChunk, Object object, ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope, IdentityHashCodeGenerator identityHashCodeGenerator);
+	public ExpressionRenderer getDeserialisationCodeChunkFor(CodeChunk codeChunk, Object object, ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope, IdentityHashCodeGenerator identityHashCodeGenerator) throws ClassNotFoundException;
 }

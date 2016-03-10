@@ -209,10 +209,7 @@ public class TestMethodsWriter {
 			if (!Modifier.isStatic(callData.modifiers) && ((callData.id == 0) && (!callData.signature.startsWith("<init>"))))
 				continue; // This is a non-static invocation on a null pointer: don't mock - the NPE will be thrown naturally.
 
-			Class<?> targetClazz = callData.targetClazz;
-			if (targetClazz == null) { // static method invocation or constructor
-				targetClazz = callData.declaringType;
-			}
+			Class<?> targetClazz = callData.declaringType;
 			// TODO - check if the target is a MustMock, but at the moment CallInvocationData does not serialise the target
 			// class, so I can't determine if it should be a MustMock.
 			if (mockingStrategy.shouldStub(targetClazz)) {

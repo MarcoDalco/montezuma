@@ -33,6 +33,8 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 		for (InitCodeChunk codeChunk : requiredInits.values()) {
 			int identityHashCode = codeChunk.identityHashCode;
 			addDeclaredObject(identityHashCode, codeChunk.declarations.get(identityHashCode));
+// TO CHECK - The following commented-out line seems reasonable, but at the moment it makes no difference.
+//			codeChunk.parentObjectDeclarationScope = this;
 			structuredTextFileWriter.appendChunk(2, codeChunk);
 		}
 		if (instantiationMethodPart != null)

@@ -1,6 +1,5 @@
 package org.montezuma.test.traffic.writing;
 
-import org.montezuma.test.traffic.MustMock;
 import org.montezuma.test.traffic.writing.VariableDeclarationRenderer.ComputableClassNameRendererPlaceholder;
 import org.montezuma.test.traffic.writing.serialisation.SerialisationRendererFactory;
 
@@ -10,7 +9,7 @@ import java.util.List;
 
 public class RenderersStrategy {
 
-	StructuredTextRenderer addRealParameter(CodeChunk codeChunk, Class<?> argClass, Object arg, int argID, ImportsContainer importsContainer, IdentityHashCodeGenerator identityHashCodeGenerator) {
+	StructuredTextRenderer addRealParameter(CodeChunk codeChunk, Class<?> argClass, Object arg, int argID, ImportsContainer importsContainer, IdentityHashCodeGenerator identityHashCodeGenerator) throws ClassNotFoundException {
 		final Class<?> declaredClass = /* TO CHECK - maybe Object.class instead of argClass, so that the actual declared type gets determined by the subsequent use? */ argClass;
 		ExpressionRenderer deserialisationRenderer = getDeserialisationRenderer(codeChunk, arg, importsContainer, codeChunk, identityHashCodeGenerator);
 		final VariableDeclarationRenderer renderer =
@@ -19,11 +18,11 @@ public class RenderersStrategy {
 		return renderer;
 	}
 
-	private ExpressionRenderer getDeserialisationRenderer(CodeChunk codeChunk, Object object, ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope, IdentityHashCodeGenerator identityHashCodeGenerator) {
+	private ExpressionRenderer getDeserialisationRenderer(CodeChunk codeChunk, Object object, ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope, IdentityHashCodeGenerator identityHashCodeGenerator) throws ClassNotFoundException {
 		return SerialisationRendererFactory.getSerialisationRenderer().getDeserialisationCodeChunkFor(codeChunk, object, importsContainer, objectDeclarationScope, identityHashCodeGenerator);
 	}
 
-	StructuredTextRenderer buildInvocationParameters(CodeChunk mainCodeChunk, Object[] args, String[] argTypes, int[] argIDs, ImportsContainer importsContainer, MockingStrategy mockingStrategy, TestClassWriter testClassWriter) {
+	StructuredTextRenderer buildInvocationParameters(CodeChunk mainCodeChunk, Object[] args, String[] argTypes, int[] argIDs, ImportsContainer importsContainer, MockingStrategy mockingStrategy, TestClassWriter testClassWriter) throws ClassNotFoundException {
 	
 		List<ExpressionRenderer> expressionRenderers = new ArrayList<>();
 		final String argSeparator = ", ";
@@ -34,13 +33,15 @@ public class RenderersStrategy {
 			if (arg == null) {
 				argumentNames.append("null");
 			} else {
-				final Class<?> argClass = (arg instanceof MustMock ? ((MustMock) arg).clazz : arg.getClass());
+				Class<?> argClass = TrafficToUnitTestsWriter.primitiveTypes.get(argTypes[i]);
+				if (argClass == null)
+					argClass = Class.forName(argTypes[i]);
 				final int argID = argIDs[i];
 	
 				// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL or is it correct? I'm now thinking the latter.
 				InitCodeChunk variableCodeChunk = mainCodeChunk.requiredInits.get(argID);
 				if ((variableCodeChunk == null) ||
-						!(MockingFrameworkFactory.getMockingFramework().canStubMultipleTypeWithOneStub() || ((variableCodeChunk instanceof StandardInitCodeChunk) && (argClass.isAssignableFrom(((StandardInitCodeChunk) variableCodeChunk).argClass))))) {
+						!(MockingFrameworkFactory.getMockingFramework().canStubMultipleTypeWithOneStub() || ((variableCodeChunk instanceof StandardInitCodeChunk) && (argClass.isAssignableFrom(((StandardInitCodeChunk) variableCodeChunk).argDeclaredClass))))) {
 					variableCodeChunk = createInitCodeChunk(arg, argClass, argID, "given", importsContainer, mockingStrategy, testClassWriter, mainCodeChunk);
 					mainCodeChunk.requiredInits.put(argID, variableCodeChunk);
 					variableCodeChunk.generateRequiredInits();

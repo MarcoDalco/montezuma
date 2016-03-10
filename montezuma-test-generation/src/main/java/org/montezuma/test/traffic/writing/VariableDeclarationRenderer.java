@@ -166,7 +166,10 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 						return name;
 					}
 
-					final String className = declaredClass.getSimpleName();
+					String className = declaredClass.getSimpleName();
+					char firstChar = className.charAt(0);
+					if (firstChar > 'Z')
+						className = className.substring(0, 1).toUpperCase() + className.substring(1);
 					final String classNameForVarName = (declaredClass.isArray() ? className.replace("[]", "Array") : className);
 					name = namePrefix + classNameForVarName + (TestMethodsWriter.globalVariableNumber++);
 
@@ -176,7 +179,7 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 				}
 			}
 
-			throw new IllegalStateException("A suitable declared class should have already been found.");
+			throw new IllegalStateException("A suitable declared class should have already been found. Desired Class: " + desiredClass + ", declared classes: " + VariableDeclarationRenderer.this.desiredClasses);
 		}
 
 		@Override

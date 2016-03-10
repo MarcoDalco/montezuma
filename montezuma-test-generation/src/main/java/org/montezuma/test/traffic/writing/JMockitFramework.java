@@ -27,7 +27,7 @@ public class JMockitFramework implements MockingFramework {
 
 	@Override
 	public boolean canStubMultipleTypeWithOneStub() {
-		return true;
+		return false;
 	}
 
 	@Override
@@ -68,10 +68,7 @@ public class JMockitFramework implements MockingFramework {
 		String methodName = methodSignature.substring(0, indexOfSeparatorBetweenMethodNameAndArgs);
 		final Class<?> declaringType = callData.declaringType;
 		final boolean isConstructorInvocation = methodName.equals("<init>");
-		// TODO - as part of the work to declare only visible classes: limiting the targetClazzOrDeclaredType to callData.declaringType would be correct, but at the moment, this could override the need for the object-on-which-the-method-is-invoked to have a more specific type definition (subclass or subinterface of callData.declaringType), so until a more sophisticated mechanism is in place to determine the actual type of a stub, this should not be in place - although it doesn't seem to mess up the generated tests.
-		// Class<?> targetClazzOrDeclaringType = callData.declaringType; (and remove the ternary operator assigned just below, as redundant.
-		Class<?> targetClazzOrDeclaringType = callData.targetClazz;
-		targetClazzOrDeclaringType = (targetClazzOrDeclaringType == null ? declaringType : targetClazzOrDeclaringType);
+		Class<?> targetClazzOrDeclaringType = callData.declaringType;
 		// "getMethod" returns the method corresponding to that signature, even if declared in superclasses or
 		// (super)interfaces, but not private ones, and I'm not sure how it matches non-public ones not accessible from this
 		// very class/package,

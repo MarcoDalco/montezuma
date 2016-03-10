@@ -25,7 +25,7 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 	private Serialiser	serialiser	= SerialisationRendererFactory.getSerialiser();
 
 	@Override
-	public ExpressionRenderer getDeserialisationCodeChunkFor(CodeChunk codeChunkNeedingDeserialisation, Object object, ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope, IdentityHashCodeGenerator identityHashCodeGenerator) {
+	public ExpressionRenderer getDeserialisationCodeChunkFor(CodeChunk codeChunkNeedingDeserialisation, Object object, ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope, IdentityHashCodeGenerator identityHashCodeGenerator) throws ClassNotFoundException {
 		try {
 			return internalGetDeserialisationCodeChunkFor(codeChunkNeedingDeserialisation, object, importsContainer, objectDeclarationScope, identityHashCodeGenerator);
 		}
@@ -34,7 +34,7 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 		}
 	}
 
-	public ExpressionRenderer internalGetDeserialisationCodeChunkFor(CodeChunk codeChunkNeedingDeserialisation, Object object, final ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope, IdentityHashCodeGenerator identityHashCodeGenerator) throws IOException {
+	public ExpressionRenderer internalGetDeserialisationCodeChunkFor(CodeChunk codeChunkNeedingDeserialisation, Object object, final ImportsContainer importsContainer, ObjectDeclarationScope objectDeclarationScope, IdentityHashCodeGenerator identityHashCodeGenerator) throws IOException, ClassNotFoundException {
 		codeChunkNeedingDeserialisation.requiredImports.addImport(new Import("com.esotericsoftware.kryo.Kryo"));
 		codeChunkNeedingDeserialisation.requiredImports.addImport(new Import("org.montezuma.test.traffic.serialisers.kryo.KryoRegisteredSerialiser"));
 
