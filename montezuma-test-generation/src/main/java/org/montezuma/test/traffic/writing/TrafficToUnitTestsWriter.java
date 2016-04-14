@@ -15,6 +15,7 @@ import java.util.Map;
 
 public class TrafficToUnitTestsWriter extends TrafficReader {
 
+	public static final String TESTS_PER_CLASS_LIMIT_OPTION_NAME = "tests_per_class_limit";
 	static Map<String, Class<?>>	primitiveTypes	= new HashMap<>();
 	static {
 		primitiveTypes.put("boolean", boolean.class);
@@ -36,6 +37,14 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 		return dontMockRegexList;
 	}
 
+	private Map<String, String> options = new HashMap<>();
+
+	public TrafficToUnitTestsWriter() {}
+
+	public TrafficToUnitTestsWriter(Map<String, String> options) {
+		this.options = options;
+	}
+
 	public void generateTestsFor(final Class<?> clazz, List<String> dontMockRegexList, File recordingDir, String outputClassPath) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		final Map<Integer, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingDir);
 		for (List<InvocationData> invocationDataList : invocationDataLists.values()) {
@@ -45,11 +54,22 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 		generateTestClasses(invocationDataLists, clazz, dontMockRegexList, outputClassPath);
 	}
 
+	private String getOption(String optionName, String defaultValue) {
+		String value = options.get(optionName);
+		if (value != null)
+			return value;
+		
+		return defaultValue;
+	}
+
 	private void generateTestClasses(Map<Integer, List<InvocationData>> invocationDataLists, Class<?> clazz, List<String> dontMockRegexList, String outputClassPath) throws IOException, ClassNotFoundException, NoSuchMethodException, SecurityException {
 		final Map<Integer, Map<Integer, List<InvocationData>>> groupedInvocationDataListMapsMap = new HashMap<Integer, Map<Integer, List<InvocationData>>>();
 		// Arbitrary grouping policy based on the number of tests (test classes) to write
 		// TODO - make this arbitrary grouping policy configurable
-		boolean allTogether = (invocationDataLists.size() < 10);
+		String testPerClassLimitString = getOption(TESTS_PER_CLASS_LIMIT_OPTION_NAME, "10");
+		int testPerClassLimit = Integer.parseInt(testPerClassLimitString);
+
+		boolean allTogether = (invocationDataLists.size() < testPerClassLimit);
 		if (allTogether) {
 			final List<InvocationData> staticInvocationsDataList = invocationDataLists.remove("0");
 			if (staticInvocationsDataList != null)
