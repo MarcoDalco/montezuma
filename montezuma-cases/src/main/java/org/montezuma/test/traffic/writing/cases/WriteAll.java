@@ -16,6 +16,7 @@ public class WriteAll {
 		BoundaryChecksWithStateChangeInBothCallForthAndCallBackTestWriter.main(args);
 		ChainedInitTestWriter.main(args);
 		ClassVisibilityCaseTestWriter.main(args);
+		CollectionsProviderTestWriter.main(args);
 		CompiledStatementStoringPreparedStatementCreatorTestWriter.main(args);
 		CurrencyUtilsTestWriter.main(args);
 		PassThroughClassTestWriter.main(args);

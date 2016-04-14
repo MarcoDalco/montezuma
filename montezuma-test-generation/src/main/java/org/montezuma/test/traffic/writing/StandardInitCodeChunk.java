@@ -119,30 +119,43 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 		} else if (List.class.isAssignableFrom(argActualClass) && argActualClass.getPackage().getName().startsWith("java.util")) {
 			@SuppressWarnings("unchecked") final List<Object> rebuiltRuntimeList = (List<Object>) arg;
 			final int listSize = rebuiltRuntimeList.size();
-			String[] listElementTypes = new String[listSize];
 			int[] listElementIDs = new int[listSize];
-			int i = 0;
-			for (Object element : rebuiltRuntimeList) {
-				listElementTypes[i] = element.getClass().getCanonicalName();
-				listElementIDs[i] = testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); // TODO: store the
-																																																	// real object ID?
-				i++;
+			for (int i=0; i<rebuiltRuntimeList.size(); i++) {
+				listElementIDs[i] = testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); // TODO: store the real object ID?
 			}
 			final ClassNameRenderer actualClassNameRenderer = new ClassNameRenderer(arg.getClass(), importsContainer);
 			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s();", argID, variableNamePrefix, argDeclaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, actualClassNameRenderer);
 			codeRenderers.add(variableDeclarationRenderer);
 			addDeclaredObject(argID, variableDeclarationRenderer);
-			buildCollection(this, rebuiltRuntimeList, listElementTypes, listElementIDs, new ExistingVariableNameRenderer(argID, argDeclaredClass, importsContainer, this));
+			buildCollection(this, rebuiltRuntimeList, listElementIDs, new ExistingVariableNameRenderer(argID, argDeclaredClass, importsContainer, this));
 		} else if (Set.class.isAssignableFrom(argActualClass)) {
 			@SuppressWarnings("unchecked") final Set<Object> rebuiltRuntimeSet = (Set<Object>) arg;
 			final int setSize = rebuiltRuntimeSet.size();
-			String[] setElementTypes = new String[setSize];
 			int[] setElementIDs = new int[setSize];
+			for (int i=0; i<rebuiltRuntimeSet.size(); i++) {
+				setElementIDs[i] = testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); // TODO: store the real object ID?
+			}
+			final ClassNameRenderer actualClassNameRenderer = new ClassNameRenderer(arg.getClass(), importsContainer);
+			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = new %s();", argID, variableNamePrefix, argDeclaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, actualClassNameRenderer);
+			codeRenderers.add(variableDeclarationRenderer);
+			addDeclaredObject(argID, variableDeclarationRenderer);
+//			declaresOrCanSeeIdentityHashCode(i, requiredClass)
+			buildCollection(this, rebuiltRuntimeSet, setElementIDs, new ExistingVariableNameRenderer(argID, argDeclaredClass, importsContainer, this));
+		} else if (Map.class.isAssignableFrom(argActualClass)) {
+			@SuppressWarnings("unchecked") final Map<Object, Object> rebuiltRuntimeMap = (Map<Object, Object>) arg;
+			final int mapSize = rebuiltRuntimeMap.size();
+			String[] keyTypes = new String[mapSize];
+			String[] valueTypes = new String[mapSize];
+			int[] mapKeyIDs = new int[mapSize];
+			int[] mapValueIDs = new int[mapSize];
 			int i = 0;
-			for (Object element : rebuiltRuntimeSet) {
-				setElementTypes[i] = element.getClass().getCanonicalName();
-				setElementIDs[i] = testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); // TODO: store the
-																																																	// real object ID?
+			for (Map.Entry<Object, Object> entry : rebuiltRuntimeMap.entrySet()) {
+				Object key = entry.getKey();
+				Object value = entry.getValue();
+				keyTypes[i] = (key == null ? null : key.getClass().getCanonicalName());
+				valueTypes[i] = (value == null ? null : value.getClass().getCanonicalName());
+				mapKeyIDs[i] = testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); // TODO: store the real object ID?
+				mapValueIDs[i] = testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); // TODO: store the real object ID?
 				i++;
 			}
 			final ClassNameRenderer actualClassNameRenderer = new ClassNameRenderer(arg.getClass(), importsContainer);
@@ -150,9 +163,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			codeRenderers.add(variableDeclarationRenderer);
 			addDeclaredObject(argID, variableDeclarationRenderer);
 //			declaresOrCanSeeIdentityHashCode(i, requiredClass)
-			buildCollection(this, rebuiltRuntimeSet, setElementTypes, setElementIDs, new ExistingVariableNameRenderer(argID, argDeclaredClass, importsContainer, this));
-		} else if (argActualClass.isAssignableFrom(Map.class)) {
-			// Not implemented yet
+			buildMap(this, rebuiltRuntimeMap, keyTypes, valueTypes, mapKeyIDs, mapValueIDs, new ExistingVariableNameRenderer(argID, argDeclaredClass, importsContainer, this));
 		} else if (argActualClass.isArray()) {
 			final Object[] serialisedObjectsArray = (Object[]) arg;
 			final Object[] rebuiltRuntimeArray = new Object[serialisedObjectsArray.length];
@@ -206,7 +217,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 		return bigIntInit;
 	}
 
-	private void buildCollection(InitCodeChunk mainCodeChunk, Collection<Object> rebuiltRuntimeCollection, String[] elementTypes, int[] elementIDs, ExistingVariableNameRenderer collectionNameRenderer) throws ClassNotFoundException {
+	private void buildCollection(InitCodeChunk mainCodeChunk, Collection<Object> rebuiltRuntimeCollection, int[] elementIDs, ExistingVariableNameRenderer collectionNameRenderer) throws ClassNotFoundException {
 		int i = 0;
 		for (Iterator<?> runtimeObjectsIterator = rebuiltRuntimeCollection.iterator(); runtimeObjectsIterator.hasNext(); i++) {
 			Object element = runtimeObjectsIterator.next();
@@ -217,18 +228,62 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 				final Class<?> elementClass = (element instanceof MustMock ? ((MustMock) element).clazz : element.getClass());
 				final int elementID = elementIDs[i];
 
-				// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL or is it correct? I'm now thinking the latter.
-				InitCodeChunk variableCodeChunk = mainCodeChunk.requiredInits.get(elementID);
-				if ((variableCodeChunk == null) || !(MockingFrameworkFactory.getMockingFramework().canStubMultipleTypeWithOneStub() || ((variableCodeChunk instanceof StandardInitCodeChunk) && (argDeclaredClass.isAssignableFrom(((StandardInitCodeChunk) variableCodeChunk).argDeclaredClass))))) {
-					variableCodeChunk = createInitCodeChunk(element, elementClass, elementID, "given", mainCodeChunk);
-					mainCodeChunk.requiredInits.put(elementID, variableCodeChunk);
-					variableCodeChunk.generateRequiredInits();
-				}
+				writeVariableGenerationIfNecessary(mainCodeChunk, element, elementClass, elementID);
 				// TODO - TOCHECK - The following should not be necessary, unless assumed by some other code to be there already, before variableCodeChunk is evaluated
 				// maincodeChunk.addDeclaredObject(elementID, variableDeclarationRenderer); // Is it correct, here?
 
 				mainCodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(%s);", collectionNameRenderer, new ExistingVariableNameRenderer(elementID, elementClass, importsContainer, mainCodeChunk)));
 			}
+		}
+	}
+
+	private void buildMap(InitCodeChunk mainCodeChunk, Map<Object, Object> rebuiltRuntimeCollection, String[] keyTypes, String[] valueTypes, int[] keyIDs, int[] valueIDs, ExistingVariableNameRenderer collectionNameRenderer) throws ClassNotFoundException {
+		int i = 0;
+		for (Iterator<Map.Entry<Object, Object>> runtimeObjectsIterator = rebuiltRuntimeCollection.entrySet().iterator(); runtimeObjectsIterator.hasNext(); i++) {
+			Map.Entry<Object, Object> entry = runtimeObjectsIterator.next();
+
+			if (entry == null) {
+				// TO CHECK: will it ever happen?
+				mainCodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(null);", collectionNameRenderer));
+			} else {
+				final ExpressionRenderer existingKeyVariableNameRenderer;
+				Object key = entry.getKey();
+				if (key != null) {
+					final Class<?> keyClass = (key instanceof MustMock ? ((MustMock) key).clazz : key.getClass());
+					final int keyID = keyIDs[i];
+					writeVariableGenerationIfNecessary(mainCodeChunk, key, keyClass, keyID);
+					existingKeyVariableNameRenderer = new ExistingVariableNameRenderer(keyID, keyClass, importsContainer, mainCodeChunk);
+				} else {
+					existingKeyVariableNameRenderer = ExpressionRenderer.stringRenderer("null");
+				}
+
+				final ExpressionRenderer existingValueVariableNameRenderer;
+				Object value = entry.getValue();
+				if (value != null) {
+					final Class<?> valueClass = (value instanceof MustMock ? ((MustMock) value).clazz : value.getClass());
+					final int valueID = valueIDs[i];
+					writeVariableGenerationIfNecessary(mainCodeChunk, value, valueClass, valueID);
+					existingValueVariableNameRenderer = new ExistingVariableNameRenderer(valueID, valueClass, importsContainer, mainCodeChunk);
+				} else {
+					existingValueVariableNameRenderer = ExpressionRenderer.stringRenderer("null");
+				}
+
+				// TODO - TOCHECK - The following should not be necessary, unless assumed by some other code to be there already, before variableCodeChunk is evaluated
+				// maincodeChunk.addDeclaredObject(keyID, variableDeclarationRenderer); // Is it correct, here?
+				// maincodeChunk.addDeclaredObject(valueID, variableDeclarationRenderer); // Is it correct, here?
+
+				mainCodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.put(%s, %s);", collectionNameRenderer, existingKeyVariableNameRenderer, existingValueVariableNameRenderer));
+			}
+		}
+	}
+
+	private void writeVariableGenerationIfNecessary(InitCodeChunk mainCodeChunk, Object entry, final Class<?> valueClass, final int valueID) throws ClassNotFoundException {
+		// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL or is it correct? I'm now thinking the latter.
+		InitCodeChunk variableCodeChunk = mainCodeChunk.requiredInits.get(valueID);
+		if ((variableCodeChunk == null) || !(MockingFrameworkFactory.getMockingFramework().canStubMultipleTypeWithOneStub() || ((variableCodeChunk instanceof StandardInitCodeChunk) && (argDeclaredClass.isAssignableFrom(((StandardInitCodeChunk) variableCodeChunk).argDeclaredClass))))) {
+			variableCodeChunk = createInitCodeChunk(entry, valueClass, valueID, "given", mainCodeChunk);
+			mainCodeChunk.requiredInits.put(valueID, variableCodeChunk);
+			variableCodeChunk.generateRequiredInits();
 		}
 	}
 

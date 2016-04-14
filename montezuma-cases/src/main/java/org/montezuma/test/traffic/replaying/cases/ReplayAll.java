@@ -13,6 +13,7 @@ public class ReplayAll {
 		BoundaryChecksWithStateChangeInBothCallForthAndCallBackTrafficReplayer.main(args);
 		ChainedInitTrafficReplayer.main(args);
 		ClassVisibilityCaseTrafficReplayer.main(args);
+		CollectionsProviderTrafficReplayer.main(args);
 		CompiledStatementStoringPreparedStatementCreatorTrafficReplayer.main(args);
 		CurrencyUtilsTrafficReplayer.main(args);
 		PassThroughClassTrafficReplayer.main(args);

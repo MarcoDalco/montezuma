@@ -11,6 +11,7 @@ public class RecordAll {
 		BoundaryChecksWithStateChangeinBothCallForthAndCallBackTrafficRecorder.main(args);
 		ChainedInitTrafficRecorder.main(args);
 		ClassVisibilityCaseTrafficRecorder.main(args);
+		CollectionsProviderTrafficRecorder.main(args);
 		CompiledStatementStoringPreparedStatementCreatorTrafficRecorder.main(args);
 		CurrencyUtilsTrafficRecorder.main(args);
 		PassThroughClassTrafficRecorder.main(args);
