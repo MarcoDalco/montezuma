@@ -303,7 +303,12 @@ public class RecordingAspect {
 		} else
 			toSerialise = new MustMock(arg);
 
-		return serialiser.get().serialise(toSerialise);
+		try {
+			return serialiser.get().serialise(toSerialise);
+		} catch (IllegalArgumentException iae) {
+			iae.printStackTrace(); // Bug in Kryo means we cannot store the actual data: java.lang.IllegalArgumentException: The type must be an enum: ... at com.esotericsoftware.kryo.serializers.DefaultSerializers$EnumSerializer.<init>(DefaultSerializers.java:315) ... 4402 more Caused by: java.lang.reflect.InvocationTargetException at sun.reflect.GeneratedConstructorAccessor131.newInstance(Unknown Source) ... at com.esotericsoftware.kryo.factories.ReflectionSerializerFactory.makeSerializer(ReflectionSerializerFactory.java:41)
+			return serialiser.get().serialise(null);
+		}
 	}
 
 	private boolean shouldSerialise(Object arg) {
