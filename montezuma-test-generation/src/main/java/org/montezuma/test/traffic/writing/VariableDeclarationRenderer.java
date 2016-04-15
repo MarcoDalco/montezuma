@@ -10,16 +10,16 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 	private final NewVariableNameRenderer variableNameRenderer;
 	private final ImportsContainer importsContainer;
 
-	public VariableDeclarationRenderer(String formattedText, int identityHashCode, ObjectDeclarationScope objectDeclarationScope, NewVariableNameRenderer variableNameRenderer, Class<?> desiredClass, ImportsContainer importsContainer, ComputableClassNameRendererPlaceholder classNameRenderer, NewVariableNameRendererPlaceholder newVariableNameRendererPlaceholder, ExpressionRenderer... renderers) {
-		super(formattedText, joinAndInitialiseExpressionRenderers(ComputableClassNameRendererPlaceholder.instance, NewVariableNameRendererPlaceholder.instance, renderers));
+	public VariableDeclarationRenderer(String formattedText, int identityHashCode, ObjectDeclarationScope objectDeclarationScope, NewVariableNameRenderer variableNameRenderer, Class<?> desiredClass, ImportsContainer importsContainer, ComputableClassNameRendererPlaceholder classNameRenderer, NewVariableNameRendererPlaceholder newVariableNameRendererPlaceholder, ExpressionRenderer valueRenderer) {
+		super(formattedText, joinAndInitialiseExpressionRenderers(ComputableClassNameRendererPlaceholder.instance, NewVariableNameRendererPlaceholder.instance, valueRenderer));
 
 		this.desiredClasses.add(desiredClass);
 		this.variableNameRenderer = variableNameRenderer;
 		this.importsContainer = importsContainer;
 	}
 
-	public VariableDeclarationRenderer(String formattedText, int identityHashCode, String namePrefix, Class<?> desiredClass, ImportsContainer importsContainer, ComputableClassNameRendererPlaceholder classNameRenderer, NewVariableNameRendererPlaceholder newVariableNameRendererPlaceholder, ExpressionRenderer... renderers) {
-		super(formattedText, joinAndInitialiseExpressionRenderers(ComputableClassNameRendererPlaceholder.instance, NewVariableNameRendererPlaceholder.instance, renderers));
+	public VariableDeclarationRenderer(String formattedText, int identityHashCode, String namePrefix, Class<?> desiredClass, ImportsContainer importsContainer, ComputableClassNameRendererPlaceholder classNameRenderer, NewVariableNameRendererPlaceholder newVariableNameRendererPlaceholder, ExpressionRenderer valueRenderer) {
+		super(formattedText, joinAndInitialiseExpressionRenderers(ComputableClassNameRendererPlaceholder.instance, NewVariableNameRendererPlaceholder.instance, valueRenderer));
 
 		NewVariableNameRenderer variableNameRenderer = new NewGeneratedVariableNameRenderer(identityHashCode, desiredClass, importsContainer, namePrefix);
 
@@ -64,12 +64,13 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 		}
 	}
 
-	private static ExpressionRenderer [] joinAndInitialiseExpressionRenderers(ComputableClassNameRendererPlaceholder classNameRendererPlaceholder, NewVariableNameRenderer variableNameRenderer, ExpressionRenderer... expressionRenderers) {
-		ExpressionRenderer [] array = new ExpressionRenderer[expressionRenderers.length + 2];
+	private static ExpressionRenderer [] joinAndInitialiseExpressionRenderers(ComputableClassNameRendererPlaceholder classNameRendererPlaceholder, NewVariableNameRenderer variableNameRenderer, ExpressionRenderer expressionRenderer) {
+		ExpressionRenderer [] array = new ExpressionRenderer[(expressionRenderer == null ? 2 : 3)];
 
 		array[0] = classNameRendererPlaceholder;
 		array[1] = variableNameRenderer;
-		System.arraycopy(expressionRenderers, 0, array, 2, expressionRenderers.length);
+		if (expressionRenderer != null)
+			array[2] = expressionRenderer;
 
 		return array;
 	}
@@ -81,34 +82,13 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 	@Override
 	public String render() {
 		String rendering = "";
-		ExpressionRenderer [] expressionRenderersMaster = expressionRenderers;
-		expressionRenderers = new ExpressionRenderer[expressionRenderersMaster.length];
 		
+		ExpressionRenderer [] expressionRenderersMaster = masterExpressionRenderers;
+
 		boolean first = true;
 		for (Class<?> desiredClass : desiredClasses) {
 			// clone the renderers now, once per desiredClass, before their "render()" method is run, then proceed to render them all.
-			for (int i=0; i<expressionRenderersMaster.length; i++) {
-				ExpressionRenderer expressionRenderer = expressionRenderersMaster[i];
-				if (expressionRenderer == ComputableClassNameRendererPlaceholder.instance)
-					expressionRenderer = new ComputableClassNameRenderer(desiredClass, importsContainer) {
-
-					Class<?> getRenderedClass() {
-						return desiredClass;
-					}
-
-				};
-				else
-				if (expressionRenderer == NewVariableNameRendererPlaceholder.instance)
-					expressionRenderer = new ExpressionRenderer() {
-						
-						@Override
-						public String render() {
-							return variableNameRenderer.getName(desiredClass);
-						}
-					};
-				
-				expressionRenderers[i] = expressionRenderer;
-			}
+			expressionRenderers = replaceRenderers(expressionRenderersMaster, desiredClass);
 
 			if (!first)
 				rendering += StructuredTextFileWriter.EOL;
@@ -119,6 +99,38 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 		}
 
 		return rendering;
+	}
+
+	private ExpressionRenderer [] replaceRenderers(ExpressionRenderer [] expressionRenderers, Class<?> desiredClass) {
+		ExpressionRenderer [] newExpressionRenderers = new ExpressionRenderer[expressionRenderers.length];
+		for (int i=0; i<expressionRenderers.length; i++) {
+			ExpressionRenderer expressionRenderer = expressionRenderers[i];
+			if (expressionRenderer == ComputableClassNameRendererPlaceholder.instance)
+				expressionRenderer = new ComputableClassNameRenderer(desiredClass, importsContainer) {
+
+				Class<?> getRenderedClass() {
+					return desiredClass;
+				}
+
+			};
+			else
+			if (expressionRenderer == NewVariableNameRendererPlaceholder.instance) {
+				expressionRenderer = new ExpressionRenderer() {
+					
+					@Override
+					public String render() {
+						return variableNameRenderer.getName(desiredClass);
+					}
+				};
+			} else if (expressionRenderer instanceof DynamicExpressionRenderer) {
+				DynamicExpressionRenderer dynamicExpressionRenderer = (DynamicExpressionRenderer) expressionRenderer;
+				dynamicExpressionRenderer.setRenderers(replaceRenderers(dynamicExpressionRenderer.getMasterRenderers(), desiredClass /* this should actually come from a placeholder */));
+			}
+			
+			newExpressionRenderers[i] = expressionRenderer;
+		}
+
+		return newExpressionRenderers;
 	}
 
 	public boolean declaresClass(Class<?> requiredClass) {

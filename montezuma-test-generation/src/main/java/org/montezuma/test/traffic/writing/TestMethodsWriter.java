@@ -192,10 +192,10 @@ public class TestMethodsWriter {
 				renderersStrategy.buildInvocationParameters(instantiationMethodPart, methodArgs, argTypes, argIDs, importsContainer, mockingStrategy, testClassWriter);
 
 		VariableDeclarationRenderer declarationRenderer = new VariableDeclarationRenderer(
-				"final %s %s = new %s(%s);" + StructuredTextFileWriter.EOL, identityHashCode, instantiationMethodPart, new NewVariableNameRenderer(identityHashCode, testClass) {
+				"final %s %s = %s;" + StructuredTextFileWriter.EOL, identityHashCode, instantiationMethodPart, new NewVariableNameRenderer(identityHashCode, testClass) {
 					@Override public String render() { return getName(testClass); }
 					@Override protected String getName(Class<?> desiredClass) { return "cut"; }
-					}, testClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, ComputableClassNameRendererPlaceholder.instance, invocationParametersRenderer);
+					}, testClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, new StructuredTextRenderer("new %s(%s)", ComputableClassNameRendererPlaceholder.instance, invocationParametersRenderer));
 		instantiationMethodPart.addExpressionRenderer(declarationRenderer);
 		instantiationMethodPart.addDeclaredObject(identityHashCode, declarationRenderer);
 
