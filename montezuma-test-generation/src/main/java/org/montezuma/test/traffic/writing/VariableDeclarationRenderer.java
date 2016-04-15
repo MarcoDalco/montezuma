@@ -88,7 +88,7 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 		boolean first = true;
 		for (Class<?> desiredClass : desiredClasses) {
 			// clone the renderers now, once per desiredClass, before their "render()" method is run, then proceed to render them all.
-			expressionRenderers = replaceRenderers(expressionRenderersMaster, desiredClass);
+			expressionRenderers = replaceRenderers(expressionRenderersMaster, desiredClass, variableNameRenderer.getName(desiredClass));
 
 			if (!first)
 				rendering += StructuredTextFileWriter.EOL;
@@ -101,7 +101,7 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 		return rendering;
 	}
 
-	private ExpressionRenderer [] replaceRenderers(ExpressionRenderer [] expressionRenderers, Class<?> desiredClass) {
+	private ExpressionRenderer [] replaceRenderers(ExpressionRenderer [] expressionRenderers, Class<?> desiredClass, String variableName) {
 		ExpressionRenderer [] newExpressionRenderers = new ExpressionRenderer[expressionRenderers.length];
 		for (int i=0; i<expressionRenderers.length; i++) {
 			ExpressionRenderer expressionRenderer = expressionRenderers[i];
@@ -119,12 +119,12 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 					
 					@Override
 					public String render() {
-						return variableNameRenderer.getName(desiredClass);
+						return variableName;
 					}
 				};
 			} else if (expressionRenderer instanceof DynamicExpressionRenderer) {
 				DynamicExpressionRenderer dynamicExpressionRenderer = (DynamicExpressionRenderer) expressionRenderer;
-				dynamicExpressionRenderer.setRenderers(replaceRenderers(dynamicExpressionRenderer.getMasterRenderers(), desiredClass /* this should actually come from a placeholder */));
+				dynamicExpressionRenderer.setRenderers(replaceRenderers(dynamicExpressionRenderer.getMasterRenderers(), desiredClass /* this should actually come from a placeholder */, variableName));
 			}
 			
 			newExpressionRenderers[i] = expressionRenderer;
