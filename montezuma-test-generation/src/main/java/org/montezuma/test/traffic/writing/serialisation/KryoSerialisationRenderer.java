@@ -50,11 +50,11 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 
 				ClassNameRenderer kryoRegisteredSerialiserClassNameRenderer = new ClassNameRenderer(KryoRegisteredSerialiser.class, importsContainer);
 				codeRenderers.add(new StructuredTextRenderer("%s.setDefaultSerializer(%s.class);", existingKryoVariableNameRenderer, kryoRegisteredSerialiserClassNameRenderer));
+				kryoVariableDeclarationRenderer.declaresClass(Kryo.class); // To avoid inlining
 			}
 		};
 		codeChunkNeedingDeserialisation.requiredInits.put(kryoInstanceID, initCodeChunk);
 		initCodeChunk.generateRequiredInits();
-		initCodeChunk.declaresIdentityHashCode(kryoInstanceID, Kryo.class);
 
 		codeChunkNeedingDeserialisation.requiredImports.addImport(new Import("java.io.ByteArrayInputStream"));
 		codeChunkNeedingDeserialisation.requiredImports.addImport(new Import("com.esotericsoftware.kryo.io.Input"));
@@ -76,6 +76,7 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 		ExpressionRenderer renderer =
 				new StructuredTextRenderer(
 						"%s;\n" + "try (%s;\n" + "     %s) {\n" + "  %s = %s.readClassAndObject(%s);\n" + "}", variableDeclarationRenderer, baisVariableDeclarationRenderer, kryoInputVariableDeclarationRenderer, existingTmpObjectVariableNameRenderer, existingKryoVariableNameRenderer, existingKryoInputVarNameRenderer);
+		initCodeChunk.declaresIdentityHashCode(kryoInstanceID, Kryo.class); // Just to tell the VariableDeclarationRenderer that there is one reference to the variable
 		codeChunkNeedingDeserialisation.codeRenderers.add(renderer);
 		codeChunkNeedingDeserialisation.addDeclaredObject(createdObjectID, variableDeclarationRenderer);
 		codeChunkNeedingDeserialisation.addDeclaredObject(inputID, kryoInputVariableDeclarationRenderer);
