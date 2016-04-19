@@ -132,7 +132,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;", argID, variableNamePrefix, argDeclaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, new StructuredTextRenderer("new %s()", actualClassNameRenderer));
 			codeRenderers.add(variableDeclarationRenderer);
 			addDeclaredObject(argID, variableDeclarationRenderer);
-			buildCollection(this, rebuiltRuntimeList, listElementIDs, new ExistingVariableNameRenderer(argID, argDeclaredClass, importsContainer, this));
+			buildCollection(this, rebuiltRuntimeList, listElementIDs, new ExistingVariableNameRenderer(argID, argDeclaredClass, importsContainer, this), variableDeclarationRenderer);
 		} else if (Set.class.isAssignableFrom(argActualClass)) {
 			@SuppressWarnings("unchecked") final Set<Object> rebuiltRuntimeSet = (Set<Object>) arg;
 			final int setSize = rebuiltRuntimeSet.size();
@@ -145,7 +145,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			codeRenderers.add(variableDeclarationRenderer);
 			addDeclaredObject(argID, variableDeclarationRenderer);
 //			declaresOrCanSeeIdentityHashCode(i, requiredClass)
-			buildCollection(this, rebuiltRuntimeSet, setElementIDs, new ExistingVariableNameRenderer(argID, argDeclaredClass, importsContainer, this));
+			buildCollection(this, rebuiltRuntimeSet, setElementIDs, new ExistingVariableNameRenderer(argID, argDeclaredClass, importsContainer, this), variableDeclarationRenderer);
 		} else if (Map.class.isAssignableFrom(argActualClass)) {
 			@SuppressWarnings("unchecked") final Map<Object, Object> rebuiltRuntimeMap = (Map<Object, Object>) arg;
 			final int mapSize = rebuiltRuntimeMap.size();
@@ -168,7 +168,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			codeRenderers.add(variableDeclarationRenderer);
 			addDeclaredObject(argID, variableDeclarationRenderer);
 //			declaresOrCanSeeIdentityHashCode(i, requiredClass)
-			buildMap(this, rebuiltRuntimeMap, keyTypes, valueTypes, mapKeyIDs, mapValueIDs, new ExistingVariableNameRenderer(argID, argDeclaredClass, importsContainer, this));
+			buildMap(this, rebuiltRuntimeMap, keyTypes, valueTypes, mapKeyIDs, mapValueIDs, new ExistingVariableNameRenderer(argID, argDeclaredClass, importsContainer, this), variableDeclarationRenderer);
 		} else if (argActualClass.isArray()) {
 			final Object[] serialisedObjectsArray = (Object[]) arg;
 			final Object[] rebuiltRuntimeArray = new Object[serialisedObjectsArray.length];
@@ -222,9 +222,10 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 		return bigIntInit;
 	}
 
-	private void buildCollection(InitCodeChunk mainCodeChunk, Collection<Object> rebuiltRuntimeCollection, int[] elementIDs, ExistingVariableNameRenderer collectionNameRenderer) throws ClassNotFoundException {
+	private void buildCollection(InitCodeChunk mainCodeChunk, Collection<Object> rebuiltRuntimeCollection, int[] elementIDs, ExistingVariableNameRenderer collectionNameRenderer, VariableDeclarationRenderer variableDeclarationRenderer) throws ClassNotFoundException {
 		int i = 0;
 		for (Iterator<?> runtimeObjectsIterator = rebuiltRuntimeCollection.iterator(); runtimeObjectsIterator.hasNext(); i++) {
+			variableDeclarationRenderer.declaresClass(collectionNameRenderer.varClass); // To avoid inlining
 			Object element = runtimeObjectsIterator.next();
 
 			if (element == null) {
@@ -238,13 +239,15 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 				// maincodeChunk.addDeclaredObject(elementID, variableDeclarationRenderer); // Is it correct, here?
 
 				mainCodeChunk.codeRenderers.add(new StructuredTextRenderer("%s.add(%s);", collectionNameRenderer, new ExistingVariableNameRenderer(elementID, elementClass, importsContainer, mainCodeChunk)));
+				mainCodeChunk.declaresOrCanSeeIdentityHashCode(elementID, elementClass); // To avoid inlining
 			}
 		}
 	}
 
-	private void buildMap(InitCodeChunk mainCodeChunk, Map<Object, Object> rebuiltRuntimeCollection, String[] keyTypes, String[] valueTypes, int[] keyIDs, int[] valueIDs, ExistingVariableNameRenderer collectionNameRenderer) throws ClassNotFoundException {
+	private void buildMap(InitCodeChunk mainCodeChunk, Map<Object, Object> rebuiltRuntimeCollection, String[] keyTypes, String[] valueTypes, int[] keyIDs, int[] valueIDs, ExistingVariableNameRenderer collectionNameRenderer, VariableDeclarationRenderer variableDeclarationRenderer) throws ClassNotFoundException {
 		int i = 0;
 		for (Iterator<Map.Entry<Object, Object>> runtimeObjectsIterator = rebuiltRuntimeCollection.entrySet().iterator(); runtimeObjectsIterator.hasNext(); i++) {
+			variableDeclarationRenderer.declaresClass(collectionNameRenderer.varClass); // To avoid inlining
 			Map.Entry<Object, Object> entry = runtimeObjectsIterator.next();
 
 			if (entry == null) {
@@ -258,6 +261,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 					final int keyID = keyIDs[i];
 					writeVariableGenerationIfNecessary(mainCodeChunk, key, keyClass, keyID);
 					existingKeyVariableNameRenderer = new ExistingVariableNameRenderer(keyID, keyClass, importsContainer, mainCodeChunk);
+					mainCodeChunk.declaresOrCanSeeIdentityHashCode(keyID, keyClass); // To avoid inlining
 				} else {
 					existingKeyVariableNameRenderer = ExpressionRenderer.stringRenderer("null");
 				}
@@ -269,6 +273,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 					final int valueID = valueIDs[i];
 					writeVariableGenerationIfNecessary(mainCodeChunk, value, valueClass, valueID);
 					existingValueVariableNameRenderer = new ExistingVariableNameRenderer(valueID, valueClass, importsContainer, mainCodeChunk);
+					mainCodeChunk.declaresOrCanSeeIdentityHashCode(valueID, valueClass); // To avoid inlining
 				} else {
 					existingValueVariableNameRenderer = ExpressionRenderer.stringRenderer("null");
 				}

@@ -117,40 +117,39 @@ public class TestMethodsWriter {
 				int returnValueIdentityHascode = testClassWriter.identityHashCodeGenerator.generateIdentityHashCode();
 //				final NewGeneratedVariableNameRenderer returnValueNameRenderer =
 //						new NewGeneratedVariableNameRenderer(returnValueIdentityHascode, returnType, importsContainer, currentMethodPart, "returned");
-				if (!currentMethodPart.declaresOrCanSeeIdentityHashCode(returnValueIdentityHascode, returnType)) {
-					VariableDeclarationRenderer returnValueDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;", returnValueIdentityHascode, "returned", returnType, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, invocationRenderer);
-					currentMethodPart.addExpressionRenderer(returnValueDeclarationRenderer);
-					currentMethodPart.addDeclaredObject(returnValueIdentityHascode, returnValueDeclarationRenderer);
-				}
+				VariableDeclarationRenderer returnValueDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s;", returnValueIdentityHascode, "returned", returnType, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, invocationRenderer);
+				currentMethodPart.addExpressionRenderer(returnValueDeclarationRenderer);
+				currentMethodPart.addDeclaredObject(returnValueIdentityHascode, returnValueDeclarationRenderer);
 
-				// final InitCodeChunk returnValueInitCodeChunk = createInitCodeChunk(returnValue, returnValueDeclaredType,
-				// identityHashCode, "expected");
-				// codeChunk.requiredInits.put(identityHashCode, returnValueInitCodeChunk);
-				// return returnValueNameRenderer;
-				// final ExpressionRenderer instantiationRenderer = new StructuredTextRenderer("assertSame(%s, %s);",
-				// returnValueNameRenderer, invocationRenderer);
+				Object returnValue = deserialiser.deserialise(serialisedReturnValue);
+				if (returnValue == null) {
+					currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertNull"));
+					final ExpressionRenderer expressionRenderer;
+					expressionRenderer = new StructuredTextRenderer("assertNull(%s);", invocationRenderer);
+					currentMethodPart.addExpressionRenderer(expressionRenderer);
+				} else {
+					// final InitCodeChunk returnValueInitCodeChunk = createInitCodeChunk(returnValue, returnValueDeclaredType,
+					// identityHashCode, "expected");
+					// codeChunk.requiredInits.put(identityHashCode, returnValueInitCodeChunk);
+					// return returnValueNameRenderer;
+					// final ExpressionRenderer instantiationRenderer = new StructuredTextRenderer("assertSame(%s, %s);",
+					// returnValueNameRenderer, invocationRenderer);
 
-				// currentMethodPart.addExpressionRenderer(instantiationRenderer);
-				// TODO - TOCHECK - that where it matters it asserts both Equals and Same. If it doesn't, it's caused by another "TOCHECK" change
-				ObjectDeclarationScope objectDeclarationScope;
-				final boolean shouldAssertSame = (objectDeclarationScope = currentTestMethod).declaresIdentityHashCode(returnValueID, returnType) || (objectDeclarationScope = this.testClassWriter).declaresIdentityHashCode(returnValueID, returnType);
-				if (shouldAssertSame) {
-					ExpressionRenderer expectedValueNameRenderer = new ExistingVariableNameRenderer(returnValueID, returnType, importsContainer, objectDeclarationScope);
-					currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertSame"));
-					currentMethodPart.addExpressionRenderer(new StructuredTextRenderer("assertSame(%s, %s);", expectedValueNameRenderer, new ExistingVariableNameRenderer(returnValueIdentityHascode, returnType, importsContainer, currentMethodPart)));
-				}
-				// In any case:
-				{
-					Object returnValue = deserialiser.deserialise(serialisedReturnValue);
-					if (returnValue == null) {
-						currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertNull"));
-						final ExpressionRenderer expressionRenderer;
-						expressionRenderer = new StructuredTextRenderer("assertNull(%s);", invocationRenderer);
-						currentMethodPart.addExpressionRenderer(expressionRenderer);
-					} else {
+					// currentMethodPart.addExpressionRenderer(instantiationRenderer);
+					// TODO - TOCHECK - that where it matters it asserts both Equals and Same. If it doesn't, it's caused by another "TOCHECK" change
+					ObjectDeclarationScope objectDeclarationScope;
+					final boolean shouldAssertSame = (objectDeclarationScope = currentTestMethod).declaresIdentityHashCode(returnValueID, returnType) || (objectDeclarationScope = this.testClassWriter).declaresIdentityHashCode(returnValueID, returnType);
+					if (shouldAssertSame) {
+						ExpressionRenderer expectedValueNameRenderer = new ExistingVariableNameRenderer(returnValueID, returnType, importsContainer, objectDeclarationScope);
+						currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertSame"));
+						currentMethodPart.declaresIdentityHashCode(returnValueIdentityHascode, returnType); // this is required for increasing the number of references to the return value, so that it's not inlined if referenced more than once
+						currentMethodPart.addExpressionRenderer(new StructuredTextRenderer("assertSame(%s, %s);", expectedValueNameRenderer, new ExistingVariableNameRenderer(returnValueIdentityHascode, returnType, importsContainer, currentMethodPart)));
+					}
+					// In any case:
+					{
 						if (returnType.isPrimitive() || returnType.isArray() || Number.class.isAssignableFrom(returnType) || Collection.class.isAssignableFrom(returnType)
 								|| Map.class.isAssignableFrom(returnType) || !(mockingStrategy.mustStub(returnValue) || mockingStrategy.shouldStub(returnType))) {
-							final int expectedReturnValueID = /* testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); */ shouldAssertSame ? returnValueIdentityHascode : returnValueID;
+							final int expectedReturnValueID = /* testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); */ shouldAssertSame ? testClassWriter.identityHashCodeGenerator.generateIdentityHashCode() : returnValueID;
 							VariableNameRenderer expectedValueNameRenderer = renderersStrategy.buildExpectedReturnValue(currentMethodPart, returnValue, returnType, expectedReturnValueID, currentMethodPart, importsContainer, mockingStrategy, renderersStrategy, testClassWriter);
 
 							// TODO - when the returned values are primitive wrappers (instances of java.lang.Number descendants), cast
@@ -160,6 +159,7 @@ public class TestMethodsWriter {
 							// The following 'if' condition means "don't assertEquals if it's a mock", but it definitely need
 							// improvement! It mirrors the createInitCodeChunk() code's cases.
 							currentMethodPart.requiredImports.addImport(new Import("org.junit.Assert", "assertEquals"));
+							currentMethodPart.declaresIdentityHashCode(returnValueIdentityHascode, returnType); // this is required for increasing the number of references to the return value, so that it's not inlined if referenced more than once
 							final ExpressionRenderer expressionRenderer = new StructuredTextRenderer("assertEquals(%s, %s);", expectedValueNameRenderer, new ExistingVariableNameRenderer(returnValueIdentityHascode, returnType, importsContainer, currentMethodPart));
 							currentMethodPart.addExpressionRenderer(expressionRenderer);
 						}

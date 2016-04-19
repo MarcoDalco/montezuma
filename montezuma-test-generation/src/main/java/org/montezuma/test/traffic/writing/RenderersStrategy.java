@@ -53,6 +53,7 @@ public class RenderersStrategy {
 				// In the above process, consider the class type of each argument as given in the argTypes String array,
 				// i.e.: int.class versus Integer.class
 				expressionRenderers.add(new ExistingVariableNameRenderer(argID, argClass, importsContainer, variableCodeChunk));
+				mainCodeChunk.declaresOrCanSeeIdentityHashCode(argID, argClass); // To avoid inlining
 				argumentNames.append("%s");
 			}
 			argumentNames.append(argSeparator);
@@ -92,6 +93,7 @@ public class RenderersStrategy {
 		// invocation - is then cast by the 'cut' to a more specific type and a method from that type is invoked. That would
 		// be a good reason to use returnValueClass (returnValue.getClass()), but such class might not be visible (private
 		// inner class).
+		returnValueInitCodeChunk.declaresOrCanSeeIdentityHashCode(identityHashCode, returnValueDeclaredType); // To avoid inlining
 		return new ExistingVariableNameRenderer(identityHashCode, returnValueDeclaredType, importsContainer, returnValueInitCodeChunk);
 	}
 

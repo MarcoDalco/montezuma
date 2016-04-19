@@ -1,19 +1,20 @@
 package org.montezuma.test.traffic.writing;
 
+import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class VariableDeclarationRenderer extends StructuredTextRenderer {
-	private final Set<Class<?>> desiredClasses = new LinkedHashSet<>();
+	private final Map<Class<?>, Integer> desiredClasses = new LinkedHashMap<>(); // Desired classes and number of times they are referenced
 	private final NewVariableNameRenderer variableNameRenderer;
 	private final ImportsContainer importsContainer;
+	private boolean inlining;
 
 	public VariableDeclarationRenderer(String formattedText, int identityHashCode, ObjectDeclarationScope objectDeclarationScope, NewVariableNameRenderer variableNameRenderer, Class<?> desiredClass, ImportsContainer importsContainer, ComputableClassNameRendererPlaceholder classNameRenderer, NewVariableNameRendererPlaceholder newVariableNameRendererPlaceholder, ExpressionRenderer valueRenderer) {
 		super(formattedText, joinAndInitialiseExpressionRenderers(ComputableClassNameRendererPlaceholder.instance, NewVariableNameRendererPlaceholder.instance, valueRenderer));
 
-		this.desiredClasses.add(desiredClass);
+		this.desiredClasses.put(desiredClass, Integer.valueOf(0));
 		this.variableNameRenderer = variableNameRenderer;
 		this.importsContainer = importsContainer;
 	}
@@ -23,7 +24,7 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 
 		NewVariableNameRenderer variableNameRenderer = new NewGeneratedVariableNameRenderer(identityHashCode, desiredClass, importsContainer, namePrefix);
 
-		this.desiredClasses.add(desiredClass);
+		this.desiredClasses.put(desiredClass, Integer.valueOf(0));
 		this.variableNameRenderer = variableNameRenderer;
 		this.importsContainer = importsContainer;
 	}
@@ -86,7 +87,18 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 		ExpressionRenderer [] expressionRenderersMaster = masterExpressionRenderers;
 
 		boolean first = true;
-		for (Class<?> desiredClass : desiredClasses) {
+
+withTheNextDesiredClass:
+		for (Map.Entry<Class<?>, Integer> desiredClassEntry : desiredClasses.entrySet()) {
+			if (desiredClassEntry.getValue().intValue() == 1) {
+				ExpressionRenderer [] expressionRenderers = (VariableDeclarationRenderer.this.expressionRenderers == null? VariableDeclarationRenderer.this.masterExpressionRenderers : VariableDeclarationRenderer.this.expressionRenderers);
+				if (expressionRenderers.length > 2) {
+					inlining = true;
+					continue withTheNextDesiredClass;
+				}
+			}
+
+			Class<?> desiredClass = desiredClassEntry.getKey();
 			// clone the renderers now, once per desiredClass, before their "render()" method is run, then proceed to render them all.
 			expressionRenderers = replaceRenderers(expressionRenderersMaster, desiredClass, variableNameRenderer.getName(desiredClass));
 
@@ -134,19 +146,27 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 	}
 
 	public boolean declaresClass(Class<?> requiredClass) {
-		for (Class<?> alreadyDesiredClass : desiredClasses) {
+		int value = 1;
+
+		for (Map.Entry<Class<?>, Integer> alreadyDesiredClassEntry : desiredClasses.entrySet()) {
+			Class<?> alreadyDesiredClass = alreadyDesiredClassEntry.getKey();
 			// An already-desired class is either the same as the requiredClass or is a sub-type (subclass or subinterface), so it already declares the requiredClass: nothing to do.
-			if (requiredClass.isAssignableFrom(alreadyDesiredClass))
+			if (requiredClass.isAssignableFrom(alreadyDesiredClass)) {
+				value = alreadyDesiredClassEntry.getValue().intValue();
+				if (value < 2) // No need to update: it doesn't make any difference. We are not keeping statistics; we just want to see if it's used only once, so we can inline it, or more, so we cannot
+					desiredClasses.put(alreadyDesiredClass, value + 1);
 				return true;
+			}
 			// A more-specific-than-already-desired class is required, so let's remove it, for adding it later on.
 			if (alreadyDesiredClass.isAssignableFrom(requiredClass)) {
-				desiredClasses.remove(alreadyDesiredClass);
-				// Go to add the requiredClass. There cannot be any more-specialised classes, as they would have all been removed by the "remove" above.
+				// TODO - WARNING: calling this with an invisible requiredClass changes the alreadyDesiredClass to an invisible subclass. It might happen from JMockitFramework.getStrictExpectationsPart
+				value = desiredClasses.remove(alreadyDesiredClass) + 1;
+				// Go to replace the requiredClass. There cannot be any more-specialised classes, as they would have all been removed by the "remove" above.
 				break;
 			}
 		}
 
-		desiredClasses.add(requiredClass);
+		desiredClasses.put(requiredClass, value);
 
 		return true;
 	}
@@ -169,13 +189,25 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 			if (name != null)
 				return name;
 
-			for (Class<?> declaredClass : VariableDeclarationRenderer.this.desiredClasses) {
+			for (Map.Entry<Class<?>, Integer> declaredClassEntry : VariableDeclarationRenderer.this.desiredClasses.entrySet()) {
+				assert(!(VariableDeclarationRenderer.this.inlining && (declaredClassEntry.getValue() > 1)));
+
+				Class<?> declaredClass = declaredClassEntry.getKey();
 				if (desiredClass.isAssignableFrom(declaredClass)) {
 					name = names.get(declaredClass);
 
 					if (name != null) {
 						names.put(desiredClass, name);
 						return name;
+					}
+
+					if (declaredClassEntry.getValue() == 1) {
+						ExpressionRenderer [] expressionRenderers = VariableDeclarationRenderer.this.masterExpressionRenderers;
+
+						if (expressionRenderers.length > 2) {
+							expressionRenderers = replaceRenderers(new ExpressionRenderer[] { expressionRenderers[2] }, desiredClass, null);
+							return expressionRenderers[0].render();
+						}
 					}
 
 					String className = declaredClass.getSimpleName();
@@ -202,7 +234,7 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 	}
 
 	public void preprocess() {
-		for (Class<?> desiredClass : desiredClasses) {
+		for (Class<?> desiredClass : desiredClasses.keySet()) {
 			if (!desiredClass.isPrimitive() && !desiredClass.isArray() && !desiredClass.getPackage().equals(Package.getPackage("java.lang"))) {
 				importsContainer.addImport(new Import(desiredClass.getCanonicalName()));
 			}

@@ -68,7 +68,6 @@ public class JMockitFramework implements MockingFramework {
 		String methodName = methodSignature.substring(0, indexOfSeparatorBetweenMethodNameAndArgs);
 		final Class<?> declaringType = callData.declaringType;
 		final boolean isConstructorInvocation = methodName.equals("<init>");
-		Class<?> targetClazzOrDeclaringType = callData.declaringType;
 		// "getMethod" returns the method corresponding to that signature, even if declared in superclasses or
 		// (super)interfaces, but not private ones, and I'm not sure how it matches non-public ones not accessible from this
 		// very class/package,
@@ -78,7 +77,7 @@ public class JMockitFramework implements MockingFramework {
 		// TODO - This getMethod/getDeclaredMethod inversion is actually a workaround as AspectJ is returning
 		// java.sql.PreparedStatement as the Declaring Class of "close()", when it's actually java.sql.Statement from
 		// "Autocloseable". Understand and fix better.
-		final Executable declaredMethod = (isConstructorInvocation ? targetClazzOrDeclaringType.getDeclaredConstructor(parameterTypes) : declaringType.getMethod(methodName, parameterTypes));
+		final Executable declaredMethod = (isConstructorInvocation ? declaringType.getDeclaredConstructor(parameterTypes) : declaringType.getMethod(methodName, parameterTypes));
 		@SuppressWarnings("unchecked") final Class<? extends Throwable>[] exceptionTypes = (Class<? extends Throwable>[]) declaredMethod.getExceptionTypes();
 		List<Class<? extends Throwable>> exceptionTypesList = Arrays.asList(exceptionTypes);
 		codeChunk.declaredThrowables.addAll(exceptionTypesList);
@@ -87,9 +86,11 @@ public class JMockitFramework implements MockingFramework {
 		// TODO - handle null pointers: id == 0 for non-static invocations to null pointers too!
 		final boolean isStaticMethod = Modifier.isStatic(callData.modifiers);
 		final int identityHashCode = isStaticMethod ? testClassWriter.identityHashCodeGenerator.generateIdentityHashCodeForStaticClass(declaringType) : id;
-		Class<?> declaredClass = ReflectionUtils.getVisibleSuperClass(targetClazzOrDeclaringType, testClassWriter.testClass);
-		if (!testClassWriter.declaresIdentityHashCode(identityHashCode, declaringType))
+		Class<?> declaredClass = ReflectionUtils.getVisibleSuperClass(declaringType, testClassWriter.testClass);
+		if (!testClassWriter.declaresIdentityHashCode(identityHashCode, declaredClass)) {
 			MockingFrameworkFactory.getMockingFramework().addStub(isStaticMethod || isConstructorInvocation, identityHashCode, declaredClass, renderersStrategy, importsContainer, testClassWriter);
+			testClassWriter.declaresIdentityHashCode(identityHashCode, declaredClass); // Just to tell the VariableDeclarationRenderer that there is one reference to the variable
+		}
 		Object[] methodArgs = TrafficReader.getDeserialisedArgs(callData.serialisedArgs);
 		final StructuredTextRenderer invocationParameters =
 				renderersStrategy.buildInvocationParameters(codeChunk, methodArgs, argTypes, callData.argIDs, importsContainer, mockingStrategy, testClassWriter);
@@ -108,7 +109,7 @@ public class JMockitFramework implements MockingFramework {
 		final byte[] serialisedReturnValue = callData.serialisedReturnValue;
 		// TODO - implement behaviour of when a Throwable is thrown rather than a result returned: serialisedReturnValue is
 		// null, but returnValueID and serialisedThrowable aren't. Return the throwable.
-		final Class<?> returnType = (isConstructorInvocation ? targetClazzOrDeclaringType : ((Method) declaredMethod).getReturnType());
+		final Class<?> returnType = (isConstructorInvocation ? declaringType : ((Method) declaredMethod).getReturnType());
 		final ExpressionRenderer resultExpressionRenderer =
 				(serialisedReturnValue == null ? ExpressionRenderer.nullRenderer() : new StructuredTextRenderer(" result = %s;", buildExpectedReturnValue(
 						codeChunk, serialisedReturnValue, returnType, callData.returnValueID, objectDeclarationScope, deserialiser, testClassWriter, renderersStrategy, importsContainer, mockingStrategy)));

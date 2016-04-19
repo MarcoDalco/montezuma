@@ -54,6 +54,7 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 		};
 		codeChunkNeedingDeserialisation.requiredInits.put(kryoInstanceID, initCodeChunk);
 		initCodeChunk.generateRequiredInits();
+		initCodeChunk.declaresIdentityHashCode(kryoInstanceID, Kryo.class);
 
 		codeChunkNeedingDeserialisation.requiredImports.addImport(new Import("java.io.ByteArrayInputStream"));
 		codeChunkNeedingDeserialisation.requiredImports.addImport(new Import("com.esotericsoftware.kryo.io.Input"));
@@ -67,8 +68,11 @@ public class KryoSerialisationRenderer implements SerialisationRenderer {
 		final int inputID = identityHashCodeGenerator.generateIdentityHashCode();
 		ExistingVariableNameRenderer existingKryoInputVarNameRenderer = new ExistingVariableNameRenderer(inputID, Input.class, importsContainer, codeChunkNeedingDeserialisation);
 		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s", createdObjectID, "deser", Object.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, null);
+		initCodeChunk.declaresIdentityHashCode(createdObjectID, Object.class);
 		VariableDeclarationRenderer baisVariableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s", baisID, "tmp", ByteArrayInputStream.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, new StructuredTextRenderer("new %s(%s)", ComputableClassNameRendererPlaceholder.instance, baObjectInitCode));
+		initCodeChunk.declaresIdentityHashCode(baisID, ByteArrayInputStream.class);
 		VariableDeclarationRenderer kryoInputVariableDeclarationRenderer = new VariableDeclarationRenderer("final %s %s = %s", inputID, "tmp", Input.class, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, new StructuredTextRenderer("new %s(%s)", ComputableClassNameRendererPlaceholder.instance, existingBaisVarNameRenderer));
+		initCodeChunk.declaresIdentityHashCode(inputID, Input.class);
 		ExpressionRenderer renderer =
 				new StructuredTextRenderer(
 						"%s;\n" + "try (%s;\n" + "     %s) {\n" + "  %s = %s.readClassAndObject(%s);\n" + "}", variableDeclarationRenderer, baisVariableDeclarationRenderer, kryoInputVariableDeclarationRenderer, existingTmpObjectVariableNameRenderer, existingKryoVariableNameRenderer, existingKryoInputVarNameRenderer);
