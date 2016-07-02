@@ -39,10 +39,11 @@ public class RenderersStrategy {
 				final int argID = argIDs[i];
 	
 				// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL or is it correct? I'm now thinking the latter.
-				InitCodeChunk variableCodeChunk = mainCodeChunk.requiredInits.get(argID);
-				if ((variableCodeChunk == null) ||
-						!(MockingFrameworkFactory.getMockingFramework().canStubMultipleTypeWithOneStub() || ((variableCodeChunk instanceof StandardInitCodeChunk) && (argClass.isAssignableFrom(((StandardInitCodeChunk) variableCodeChunk).argDeclaredClass))))) {
-					variableCodeChunk = createInitCodeChunk(arg, argClass, argID, "given", importsContainer, mockingStrategy, testClassWriter, mainCodeChunk);
+//				InitCodeChunk variableCodeChunk = mainCodeChunk.requiredInits.get(argID);
+				VariableDeclarationRenderer variableDeclarationRenderer = mainCodeChunk.getVisibleDeclarationRenderer(argID, argClass);
+				if ((variableDeclarationRenderer == null) ||
+						!(MockingFrameworkFactory.getMockingFramework().canStubMultipleTypeWithOneStub() || variableDeclarationRenderer.desiresNoMoreThanSuperOrSubClassesOf(argClass))) {
+					InitCodeChunk variableCodeChunk = createInitCodeChunk(arg, argClass, argID, "given", importsContainer, mockingStrategy, testClassWriter, mainCodeChunk);
 					mainCodeChunk.requiredInits.put(argID, variableCodeChunk);
 					variableCodeChunk.generateRequiredInits();
 				}
@@ -52,7 +53,7 @@ public class RenderersStrategy {
 				// and valueOf(Long). It will require this method to take the Declaring Type as an extra parameter.
 				// In the above process, consider the class type of each argument as given in the argTypes String array,
 				// i.e.: int.class versus Integer.class
-				expressionRenderers.add(new ExistingVariableNameRenderer(argID, argClass, importsContainer, variableCodeChunk));
+				expressionRenderers.add(new ExistingVariableNameRenderer(argID, argClass, importsContainer, mainCodeChunk));
 				mainCodeChunk.declaresOrCanSeeIdentityHashCode(argID, argClass); // To avoid inlining
 				argumentNames.append("%s");
 			}
@@ -71,14 +72,14 @@ public class RenderersStrategy {
 		return new StandardInitCodeChunk(argID, arg, argClass, argID, variableNamePrefix, importsContainer, mockingStrategy, this, testClassWriter, parentObjectDeclarationScope);
 	}
 
-	VariableNameRenderer buildExpectedReturnValue(CodeChunk codeChunk, Object returnValue, Class<?> returnValueDeclaredType, int identityHashCode, ObjectDeclarationScope objectDeclarationScope, ImportsContainer importsContainer, MockingStrategy mockingStrategy, RenderersStrategy renderersStrategy, TestClassWriter testClassWriter) throws ClassNotFoundException, IOException {
+	VariableNameRenderer buildExpectedReturnValue(CodeChunk codeChunk, Object returnValue, Class<?> returnValueDeclaredType, int identityHashCode, ImportsContainer importsContainer, MockingStrategy mockingStrategy, RenderersStrategy renderersStrategy, TestClassWriter testClassWriter) throws ClassNotFoundException, IOException {
 		final Object arg = returnValue;
 		final int argID = identityHashCode;
 	
 		// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL.
 		// TODO - when not mocked, should this be a reconstructed object, instead?
 		if (codeChunk.declaresOrCanSeeIdentityHashCode(identityHashCode, returnValueDeclaredType))
-			return new ExistingVariableNameRenderer(identityHashCode, returnValueDeclaredType, importsContainer, objectDeclarationScope);
+			return new ExistingVariableNameRenderer(identityHashCode, returnValueDeclaredType, importsContainer, codeChunk);
 	
 		InitCodeChunk returnValueInitCodeChunk = codeChunk.requiredInits.get(identityHashCode);
 		if (returnValueInitCodeChunk == null) {

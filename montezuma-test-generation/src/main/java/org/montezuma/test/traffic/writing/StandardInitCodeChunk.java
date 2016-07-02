@@ -200,7 +200,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			if (mockingStrategy.mustStub(arg) || mockingStrategy.shouldStub(argActualClass)) {
 				// TO CHECK - getting the visible superclass MIGHT not be necessary.
 				final Class<?> declaredClass = ReflectionUtils.getVisibleSuperClass(argDeclaredClass, testClassWriter.testClass); // argClass or argActualClass, here?
-				MockingFrameworkFactory.getMockingFramework().addStub(false, argID, declaredClass, renderersStrategy, importsContainer, testClassWriter);
+				MockingFrameworkFactory.getMockingFramework().addStub(false, false, argID, declaredClass, renderersStrategy, importsContainer, testClassWriter, this);
 			} else {
 				codeRenderers.add(renderersStrategy.addRealParameter(this, argDeclaredClass, arg, argID, importsContainer, testClassWriter.identityHashCodeGenerator));
 			}

@@ -171,6 +171,13 @@ withTheNextDesiredClass:
 		return true;
 	}
 
+	public boolean desiresNoMoreThanSuperOrSubClassesOf(Class<?> requiredClass) {
+		Map.Entry<Class<?>, Integer> alreadyDesiredClassEntry = desiredClasses.entrySet().iterator().next();
+
+		Class<?> alreadyDesiredClass = alreadyDesiredClassEntry.getKey();
+		return ((requiredClass.isAssignableFrom(alreadyDesiredClass)) || (alreadyDesiredClass.isAssignableFrom(requiredClass)));
+	}
+
 	class NewGeneratedVariableNameRenderer extends NewVariableNameRenderer {
 		protected final ImportsContainer			importsContainer;
 		private final String									namePrefix;
@@ -228,7 +235,7 @@ withTheNextDesiredClass:
 
 		@Override
 		public String render() {
-			return getName(varClass);
+			throw new IllegalStateException("This method should never be invoked");
 		}
 
 	}

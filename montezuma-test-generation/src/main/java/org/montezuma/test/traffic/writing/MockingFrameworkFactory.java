@@ -6,4 +6,8 @@ public class MockingFrameworkFactory {
 	static MockingFramework getMockingFramework() {
 		return mockingFramework;
 	}
+
+	public static void setMockingFramework(MockingFramework mockingFramework) {
+		MockingFrameworkFactory.mockingFramework = mockingFramework;
+	}
 }

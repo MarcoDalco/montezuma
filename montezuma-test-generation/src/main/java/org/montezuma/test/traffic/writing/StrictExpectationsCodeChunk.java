@@ -15,16 +15,7 @@ public class StrictExpectationsCodeChunk extends CodeChunk {
 
 	@Override
 	public List<ExpressionRenderer> getExpressionRenderers() {
-		final StringBuffer text = new StringBuffer("new StrictExpectations() {{");
-		text.append(StructuredTextFileWriter.EOL);
-		for (int i = 0; i < codeRenderers.size(); i++) {
-			text.append(StructuredTextFileWriter.INDENTATION_UNIT + "%s");
-			text.append(StructuredTextFileWriter.EOL);
-		}
-		text.append("}};");
-		text.append(StructuredTextFileWriter.EOL);
-
-		return Collections.singletonList(new StructuredTextRenderer(text.toString(), codeRenderers.toArray(new ExpressionRenderer[codeRenderers.size()])));
+		return MockingFrameworkFactory.getMockingFramework().getStrictExpectationsRenderers(codeRenderers);
 	}
 
 	public boolean canCombineWith(CodeChunk previous) {

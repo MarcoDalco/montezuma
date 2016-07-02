@@ -11,9 +11,16 @@ import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-public class JMockitFramework implements MockingFramework {
+public class JMockitFramework extends AbstractMockingFramework implements MockingFramework {
+
+	@Override
+	public CodeChunk getStrictExpectationPart(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
+		testClassWriter.addImport("mockit.StrictExpectations");
+		return super.getStrictExpectationPart(callData, objectDeclarationScope, testClassWriter, renderersStrategy, importsContainer, mockingStrategy, deserialiser);
+	}
 
 	@Override
 	public String getRunwithClassName() {
@@ -31,7 +38,7 @@ public class JMockitFramework implements MockingFramework {
 	}
 
 	@Override
-	public VariableDeclarationRenderer addStub(boolean isStaticStub, int identityHashCode, Class<?> declaredClass, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, TestClassWriter testClassWriter) {
+	public void addStub(boolean isStaticStub, boolean isConstructorInvocation, int identityHashCode, Class<?> declaredClass, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, TestClassWriter testClassWriter, CodeChunk codeChunk) {
 		// TODO - add mocks to a "(Stubbed)FieldContainer" instead of the testClassWriter
 		// TODO - get the argClass simpleName lazily from the ImportContainer
 		final Import requiredImport;
@@ -46,80 +53,51 @@ public class JMockitFramework implements MockingFramework {
 		importsContainer.addImport(requiredImport);
 		importsContainer.addImport(new Import(declaredClass.getCanonicalName()));
 		if (testClassWriter.declaresIdentityHashCode(identityHashCode, declaredClass))
-			return testClassWriter.getVisibleDeclarationRenderer(identityHashCode, declaredClass);
+			return;
 
 		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer(annotation + " private %s %s;", identityHashCode, "mocked", declaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, null);
 		testClassWriter.addField(identityHashCode, variableDeclarationRenderer);
 		testClassWriter.addDeclaredObject(identityHashCode, variableDeclarationRenderer);
-		
-		return variableDeclarationRenderer;
 	}
 
-	@Override
-	public CodeChunk getStrictExpectationPart(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
-		testClassWriter.addImport("mockit.StrictExpectations");
-		final StrictExpectationsCodeChunk codeChunk = new StrictExpectationsCodeChunk(objectDeclarationScope);
-		String methodSignature = callData.signature;
-		final int indexOfSeparatorBetweenMethodNameAndArgs = methodSignature.indexOf(Common.METHOD_NAME_TO_ARGS_SEPARATOR);
-		final String argTypesSubstring = methodSignature.substring(1 + indexOfSeparatorBetweenMethodNameAndArgs);
-		final String[] argTypes = (argTypesSubstring.length() == 0 ? new String[] {} : argTypesSubstring.split(Common.ARGS_SEPARATOR));
-		Class<?>[] parameterTypes = ReflectionUtils.buildParameterTypes(argTypes);
-	
-		String methodName = methodSignature.substring(0, indexOfSeparatorBetweenMethodNameAndArgs);
-		final Class<?> declaringType = callData.declaringType;
-		final boolean isConstructorInvocation = methodName.equals("<init>");
-		// "getMethod" returns the method corresponding to that signature, even if declared in superclasses or
-		// (super)interfaces, but not private ones, and I'm not sure how it matches non-public ones not accessible from this
-		// very class/package,
-		// while "getDeclaredMethod" returns only methods declared by that specified class, but considers private methods
-		// too. Private methods should not be tested or intercepted, hence the choice to use "getMethod" instead, but look
-		// out for "NoSuchMethodException" exceptions
-		// TODO - This getMethod/getDeclaredMethod inversion is actually a workaround as AspectJ is returning
-		// java.sql.PreparedStatement as the Declaring Class of "close()", when it's actually java.sql.Statement from
-		// "Autocloseable". Understand and fix better.
-		final Executable declaredMethod = (isConstructorInvocation ? declaringType.getDeclaredConstructor(parameterTypes) : declaringType.getMethod(methodName, parameterTypes));
-		@SuppressWarnings("unchecked") final Class<? extends Throwable>[] exceptionTypes = (Class<? extends Throwable>[]) declaredMethod.getExceptionTypes();
-		List<Class<? extends Throwable>> exceptionTypesList = Arrays.asList(exceptionTypes);
-		codeChunk.declaredThrowables.addAll(exceptionTypesList);
-	
-		final int id = isConstructorInvocation ? callData.returnValueID : callData.id;
-		// TODO - handle null pointers: id == 0 for non-static invocations to null pointers too!
-		final boolean isStaticMethod = Modifier.isStatic(callData.modifiers);
-		final int identityHashCode = isStaticMethod ? testClassWriter.identityHashCodeGenerator.generateIdentityHashCodeForStaticClass(declaringType) : id;
-		Class<?> declaredClass = ReflectionUtils.getVisibleSuperClass(declaringType, testClassWriter.testClass);
-		if (!testClassWriter.declaresIdentityHashCode(identityHashCode, declaredClass)) {
-			MockingFrameworkFactory.getMockingFramework().addStub(isStaticMethod || isConstructorInvocation, identityHashCode, declaredClass, renderersStrategy, importsContainer, testClassWriter);
-			testClassWriter.declaresIdentityHashCode(identityHashCode, declaredClass); // Just to tell the VariableDeclarationRenderer that there is one reference to the variable
-		}
-		Object[] methodArgs = TrafficReader.getDeserialisedArgs(callData.serialisedArgs);
-		final StructuredTextRenderer invocationParameters =
-				renderersStrategy.buildInvocationParameters(codeChunk, methodArgs, argTypes, callData.argIDs, importsContainer, mockingStrategy, testClassWriter);
+	protected void writeExpectation(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser, final StrictExpectationsCodeChunk codeChunk, String methodName, final Class<?> declaringType, final boolean isConstructorInvocation, final Executable declaredMethod, final boolean isStaticMethod, final StructuredTextRenderer invocationParameters, final byte[] serialisedReturnValue) throws ClassNotFoundException, IOException {
 		final ExpressionRenderer invocationExpressionRenderer =
 				isConstructorInvocation ?
-						new StructuredTextRenderer("new %s(%s);",
+						new StructuredTextRenderer("new %s(%s)",
 								new ClassNameRenderer(declaringType, importsContainer),
 								invocationParameters)
-						: new StructuredTextRenderer("%s.%s(%s);",
+						: new StructuredTextRenderer("%s.%s(%s)",
 								isStaticMethod ?
 										new ClassNameRenderer(declaringType, importsContainer)
 										: new ExistingVariableNameRenderer(callData.id, /* TO CHECK - it might need to be the targetClass or its most visible superclass. Perhaps declaredClass */ declaringType, importsContainer, testClassWriter),
 								ExpressionRenderer.stringRenderer(methodName),
 								invocationParameters);
-		final ExpressionRenderer timesExpressionRenderer = ExpressionRenderer.stringRenderer(" times = 1;");
-		final byte[] serialisedReturnValue = callData.serialisedReturnValue;
+		final ExpressionRenderer timesExpressionRenderer = ExpressionRenderer.stringRenderer(" times = 1");
 		// TODO - implement behaviour of when a Throwable is thrown rather than a result returned: serialisedReturnValue is
 		// null, but returnValueID and serialisedThrowable aren't. Return the throwable.
 		final Class<?> returnType = (isConstructorInvocation ? declaringType : ((Method) declaredMethod).getReturnType());
 		final ExpressionRenderer resultExpressionRenderer =
-				(serialisedReturnValue == null ? ExpressionRenderer.nullRenderer() : new StructuredTextRenderer(" result = %s;", buildExpectedReturnValue(
+				(serialisedReturnValue == null ? ExpressionRenderer.nullRenderer() : new StructuredTextRenderer(" result = %s", buildExpectedReturnValue(
 						codeChunk, serialisedReturnValue, returnType, callData.returnValueID, objectDeclarationScope, deserialiser, testClassWriter, renderersStrategy, importsContainer, mockingStrategy)));
-		codeChunk.addExpressionRenderer(new StructuredTextRenderer("%s%s%s", invocationExpressionRenderer, timesExpressionRenderer, resultExpressionRenderer));
-	
-		return codeChunk;
+		codeChunk.addExpressionRenderer(new StructuredTextRenderer("%s;%s;%s;", invocationExpressionRenderer, timesExpressionRenderer, resultExpressionRenderer));
 	}
 
-	private ExpressionRenderer buildExpectedReturnValue(CodeChunk codeChunk, byte[] serialisedReturnValue, Class<?> returnValueDeclaredType, int identityHashCode, ObjectDeclarationScope objectDeclarationScope, Deserialiser deserialiser, TestClassWriter testClassWriter, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy) throws ClassNotFoundException, IOException {
-		Object returnValue = deserialiser.deserialise(serialisedReturnValue);
-		return renderersStrategy.buildExpectedReturnValue(codeChunk, returnValue, returnValueDeclaredType, identityHashCode, objectDeclarationScope, importsContainer, mockingStrategy, renderersStrategy, testClassWriter);
+	@Override
+	public List<ExpressionRenderer> getStrictExpectationsRenderers(List<ExpressionRenderer> codeRenderers) {
+		final StringBuffer text = new StringBuffer("new StrictExpectations() {{");
+		text.append(StructuredTextFileWriter.EOL);
+		for (int i = 0; i < codeRenderers.size(); i++) {
+			text.append(StructuredTextFileWriter.INDENTATION_UNIT + "%s");
+			text.append(StructuredTextFileWriter.EOL);
+		}
+		text.append("}};");
+		text.append(StructuredTextFileWriter.EOL);
+
+		return Collections.singletonList(new StructuredTextRenderer(text.toString(), codeRenderers.toArray(new ExpressionRenderer[codeRenderers.size()])));
+	}
+
+	@Override
+	protected ObjectDeclarationScope getStubDeclarationScope(ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter) {
+		return testClassWriter;
 	}
 }

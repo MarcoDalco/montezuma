@@ -90,8 +90,7 @@ public class TestMethodsWriter {
 			CodeChunk currentMethodPart = new CodeChunk(currentTestMethod);
 			currentTestMethod.codeChunks.add(currentMethodPart);
 
-			final List<CodeChunk> expectationChunks = buildExpectations(invocationData.calls, currentMethodPart);
-			currentMethodPart.methodPartsBeforeLines.addAll(expectationChunks);
+			buildExpectations(invocationData.calls, currentMethodPart);
 			final byte[] serialisedReturnValue = invocationData.serialisedReturnValue;
 			ExpressionRenderer cutVariableOrClassNameRenderer = (amTestingTheStaticPart ? new ClassNameRenderer(this.testClass, importsContainer) : ExpressionRenderer.stringRenderer("cut"));
 			StructuredTextRenderer instantiatedInvocationParametersRenderer =
@@ -150,7 +149,7 @@ public class TestMethodsWriter {
 						if (returnType.isPrimitive() || returnType.isArray() || Number.class.isAssignableFrom(returnType) || Collection.class.isAssignableFrom(returnType)
 								|| Map.class.isAssignableFrom(returnType) || !(mockingStrategy.mustStub(returnValue) || mockingStrategy.shouldStub(returnType))) {
 							final int expectedReturnValueID = /* testClassWriter.identityHashCodeGenerator.generateIdentityHashCode(); */ shouldAssertSame ? testClassWriter.identityHashCodeGenerator.generateIdentityHashCode() : returnValueID;
-							VariableNameRenderer expectedValueNameRenderer = renderersStrategy.buildExpectedReturnValue(currentMethodPart, returnValue, returnType, expectedReturnValueID, currentMethodPart, importsContainer, mockingStrategy, renderersStrategy, testClassWriter);
+							VariableNameRenderer expectedValueNameRenderer = renderersStrategy.buildExpectedReturnValue(currentMethodPart, returnValue, returnType, expectedReturnValueID, importsContainer, mockingStrategy, renderersStrategy, testClassWriter);
 
 							// TODO - when the returned values are primitive wrappers (instances of java.lang.Number descendants), cast
 							// the first argument to their original class (the primitive or the wrapper/Object) basing on the return
@@ -186,7 +185,7 @@ public class TestMethodsWriter {
 
 	protected void generateInstantiation(TestMethod currentTestMethod, int identityHashCode, Object[] methodArgs, String[] argTypes, int[] argIDs, Queue<CallInvocationData> calls) throws ClassNotFoundException, IOException, NoSuchMethodException {
 		CodeChunk instantiationMethodPart = new CodeChunk(currentTestMethod);
-		instantiationMethodPart.methodPartsBeforeLines.addAll(buildExpectations(calls, instantiationMethodPart));
+		buildExpectations(calls, instantiationMethodPart);
 
 		final StructuredTextRenderer invocationParametersRenderer =
 				renderersStrategy.buildInvocationParameters(instantiationMethodPart, methodArgs, argTypes, argIDs, importsContainer, mockingStrategy, testClassWriter);
@@ -202,8 +201,7 @@ public class TestMethodsWriter {
 		currentTestMethod.instantiationMethodPart = instantiationMethodPart;
 	}
 
-	private List<CodeChunk> buildExpectations(Queue<CallInvocationData> calls, ObjectDeclarationScope objectDeclarationScope) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
-		List<CodeChunk> expectationParts = new ArrayList<>();
+	private void buildExpectations(Queue<CallInvocationData> calls, CodeChunk codeChunk) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
 
 		for (CallInvocationData callData : calls) {
 			if (!Modifier.isStatic(callData.modifiers) && ((callData.id == 0) && (!callData.signature.startsWith("<init>"))))
@@ -213,11 +211,9 @@ public class TestMethodsWriter {
 			// TODO - check if the target is a MustMock, but at the moment CallInvocationData does not serialise the target
 			// class, so I can't determine if it should be a MustMock.
 			if (mockingStrategy.shouldStub(targetClazz)) {
-				expectationParts.add(MockingFrameworkFactory.getMockingFramework().getStrictExpectationPart(callData, objectDeclarationScope, testClassWriter, renderersStrategy, importsContainer, mockingStrategy, deserialiser));
+				codeChunk.methodPartsBeforeLines.add(MockingFrameworkFactory.getMockingFramework().getStrictExpectationPart(callData, codeChunk, testClassWriter, renderersStrategy, importsContainer, mockingStrategy, deserialiser));
 			}
 		}
-
-		return expectationParts;
 	}
 
 	private TestMethod closeTestMethod(TestMethod testMethod) {

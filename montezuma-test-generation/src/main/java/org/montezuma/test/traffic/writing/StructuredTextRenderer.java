@@ -1,8 +1,10 @@
 package org.montezuma.test.traffic.writing;
 
+import java.util.Arrays;
+
 public class StructuredTextRenderer implements DynamicExpressionRenderer {
 
-	protected final String						formattedText;
+	protected String						formattedText;
 	protected ExpressionRenderer[]	masterExpressionRenderers;
 	protected ExpressionRenderer[]	expressionRenderers;
 
@@ -31,6 +33,12 @@ public class StructuredTextRenderer implements DynamicExpressionRenderer {
 	@Override
 	public void setRenderers(ExpressionRenderer[] expressionRenderers) {
 		this.expressionRenderers = expressionRenderers;
+	}
+
+	@Override
+	public String toString() {
+		return "StructuredTextRenderer [formattedText=" + formattedText + ", masterExpressionRenderers=" + Arrays.toString(masterExpressionRenderers) + ", expressionRenderers="
+				+ Arrays.toString(expressionRenderers) + "]";
 	}
 
 }

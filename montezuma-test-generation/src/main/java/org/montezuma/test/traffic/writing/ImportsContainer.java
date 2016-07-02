@@ -14,6 +14,9 @@ public class ImportsContainer {
 	public void addImport(Import imporz) {
 		Set<Import> setOfImports;
 		String id = imporz.getMethodName();
+		if ("*".equals(id)) {
+			id = imporz.getShortName() + "." + id;
+		}
 		if (id == null) {
 			id = imporz.getShortName();
 		}

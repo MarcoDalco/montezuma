@@ -16,10 +16,6 @@ public abstract class InitCodeChunk extends CodeChunk {
 
 	public abstract void generateRequiredInits() throws ClassNotFoundException;
 
-	protected TextRenderer getRenderer() {
-		throw new RuntimeException("UNEXPECTED INVOCATION"); // TODO - Was "return this;": is it safe to remove?
-	}
-
 	@Override
 	public void preprocess() {
 		//generateRequiredInits();

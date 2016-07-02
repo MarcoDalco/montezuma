@@ -15,7 +15,7 @@ public class TestClassWriter implements ObjectDeclarationScope {
 	final private String											packageName;
 	final private String											testClassName;
 	final Class<?>														testClass;
-	ImportsContainer													importsContainer					= new ImportsContainer();
+	ImportsContainer													importsContainer	= new ImportsContainer();
 	private Map<Integer, ExpressionRenderer>	fieldRenderers		= new HashMap<>();
 	private List<TestMethod>									testMethods				= new ArrayList<>();
 	private final StructuredTextFileWriter		structuredFileWriter;
@@ -24,6 +24,7 @@ public class TestClassWriter implements ObjectDeclarationScope {
 	// The IdentityHashCodeGenerator must not generate duplicate IDs within the same test class, can do it in different
 	// test classes; that's why it's here.
 	public final IdentityHashCodeGenerator		identityHashCodeGenerator	= new IdentityHashCodeGenerator();
+	private Map<String, ExpressionRenderer> 	annotationRenderers = new HashMap<>();
 	static final String												FILE_SEPARATOR		= System.getProperty("file.separator");
 
 	public TestClassWriter(Class<?> clazz, String testClassName) {
@@ -70,6 +71,10 @@ public class TestClassWriter implements ObjectDeclarationScope {
 		importsContainer.addImport(new Import(importExpression));
 	}
 
+	public void addImport(String importExpression, String methodName) {
+		importsContainer.addImport(new Import(importExpression, methodName));
+	}
+
 	private void appendImports() {
 		for (TestMethod testMethod : testMethods) {
 			importsContainer.add(testMethod.getAllImports());
@@ -80,9 +85,19 @@ public class TestClassWriter implements ObjectDeclarationScope {
 		}
 	}
 
+	public void addAnnotation(String annotationName, ExpressionRenderer annotationRenderer) {
+		annotationRenderers.put(annotationName, annotationRenderer);
+	}
+
+	public ExpressionRenderer getAnnotation(String prepareForTestAnnotationCanonicalName) {
+		return annotationRenderers.get(prepareForTestAnnotationCanonicalName);
+	}
+
 	private void appendClassDeclaration() {
 		String mockingFrameworkRunwithClassName = MockingFrameworkFactory.getMockingFramework().getRunwithClassName();
 		structuredFileWriter.appendLine(0, "@RunWith(" + mockingFrameworkRunwithClassName + ".class)");
+		for (ExpressionRenderer annotationRenderer : annotationRenderers.values())
+			structuredFileWriter.appendLine(0, annotationRenderer.render());
 		structuredFileWriter.appendLine(0, "public class " + testClassName + " {");
 	}
 

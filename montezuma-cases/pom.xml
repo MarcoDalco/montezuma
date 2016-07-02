@@ -69,5 +69,15 @@
   		<version>1.16</version>
   		<scope>runtime</scope>
   	</dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.10.19</version>
+    </dependency>
+    <dependency>
+      <groupId>org.powermock</groupId>
+      <artifactId>powermock-mockito-release-full</artifactId>
+      <version>1.6.4</version>
+    </dependency>
   </dependencies>
 </project>
