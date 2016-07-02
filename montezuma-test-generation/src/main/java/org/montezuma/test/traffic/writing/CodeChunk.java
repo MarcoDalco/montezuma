@@ -10,7 +10,6 @@ import java.util.Set;
 
 public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 	public ImportsContainer												requiredImports					= new ImportsContainer();
-	public Set<String>														requiredMocks						= new HashSet<>();
 	public Set<Class<? extends Throwable>>				declaredThrowables			= new HashSet<>();
 	public LinkedHashMap<Integer, InitCodeChunk>	requiredInits						= new LinkedHashMap<>();
 	public List<CodeChunk>												methodPartsBeforeLines	= new ArrayList<>();
@@ -25,7 +24,6 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 
 	public CodeChunk(CodeChunk original) {
 		requiredImports.add(original.requiredImports);
-		requiredMocks.addAll(original.requiredMocks);
 		declaredThrowables.addAll(original.declaredThrowables);
 		requiredInits.putAll(original.requiredInits);
 		methodPartsBeforeLines.addAll(original.methodPartsBeforeLines);
@@ -128,7 +126,6 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 
 	protected void mergeAllFrom(CodeChunk codeChunk) {
 		requiredImports.add(codeChunk.requiredImports);
-		requiredMocks.addAll(codeChunk.requiredMocks);
 		declaredThrowables.addAll(codeChunk.declaredThrowables);
 		// FIXME - At the moment it's overriding inits of the same objects (same identityHashCodes), but some of those Inits need to be preproceesed for other objects to use them (NewVariableNameRenderer), and merging them causes the overridden ones not to be preprocessed.
 		mergeRequiredInits(requiredInits, codeChunk);
@@ -212,8 +209,9 @@ public class CodeChunk implements TextRenderer, ObjectDeclarationScope {
 
 	@Override
 	public String toString() {
-		return "CodeChunk [requiredImports=" + requiredImports + ", requiredMocks=" + requiredMocks + ", declaredThrowables=" + declaredThrowables + ", requiredInits=" + requiredInits
-				+ ", methodPartsBeforeLines=" + methodPartsBeforeLines + ", codeRenderers=" + codeRenderers + ", methodPartsAfterLines=" + methodPartsAfterLines + "]";
+		return getClass().getName() + "@" + System.identityHashCode(this) + " [requiredImports=" + requiredImports + ", declaredThrowables=" + declaredThrowables + ", requiredInits=" + requiredInits + ", methodPartsBeforeLines=" + methodPartsBeforeLines
+				+ ", codeRenderers=" + codeRenderers + ", methodPartsAfterLines=" + methodPartsAfterLines + ", declarations=" + declarations + ", parentObjectDeclarationScope=" + parentObjectDeclarationScope.getClass().getName() + "@" + System.identityHashCode(parentObjectDeclarationScope)
+				+ "]";
 	}
 
 	public void addExpressionRenderer(ExpressionRenderer expressionRenderer) {

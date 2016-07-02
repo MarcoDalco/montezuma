@@ -62,7 +62,8 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 
 	@Override
 	public String toString() {
-		return "TestMethod [opening=" + opening + ", instantiationMethodPart=" + instantiationMethodPart + ", codeChunks=" + codeChunks + ", closure=" + closure + "]";
+		return getClass().getName() + "@" + System.identityHashCode(this) + " [opening=" + opening + ", instantiationMethodPart=" + instantiationMethodPart + ", codeChunks=" + codeChunks + ", closure=" + closure + ", declaredVariables="
+				+ declaredVariables + ", parentObjectDeclarationScope=" + ((Object) parentObjectDeclarationScope).toString() + "]";
 	}
 
 	private Collection<Class<? extends Throwable>> getAllDeclaredThrowables() {

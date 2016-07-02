@@ -152,4 +152,11 @@ public class TestClassWriter implements ObjectDeclarationScope {
 	public VariableDeclarationRenderer getVisibleDeclarationRenderer(int identityHashCode, Class<?> requiredClass) {
 		return declaredVariables.get(identityHashCode);
 	}
+
+	@Override
+	public String toString() {
+		return getClass().getName() + "@" + System.identityHashCode(this) + " [packageName=" + packageName + ", testClassName=" + testClassName + ", testClass=" + testClass + ", importsContainer=" + importsContainer + ", fieldRenderers="
+				+ fieldRenderers + ", testMethods=" + testMethods + ", structuredFileWriter=" + structuredFileWriter + ", testNumber=" + testNumber + ", declaredVariables=" + declaredVariables
+				+ ", identityHashCodeGenerator=" + identityHashCodeGenerator + ", annotationRenderers=" + annotationRenderers + "]";
+	}
 }

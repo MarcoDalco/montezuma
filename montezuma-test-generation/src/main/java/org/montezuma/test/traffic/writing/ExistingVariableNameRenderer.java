@@ -32,4 +32,10 @@ public class ExistingVariableNameRenderer extends VariableNameRenderer {
 //		return getName();
 	}
 
+	@Override
+	public String toString() {
+		return "ExistingVariableNameRenderer [varClass=" + varClass + ", importsContainer=" + importsContainer.getClass().getName() + "@" + System.identityHashCode(importsContainer) + ", objectDeclarationScope=" + objectDeclarationScope.getClass().getName() + "@" + System.identityHashCode(objectDeclarationScope) + ", identityHashCode="
+				+ identityHashCode + "]";
+	}
+
 }

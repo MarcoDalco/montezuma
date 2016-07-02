@@ -238,6 +238,12 @@ withTheNextDesiredClass:
 			throw new IllegalStateException("This method should never be invoked");
 		}
 
+		@Override
+		public String toString() {
+			return "NewGeneratedVariableNameRenderer [importsContainer=" + importsContainer + ", namePrefix=" + namePrefix + ", names=" + names + ", varClass=" + varClass + ", identityHashCode="
+					+ identityHashCode + "]";
+		}
+
 	}
 
 	public void preprocess() {
@@ -246,6 +252,12 @@ withTheNextDesiredClass:
 				importsContainer.addImport(new Import(desiredClass.getCanonicalName()));
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+		return getClass().getName() + "@" + System.identityHashCode(this) + " [desiredClasses=" + desiredClasses + ", variableNameRenderer=" + variableNameRenderer + ", importsContainer=" + importsContainer.getClass().getName() + "@" + System.identityHashCode(importsContainer) + ", inlining=" + inlining
+				+ ", formattedText=" + formattedText + ", masterExpressionRenderers=" + Arrays.toString(masterExpressionRenderers) + ", expressionRenderers=" + Arrays.toString(expressionRenderers) + "]";
 	}
 
 }

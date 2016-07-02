@@ -76,4 +76,9 @@ public class ImportsContainer {
 	public boolean imports(String classCanonicalName) {
 		return (classCanonicalName.startsWith("java.lang") || getResolvedImportsAndLongNames().containsKey(classCanonicalName));
 	}
+
+	@Override
+	public String toString() {
+		return getClass().getName() + "@" + System.identityHashCode(this) + " [importSets=" + importSets + ", resolvedImportsAndShortNames=" + resolvedImportsAndShortNames + ", resolvedImportsAndLongNames=" + resolvedImportsAndLongNames + "]";
+	}
 }

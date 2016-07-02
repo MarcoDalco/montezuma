@@ -18,4 +18,9 @@ public class ClassNameRenderer implements ExpressionRenderer {
 	Class<?> getRenderedClass() {
 		return clazz;
 	}
+
+	@Override
+	public String toString() {
+		return "ClassNameRenderer [clazz=" + clazz + ", importsContainer=" + importsContainer.getClass().getName() + "@" + System.identityHashCode(importsContainer) + "]";
+	}
 }
