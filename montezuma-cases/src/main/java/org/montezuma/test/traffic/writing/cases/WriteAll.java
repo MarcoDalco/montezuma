@@ -35,9 +35,9 @@ public class WriteAll {
 		MockingFrameworkFactory.setMockingFramework(mockingFramework);
 
 		BigDecimalUtilsTestWriter.main(args);
-		BoundaryChecksTestWriter.main(args);
-		BoundaryChecksCallbackTestWriter.main(args);
-		BoundaryChecksWithStateChangeInBothCallForthAndCallBackTestWriter.main(args);
+		BoundaryChecksCallbackTestWriter.main(mergeArrays(args, new String [] { CasesCommon.TEST_CLASS_NAME_PREFIX_KEY, "BoundaryChecksCallBack" }));
+		BoundaryChecksTestWriter.main(mergeArrays(args, new String [] { CasesCommon.TEST_CLASS_NAME_PREFIX_KEY, "BoundaryChecks" }));
+		BoundaryChecksWithStateChangeInBothCallForthAndCallBackTestWriter.main(mergeArrays(args, new String [] { CasesCommon.TEST_CLASS_NAME_PREFIX_KEY, "BoundaryChecksWithStateChangeInBothCallForthAndCallBack" }));
 		ChainedInitTestWriter.main(args);
 		if (mocking)
 			ClassVisibilityCaseTestWriter.main(args);
@@ -57,5 +57,14 @@ public class WriteAll {
 			UtilsConsumerTestWriter.main(args);
 		else
 			UtilsConsumerNoUtilsMockingTestWriter.main(args);
+	}
+
+	private static String[] mergeArrays(String[] array1, String[] array2) {
+		String[] mergedArray = new String[array1.length + array2.length];
+
+		System.arraycopy(array1, 0, mergedArray, 0, array1.length);
+		System.arraycopy(array2, 0, mergedArray, array1.length, array2.length);
+
+		return mergedArray;
 	}
 }

@@ -14,7 +14,7 @@ public class TestClassWriter implements ObjectDeclarationScope {
 
 	final private String											packageName;
 	final private String											testClassName;
-	final Class<?>														testClass;
+	final Class<?>														testedClass;
 	ImportsContainer													importsContainer	= new ImportsContainer();
 	private Map<Integer, ExpressionRenderer>	fieldRenderers		= new HashMap<>();
 	private List<TestMethod>									testMethods				= new ArrayList<>();
@@ -29,8 +29,8 @@ public class TestClassWriter implements ObjectDeclarationScope {
 
 	public TestClassWriter(Class<?> clazz, String testClassName) {
 		this.packageName = clazz.getPackage().getName();
+		this.testedClass = clazz;
 		this.testClassName = testClassName;
-		this.testClass = clazz;
 		this.structuredFileWriter = new StructuredTextFileWriter();
 	}
 
@@ -155,7 +155,7 @@ public class TestClassWriter implements ObjectDeclarationScope {
 
 	@Override
 	public String toString() {
-		return getClass().getName() + "@" + System.identityHashCode(this) + " [packageName=" + packageName + ", testClassName=" + testClassName + ", testClass=" + testClass + ", importsContainer=" + importsContainer + ", fieldRenderers="
+		return getClass().getName() + "@" + System.identityHashCode(this) + " [packageName=" + packageName + ", testClassName=" + testClassName + ", testedClass=" + testedClass + ", importsContainer=" + importsContainer + ", fieldRenderers="
 				+ fieldRenderers + ", testMethods=" + testMethods + ", structuredFileWriter=" + structuredFileWriter + ", testNumber=" + testNumber + ", declaredVariables=" + declaredVariables
 				+ ", identityHashCodeGenerator=" + identityHashCodeGenerator + ", annotationRenderers=" + annotationRenderers + "]";
 	}

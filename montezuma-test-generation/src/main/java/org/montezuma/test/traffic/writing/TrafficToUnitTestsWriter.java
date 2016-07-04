@@ -45,13 +45,13 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 		this.options = options;
 	}
 
-	public void generateTestsFor(final Class<?> clazz, List<String> dontMockRegexList, File recordingDir, String outputClassPath) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+	public void generateTestsFor(final Class<?> clazz, List<String> dontMockRegexList, File recordingDir, String outputClassPath, String testClassNamePrefix) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		final Map<Integer, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingDir);
 		for (List<InvocationData> invocationDataList : invocationDataLists.values()) {
 			printInvocationDataSizes(invocationDataList);
 		}
 
-		generateTestClasses(invocationDataLists, clazz, dontMockRegexList, outputClassPath);
+		generateTestClasses(invocationDataLists, clazz, dontMockRegexList, outputClassPath, testClassNamePrefix);
 	}
 
 	private String getOption(String optionName, String defaultValue) {
@@ -62,7 +62,7 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 		return defaultValue;
 	}
 
-	private void generateTestClasses(Map<Integer, List<InvocationData>> invocationDataLists, Class<?> clazz, List<String> dontMockRegexList, String outputClassPath) throws IOException, ClassNotFoundException, NoSuchMethodException, SecurityException {
+	private void generateTestClasses(Map<Integer, List<InvocationData>> invocationDataLists, Class<?> clazz, List<String> dontMockRegexList, String outputClassPath, String testClassNamePrefix) throws IOException, ClassNotFoundException, NoSuchMethodException, SecurityException {
 		final Map<Integer, Map<Integer, List<InvocationData>>> groupedInvocationDataListMapsMap = new HashMap<Integer, Map<Integer, List<InvocationData>>>();
 		// Arbitrary grouping policy based on the number of tests (test classes) to write
 		// TODO - make this arbitrary grouping policy configurable
@@ -86,14 +86,14 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 		}
 
 		for (Map.Entry<Integer, Map<Integer, List<InvocationData>>> invocationDataListEntry : groupedInvocationDataListMapsMap.entrySet())
-			generateTestClasses(invocationDataListEntry.getKey(), invocationDataListEntry.getValue(), clazz, dontMockRegexList, outputClassPath);
+			generateTestClasses(invocationDataListEntry.getKey(), invocationDataListEntry.getValue(), clazz, dontMockRegexList, outputClassPath, testClassNamePrefix);
 	}
 
-	private void generateTestClasses(int testClassNumber, Map<Integer, List<InvocationData>> invocationDataListsMap, Class<?> clazz, List<String> dontMockRegexList, String outputClassPath) throws IOException, ClassNotFoundException, NoSuchMethodException, SecurityException {
+	private void generateTestClasses(int testClassNumber, Map<Integer, List<InvocationData>> invocationDataListsMap, Class<?> clazz, List<String> dontMockRegexList, String outputClassPath, String testClassNamePrefix) throws IOException, ClassNotFoundException, NoSuchMethodException, SecurityException {
 		final String className = clazz.getSimpleName();
 		final String testClassName = className + testClassNumber + "Test";
 
-		TestClassWriter classWriter = new TestClassWriter(clazz, testClassName);
+		TestClassWriter classWriter = new TestClassWriter(clazz, testClassNamePrefix + testClassName);
 		classWriter.addImport("org.junit.Test");
 		classWriter.addImport("org.junit.runner.RunWith");
 		String mockingFrameworkRunwithClassCanonicalName = MockingFrameworkFactory.getMockingFramework().getRunwithClassCanonicalName();

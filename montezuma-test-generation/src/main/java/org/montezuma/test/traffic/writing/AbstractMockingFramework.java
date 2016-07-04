@@ -45,7 +45,7 @@ public abstract class AbstractMockingFramework implements MockingFramework {
 		// TODO - handle null pointers: id == 0 for non-static invocations to null pointers too!
 		final boolean isStaticMethod = Modifier.isStatic(callData.modifiers);
 		final int identityHashCode = isStaticMethod ? testClassWriter.identityHashCodeGenerator.generateIdentityHashCodeForStaticClass(declaringType) : id;
-		Class<?> declaredClass = ReflectionUtils.getVisibleSuperClass(declaringType, testClassWriter.testClass);
+		Class<?> declaredClass = ReflectionUtils.getVisibleSuperClass(declaringType, testClassWriter.testedClass);
 		ObjectDeclarationScope stubDeclarationScope = getStubDeclarationScope(objectDeclarationScope, testClassWriter);
 		if (!stubDeclarationScope.declaresOrCanSeeIdentityHashCode(identityHashCode, declaredClass)) {
 			MockingFrameworkFactory.getMockingFramework().addStub(isStaticMethod || isConstructorInvocation, isConstructorInvocation, identityHashCode, declaredClass, renderersStrategy, importsContainer, testClassWriter, codeChunk);
