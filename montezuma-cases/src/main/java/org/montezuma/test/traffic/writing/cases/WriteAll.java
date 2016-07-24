@@ -53,10 +53,7 @@ public class WriteAll {
 		StaticMethodCallTestWriter.main(args);
 		SuperClassCallWithStateTestWriter.main(args);
 		TimeConsumerTestWriter.main(args);
-		if (mocking)
-			UtilsConsumerTestWriter.main(args);
-		else
-			UtilsConsumerNoUtilsMockingTestWriter.main(args);
+		UtilsConsumerTestWriter.main(args);
 	}
 
 	private static String[] mergeArrays(String[] array1, String[] array2) {

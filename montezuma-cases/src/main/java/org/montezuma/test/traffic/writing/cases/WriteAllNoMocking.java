@@ -19,7 +19,7 @@ public class WriteAllNoMocking {
 		StaticMethodCallTestWriter.main(args);
 		SuperClassCallWithStateTestWriter.main(args);
 		TimeConsumerTestWriter.main(args);
-		UtilsConsumerNoUtilsMockingTestWriter.main(args);
+		UtilsConsumerTestWriter.main(args);
 
 		System.out.println();
 		System.out.println("**********************************************");
