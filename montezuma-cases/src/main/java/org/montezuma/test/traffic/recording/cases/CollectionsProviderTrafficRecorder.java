@@ -3,14 +3,12 @@ package org.montezuma.test.traffic.recording.cases;
 import org.montezuma.test.traffic.recording.TrafficRecorder;
 import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
 
-import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import analysethis.collections.CollectionsProvider;
-import analysethis.utils.math.BigDecimalUtils;
 
 public class CollectionsProviderTrafficRecorder {
 	public static final String	COLLECTIONS_PROVIDER_RECORDING_SUBDIR	= "collectionsprovider";
@@ -22,7 +20,6 @@ public class CollectionsProviderTrafficRecorder {
 			public void run() {
 				RecordingAspect.turnOff();
 				System.out.println("Loading CUT class to avoid static init processing: " + new CollectionsProvider());
-				System.out.println("Loading CUT class to avoid static init processing: " + new BigDecimalUtils());
 				RecordingAspect.turnOn();
 
 				CollectionsProvider cut = new CollectionsProvider();
