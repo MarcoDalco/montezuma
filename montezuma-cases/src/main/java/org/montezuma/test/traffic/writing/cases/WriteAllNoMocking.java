@@ -12,6 +12,7 @@ public class WriteAllNoMocking {
 		BoundaryChecksCallbackTestWriter.main(args);
 		BoundaryChecksWithStateChangeInBothCallForthAndCallBackTestWriter.main(args);
 		ChainedInitTestWriter.main(args);
+		ClassVisibilityAndTypeOptimisationCaseNoExternalInvokedClassTestWriter.main(args);
 		ClassVisibilityCaseNoExternalInvokedClassTestWriter.main(args);
 		CompiledStatementStoringPreparedStatementCreatorTestWriter.main(args);
 		CurrencyUtilsTestWriter.main(args);

@@ -10,6 +10,7 @@ public class RecordAll {
 		BoundaryChecksCallbackTrafficRecorder.main(args);
 		BoundaryChecksWithStateChangeinBothCallForthAndCallBackTrafficRecorder.main(args);
 		ChainedInitTrafficRecorder.main(args);
+		ClassVisibilityAndTypeOptimisationCaseTrafficRecorder.main(args);
 		ClassVisibilityCaseTrafficRecorder.main(args);
 		CollectionsProviderTrafficRecorder.main(args);
 		CompiledStatementStoringPreparedStatementCreatorTrafficRecorder.main(args);

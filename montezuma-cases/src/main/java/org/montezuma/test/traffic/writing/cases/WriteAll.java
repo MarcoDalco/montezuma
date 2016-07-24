@@ -39,10 +39,13 @@ public class WriteAll {
 		BoundaryChecksTestWriter.main(mergeArrays(args, new String [] { CasesCommon.TEST_CLASS_NAME_PREFIX_KEY, "BoundaryChecks" }));
 		BoundaryChecksWithStateChangeInBothCallForthAndCallBackTestWriter.main(mergeArrays(args, new String [] { CasesCommon.TEST_CLASS_NAME_PREFIX_KEY, "BoundaryChecksWithStateChangeInBothCallForthAndCallBack" }));
 		ChainedInitTestWriter.main(args);
-		if (mocking)
+		if (mocking) {
+			ClassVisibilityAndTypeOptimisationCaseTestWriter.main(args);
 			ClassVisibilityCaseTestWriter.main(args);
-		else
+		} else {
+			ClassVisibilityAndTypeOptimisationCaseNoExternalInvokedClassTestWriter.main(args);
 			ClassVisibilityCaseNoExternalInvokedClassTestWriter.main(args);
+		}
 		if (mocking) CollectionsProviderTestWriter.main(args);
 		CompiledStatementStoringPreparedStatementCreatorTestWriter.main(args);
 		CurrencyUtilsTestWriter.main(args);

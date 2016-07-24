@@ -1,8 +1,8 @@
 package analysethis.privateclassreferences;
 
-import dontanalisethis.privateclassreferences.ClassVisibilityCaseExternalInvokedClass;
-import dontanalisethis.privateclassreferences.VisibleClass;
-import dontanalisethis.privateclassreferences.VisibleInterface;
+import dontanalysethis.privateclassreferences.ClassVisibilityCaseExternalInvokedClass;
+import dontanalysethis.privateclassreferences.VisibleClass;
+import dontanalysethis.privateclassreferences.VisibleInterface;
 
 public class ClassVisibilityCaseMainClass {
 	private final ClassVisibilityCaseExternalInvokedClass CLASS_VISIBILITY_CASE_EXTERNAL_INVOKED_CLASS = new ClassVisibilityCaseExternalInvokedClass();

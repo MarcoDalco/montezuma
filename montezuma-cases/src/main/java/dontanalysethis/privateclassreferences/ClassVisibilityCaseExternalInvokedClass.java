@@ -1,4 +1,4 @@
-package dontanalisethis.privateclassreferences;
+package dontanalysethis.privateclassreferences;
 
 public class ClassVisibilityCaseExternalInvokedClass {
 	private final InvisibleClass INVISIBLE_CLASS = new InvisibleClass();

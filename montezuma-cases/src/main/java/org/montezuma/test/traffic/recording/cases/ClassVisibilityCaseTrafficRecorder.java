@@ -4,8 +4,8 @@ import org.montezuma.test.traffic.recording.TrafficRecorder;
 import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
 
 import analysethis.privateclassreferences.ClassVisibilityCaseMainClass;
-import dontanalisethis.privateclassreferences.VisibleClass;
-import dontanalisethis.privateclassreferences.VisibleInterface;
+import dontanalysethis.privateclassreferences.VisibleClass;
+import dontanalysethis.privateclassreferences.VisibleInterface;
 
 public class ClassVisibilityCaseTrafficRecorder {
 	public static final String	CLASS_VISIBILITY_CASE_RECORDING_SUBDIR	= "classvisibilitycase";
