@@ -16,6 +16,7 @@ public class TestClassWriter implements ObjectDeclarationScope {
 	final private String											testClassName;
 	final Class<?>														testedClass;
 	ImportsContainer													importsContainer	= new ImportsContainer();
+	private String														classJavadoc;
 	private Map<Integer, ExpressionRenderer>	fieldRenderers		= new HashMap<>();
 	private List<TestMethod>									testMethods				= new ArrayList<>();
 	private final StructuredTextFileWriter		structuredFileWriter;
@@ -85,6 +86,10 @@ public class TestClassWriter implements ObjectDeclarationScope {
 		}
 	}
 
+	public void addClassJavadoc(String javadoc) {
+		this.classJavadoc = javadoc;
+	}
+
 	public void addAnnotation(String annotationName, ExpressionRenderer annotationRenderer) {
 		annotationRenderers.put(annotationName, annotationRenderer);
 	}
@@ -94,6 +99,9 @@ public class TestClassWriter implements ObjectDeclarationScope {
 	}
 
 	private void appendClassDeclaration() {
+		if (classJavadoc != null)
+			structuredFileWriter.appendLine(0, "/** " + classJavadoc + " */");
+
 		String mockingFrameworkRunwithClassName = MockingFrameworkFactory.getMockingFramework().getRunwithClassName();
 		structuredFileWriter.appendLine(0, "@RunWith(" + mockingFrameworkRunwithClassName + ".class)");
 		for (ExpressionRenderer annotationRenderer : annotationRenderers.values())

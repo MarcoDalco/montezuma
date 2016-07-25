@@ -44,9 +44,9 @@ public class CasesCommon {
 		return (testClassNamePrefix != null ? testClassNamePrefix : TEST_CLASS_NAME_PREFIX_DEFAULT);
 	}
 
-	public static void generateTestsFor(Class<?> clazz, List<String> dontMockClasses, String recordingsSubDir, Map<String, String> args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
+	public static void generateTestsFor(Class<?> clazz, List<String> dontMockClasses, String recordingsSubDir, Map<String, String> args, String classJavadoc) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
 		new TrafficToUnitTestsWriter().generateTestsFor(
-		clazz, dontMockClasses, getRecordingsDir(recordingsSubDir), CasesCommon.getClassPath(args), CasesCommon.getClassNamePrefix(args));
+		clazz, dontMockClasses, getRecordingsDir(recordingsSubDir), CasesCommon.getClassPath(args), CasesCommon.getClassNamePrefix(args), classJavadoc);
 	}
 
 	public static File getRecordingsDir(String recordingsSubDir) {

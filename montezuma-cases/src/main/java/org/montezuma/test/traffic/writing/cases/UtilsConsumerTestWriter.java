@@ -13,8 +13,9 @@ import analysethis.utils.consumer.UtilsConsumer;
 public class UtilsConsumerTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
+		final String classJavadoc= "This case is almost a duplicate of the BigDecimalUtils one, except it tests returning a null value, which should be asserted with 'assertNull'.";
 		CasesCommon.generateTestsFor(
-				UtilsConsumer.class, TrafficToUnitTestsWriter.getDontMockClasses(), UtilsConsumerTrafficRecorder.UTILS_CONSUMER_RECORDING_SUBDIR, CasesCommon.parseArguments(args));
+				UtilsConsumer.class, TrafficToUnitTestsWriter.getDontMockClasses(), UtilsConsumerTrafficRecorder.UTILS_CONSUMER_RECORDING_SUBDIR, CasesCommon.parseArguments(args), classJavadoc);
 	}
 
 }

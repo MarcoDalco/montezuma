@@ -13,8 +13,9 @@ import analysethis.collections.CollectionsProvider;
 public class CollectionsProviderTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
+		final String classJavadoc= "This test case checks the code-generation for the creation of the most commonly used collections";
 		CasesCommon.generateTestsFor(
-				CollectionsProvider.class, TrafficToUnitTestsWriter.getDontMockClasses(), CollectionsProviderTrafficRecorder.COLLECTIONS_PROVIDER_RECORDING_SUBDIR, CasesCommon.parseArguments(args));
+				CollectionsProvider.class, TrafficToUnitTestsWriter.getDontMockClasses(), CollectionsProviderTrafficRecorder.COLLECTIONS_PROVIDER_RECORDING_SUBDIR, CasesCommon.parseArguments(args), classJavadoc);
 	}
 
 }

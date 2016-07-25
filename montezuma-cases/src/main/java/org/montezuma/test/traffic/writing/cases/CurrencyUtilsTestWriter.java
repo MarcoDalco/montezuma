@@ -13,8 +13,9 @@ import analysethis.utils.math.CurrencyUtils;
 public class CurrencyUtilsTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
+		final String classJavadoc= "This test is a very basic real-life scenario. It just tests the invocation of a method and the equivalence of its returned value.";
 		CasesCommon.generateTestsFor(
-				CurrencyUtils.class, TrafficToUnitTestsWriter.getDontMockClasses(), CurrencyUtilsTrafficRecorder.CURRENCY_UTILS_RECORDING_SUBDIR, CasesCommon.parseArguments(args));
+				CurrencyUtils.class, TrafficToUnitTestsWriter.getDontMockClasses(), CurrencyUtilsTrafficRecorder.CURRENCY_UTILS_RECORDING_SUBDIR, CasesCommon.parseArguments(args), classJavadoc);
 	}
 
 }

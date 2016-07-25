@@ -13,9 +13,10 @@ import analysethis.com.somecompany.dao.CompiledStatementStoringPreparedStatement
 public class CompiledStatementStoringPreparedStatementCreatorTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
+		final String classJavadoc= "This test is a real-life scenario. It checks expected invocations on a mocked object passed as parameter and on a mock returned by the invocation of a method on the previous mock.";
 		CasesCommon.generateTestsFor(
 				CompiledStatementStoringPreparedStatementCreator.class, TrafficToUnitTestsWriter.getDontMockClasses(),
-				CompiledStatementStoringPreparedStatementCreatorTrafficRecorder.COMPILED_STATEMENT_RECORDING_SUBDIR, CasesCommon.parseArguments(args));
+				CompiledStatementStoringPreparedStatementCreatorTrafficRecorder.COMPILED_STATEMENT_RECORDING_SUBDIR, CasesCommon.parseArguments(args), classJavadoc);
 	}
 
 }

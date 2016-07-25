@@ -13,8 +13,9 @@ import analysethis.utils.math.MonitoredClass;
 public class PassThroughClassTestWriter {
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
+		final String classJavadoc = "This test is a sort of a duplicate of the BoundaryChecks tests, with the difference that the instance of the class invoked when exiting the boundaries is passed as a mocked parameter rather than directly instantiated (and mocked) from inside the boundaries.";
 		CasesCommon.generateTestsFor(
-				MonitoredClass.class, TrafficToUnitTestsWriter.getDontMockClasses(), PassThroughClassTrafficRecorder.PASSTHROUGH_CLASS_RECORDING_SUBDIR, CasesCommon.parseArguments(args));
+				MonitoredClass.class, TrafficToUnitTestsWriter.getDontMockClasses(), PassThroughClassTrafficRecorder.PASSTHROUGH_CLASS_RECORDING_SUBDIR, CasesCommon.parseArguments(args), classJavadoc);
 	}
 
 }

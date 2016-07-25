@@ -29,7 +29,7 @@ public class ClassVisibilityAndTypeOptimisationCaseNoExternalInvokedClassTestWri
 	 */
 
 	public static void main(String[] args) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
-		final String classJavadoc= null;
+		final String classJavadoc= "This test has a complex explanation. Please look at its test-writer class, " + ClassVisibilityCaseNoExternalInvokedClassTestWriter.class;
 		final List<String> dontMockClasses = new ArrayList<>();
 		dontMockClasses.add(".*ClassVisibilityCaseExternalInvokedClass.*");
 		dontMockClasses.add("dontanalisethis.privateclassreferences.VisibleClass");
