@@ -57,14 +57,14 @@ public abstract class AbstractMockingFramework implements MockingFramework {
 		final byte[] serialisedReturnValue = callData.serialisedReturnValue;
 		writeExpectation(
 				callData, objectDeclarationScope, testClassWriter, testMethod, renderersStrategy, importsContainer, mockingStrategy, deserialiser, codeChunk, methodName, declaringType,
-				isConstructorInvocation, declaredMethod, isStaticMethod, invocationParameters, serialisedReturnValue);
+				isConstructorInvocation, declaredMethod, isStaticMethod, invocationParameters, serialisedReturnValue, callData.invokingClass);
 	
 		return codeChunk;
 	}
 
 	protected abstract ObjectDeclarationScope getStubDeclarationScope(ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter);
 
-	protected abstract void writeExpectation(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, TestMethod testMethod, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser, final StrictExpectationsCodeChunk codeChunk, String methodName, final Class<?> declaringType, final boolean isConstructorInvocation, final Executable declaredMethod, final boolean isStaticMethod, final StructuredTextRenderer invocationParameters, final byte[] serialisedReturnValue) throws ClassNotFoundException, IOException;
+	protected abstract void writeExpectation(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, TestMethod testMethod, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser, final StrictExpectationsCodeChunk codeChunk, String methodName, final Class<?> declaringType, final boolean isConstructorInvocation, final Executable declaredMethod, final boolean isStaticMethod, final StructuredTextRenderer invocationParameters, final byte[] serialisedReturnValue, Class<?> invokingClass) throws ClassNotFoundException, IOException;
 
 	protected ExpressionRenderer buildExpectedReturnValue(CodeChunk codeChunk, byte[] serialisedReturnValue, Class<?> returnValueDeclaredType, int identityHashCode, ObjectDeclarationScope objectDeclarationScope, Deserialiser deserialiser, TestClassWriter testClassWriter, TestMethod testMethod, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy) throws ClassNotFoundException, IOException {
 		Object returnValue = deserialiser.deserialise(serialisedReturnValue);

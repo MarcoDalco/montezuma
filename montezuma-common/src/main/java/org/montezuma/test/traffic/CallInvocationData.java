@@ -8,12 +8,14 @@ public class CallInvocationData extends InvocationData {
 	public final Class<?>			targetClazz;
 	public final int					id;
 	public final int					modifiers;
+	public final Class<?>			invokingClass;
 
-	public CallInvocationData(Class<?> declaringType, Object target, Date invocationDate, String signature, byte[][] serialisedArgs, int[] argIDs, int modifiers) {
+	public CallInvocationData(Class<?> declaringType, Object target, Date invocationDate, String signature, byte[][] serialisedArgs, int[] argIDs, int modifiers, Class<?> invokingClass) {
 		super(invocationDate, signature, serialisedArgs, argIDs);
 		this.declaringType = declaringType;
 		this.targetClazz = (target == null ? null : target.getClass());
 		this.id = System.identityHashCode(target);
 		this.modifiers = modifiers;
+		this.invokingClass = invokingClass;
 	}
 }

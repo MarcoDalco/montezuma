@@ -57,7 +57,7 @@ public class MockitoFramework extends AbstractMockingFramework implements Mockin
 	}
 
 	@Override
-	protected void writeExpectation(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, TestMethod testMethod, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser, StrictExpectationsCodeChunk codeChunk, String methodName, Class<?> declaringType, boolean isConstructorInvocation, Executable declaredMethod, boolean isStaticMethod, StructuredTextRenderer invocationParameters, byte[] serialisedReturnValue) throws ClassNotFoundException, IOException {
+	protected void writeExpectation(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, TestMethod testMethod, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser, StrictExpectationsCodeChunk codeChunk, String methodName, Class<?> declaringType, boolean isConstructorInvocation, Executable declaredMethod, boolean isStaticMethod, StructuredTextRenderer invocationParameters, byte[] serialisedReturnValue, Class<?> invokingClass) throws ClassNotFoundException, IOException {
 		ClassNameRenderer classNameRenderer = null;
 		final ExpressionRenderer invocationExpressionRenderer;
 		if (isConstructorInvocation) {
@@ -81,7 +81,8 @@ public class MockitoFramework extends AbstractMockingFramework implements Mockin
 			testClassWriter.addImport(PREPARE_FOR_TEST_ANNOTATION_CANONICAL_NAME);
 			StructuredTextRenderer annotationRenderer = (StructuredTextRenderer)testClassWriter.getAnnotation(PREPARE_FOR_TEST_ANNOTATION_CANONICAL_NAME);
 			if (annotationRenderer == null) {
-				ExpressionRenderer parametersRenderer = new StructuredTextRenderer("%s.class", classNameRenderer);
+				ClassNameRenderer invokingClassNameRenderer = new ClassNameRenderer(invokingClass, importsContainer);
+				ExpressionRenderer parametersRenderer = new StructuredTextRenderer("%s.class", invokingClassNameRenderer);
 				annotationRenderer = new StructuredTextRenderer("@PrepareForTest({%s})", parametersRenderer);
 			} else {
 				// Add a renderer to annotationRenderer

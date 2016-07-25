@@ -268,7 +268,9 @@ public class RecordingAspect {
 					+ ", to target: " + (joinPoint.getTarget() == null ? null : joinPoint.getTarget().getClass().getName()) + ", method " + methodSignatureString + ", n. args: " + args.length);
 			System.out.println("InvocationData stack size before peeking:" + stackOfExecutionData.size());
 		}
-		CallInvocationData callInvocationData = new CallInvocationData(declaringType, joinPoint.getTarget(), new Date(), methodSignatureString, serialiseArgs(args), argIDs, signature.getModifiers());
+		final Object thiz = joinPoint.getThis();
+		Class<?> thisClass = (thiz == null ? joinPoint.getSourceLocation().getWithinType() : thiz.getClass());
+		CallInvocationData callInvocationData = new CallInvocationData(declaringType, joinPoint.getTarget(), new Date(), methodSignatureString, serialiseArgs(args), argIDs, signature.getModifiers(), thisClass);
 		final InvocationData thisFrameInvocationData = stackOfExecutionData.peek();
 		thisFrameInvocationData.addCall(callInvocationData);
 		if (behaviouralCapture) {
