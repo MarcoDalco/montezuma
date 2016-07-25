@@ -32,7 +32,9 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 		LinkedHashMap<Integer, InitCodeChunk> requiredInits = collectAllTheRequiredInits();
 		for (InitCodeChunk codeChunk : requiredInits.values()) {
 			int identityHashCode = codeChunk.identityHashCode;
-			addDeclaredObject(identityHashCode, codeChunk.declarations.get(identityHashCode));
+			VariableDeclarationRenderer variableDeclarationRenderer = codeChunk.declarations.get(identityHashCode);
+			if (variableDeclarationRenderer != null)
+				addDeclaredObject(identityHashCode, variableDeclarationRenderer);
 // TO CHECK - The following commented-out line seems reasonable, but at the moment it makes no difference.
 //			codeChunk.parentObjectDeclarationScope = this;
 			structuredTextFileWriter.appendChunk(2, codeChunk);
