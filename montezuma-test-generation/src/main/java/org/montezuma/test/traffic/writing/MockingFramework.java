@@ -8,9 +8,9 @@ import java.util.List;
 
 public interface MockingFramework {
 
-	void addStub(boolean isStaticStub, boolean isConstructorInvocation, int identityHashCode, Class<?> argClass, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, TestClassWriter testClassWriter, CodeChunk codeChunk) throws ClassNotFoundException;
+	void addStub(boolean isStaticStub, boolean isConstructorInvocation, int identityHashCode, Class<?> argClass, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, TestMethod testMethod, CodeChunk codeChunk) throws ClassNotFoundException;
 
-	CodeChunk getStrictExpectationPart(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException;
+	CodeChunk getStrictExpectationPart(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, TestMethod testMethod, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException;
 
 	String getRunwithClassName();
 

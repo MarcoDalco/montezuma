@@ -17,9 +17,9 @@ import java.util.List;
 public class JMockitFramework extends AbstractMockingFramework implements MockingFramework {
 
 	@Override
-	public CodeChunk getStrictExpectationPart(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
+	public CodeChunk getStrictExpectationPart(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, TestMethod testMethod, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
 		testClassWriter.addImport("mockit.StrictExpectations");
-		return super.getStrictExpectationPart(callData, objectDeclarationScope, testClassWriter, renderersStrategy, importsContainer, mockingStrategy, deserialiser);
+		return super.getStrictExpectationPart(callData, objectDeclarationScope, testClassWriter, testMethod, renderersStrategy, importsContainer, mockingStrategy, deserialiser);
 	}
 
 	@Override
@@ -38,7 +38,7 @@ public class JMockitFramework extends AbstractMockingFramework implements Mockin
 	}
 
 	@Override
-	public void addStub(boolean isStaticStub, boolean isConstructorInvocation, int identityHashCode, Class<?> declaredClass, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, TestClassWriter testClassWriter, CodeChunk codeChunk) {
+	public void addStub(boolean isStaticStub, boolean isConstructorInvocation, int identityHashCode, Class<?> declaredClass, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, TestMethod testMethod, CodeChunk codeChunk) {
 		// TODO - add mocks to a "(Stubbed)FieldContainer" instead of the testClassWriter
 		// TODO - get the argClass simpleName lazily from the ImportContainer
 		final Import requiredImport;
@@ -52,15 +52,14 @@ public class JMockitFramework extends AbstractMockingFramework implements Mockin
 		}
 		importsContainer.addImport(requiredImport);
 		importsContainer.addImport(new Import(declaredClass.getCanonicalName()));
-		if (testClassWriter.declaresIdentityHashCode(identityHashCode, declaredClass))
+		if (testMethod.declaresIdentityHashCode(identityHashCode, declaredClass))
 			return;
-
-		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer(annotation + " private %s %s;", identityHashCode, "mocked", declaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, null);
-		testClassWriter.addField(identityHashCode, variableDeclarationRenderer);
-		testClassWriter.addDeclaredObject(identityHashCode, variableDeclarationRenderer);
+		VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer(annotation + ""
+			+ " %s %s", identityHashCode, "mocked", declaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, null);
+		testMethod.addParameter(identityHashCode, variableDeclarationRenderer);
 	}
 
-	protected void writeExpectation(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser, final StrictExpectationsCodeChunk codeChunk, String methodName, final Class<?> declaringType, final boolean isConstructorInvocation, final Executable declaredMethod, final boolean isStaticMethod, final StructuredTextRenderer invocationParameters, final byte[] serialisedReturnValue) throws ClassNotFoundException, IOException {
+	protected void writeExpectation(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, TestMethod testMethod, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser, final StrictExpectationsCodeChunk codeChunk, String methodName, final Class<?> declaringType, final boolean isConstructorInvocation, final Executable declaredMethod, final boolean isStaticMethod, final StructuredTextRenderer invocationParameters, final byte[] serialisedReturnValue) throws ClassNotFoundException, IOException {
 		final ExpressionRenderer invocationExpressionRenderer =
 				isConstructorInvocation ?
 						new StructuredTextRenderer("new %s(%s)",
@@ -69,7 +68,7 @@ public class JMockitFramework extends AbstractMockingFramework implements Mockin
 						: new StructuredTextRenderer("%s.%s(%s)",
 								isStaticMethod ?
 										new ClassNameRenderer(declaringType, importsContainer)
-										: new ExistingVariableNameRenderer(callData.id, /* TO CHECK - it might need to be the targetClass or its most visible superclass. Perhaps declaredClass */ declaringType, importsContainer, testClassWriter),
+										: new ExistingVariableNameRenderer(callData.id, /* TO CHECK - it might need to be the targetClass or its most visible superclass. Perhaps declaredClass */ declaringType, importsContainer, testMethod),
 								ExpressionRenderer.stringRenderer(methodName),
 								invocationParameters);
 		final ExpressionRenderer timesExpressionRenderer = ExpressionRenderer.stringRenderer(" times = 1");
@@ -78,7 +77,7 @@ public class JMockitFramework extends AbstractMockingFramework implements Mockin
 		final Class<?> returnType = (isConstructorInvocation ? declaringType : ((Method) declaredMethod).getReturnType());
 		final ExpressionRenderer resultExpressionRenderer =
 				(serialisedReturnValue == null ? ExpressionRenderer.nullRenderer() : new StructuredTextRenderer(" result = %s", buildExpectedReturnValue(
-						codeChunk, serialisedReturnValue, returnType, callData.returnValueID, objectDeclarationScope, deserialiser, testClassWriter, renderersStrategy, importsContainer, mockingStrategy)));
+						codeChunk, serialisedReturnValue, returnType, callData.returnValueID, objectDeclarationScope, deserialiser, testClassWriter, testMethod, renderersStrategy, importsContainer, mockingStrategy)));
 		codeChunk.addExpressionRenderer(new StructuredTextRenderer("%s;%s;%s;", invocationExpressionRenderer, timesExpressionRenderer, resultExpressionRenderer));
 	}
 

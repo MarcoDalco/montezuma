@@ -22,7 +22,7 @@ public class RenderersStrategy {
 		return SerialisationRendererFactory.getSerialisationRenderer().getDeserialisationCodeChunkFor(codeChunk, object, importsContainer, objectDeclarationScope, identityHashCodeGenerator);
 	}
 
-	StructuredTextRenderer buildInvocationParameters(CodeChunk mainCodeChunk, Object[] args, String[] argTypes, int[] argIDs, ImportsContainer importsContainer, MockingStrategy mockingStrategy, TestClassWriter testClassWriter) throws ClassNotFoundException {
+	StructuredTextRenderer buildInvocationParameters(CodeChunk mainCodeChunk, Object[] args, String[] argTypes, int[] argIDs, ImportsContainer importsContainer, MockingStrategy mockingStrategy, TestClassWriter testClassWriter, TestMethod testMethod) throws ClassNotFoundException {
 	
 		List<ExpressionRenderer> expressionRenderers = new ArrayList<>();
 		final String argSeparator = ", ";
@@ -43,7 +43,7 @@ public class RenderersStrategy {
 				VariableDeclarationRenderer variableDeclarationRenderer = mainCodeChunk.getVisibleDeclarationRenderer(argID, argClass);
 				if ((variableDeclarationRenderer == null) ||
 						!(MockingFrameworkFactory.getMockingFramework().canStubMultipleTypeWithOneStub() || variableDeclarationRenderer.desiresNoMoreThanSuperOrSubClassesOf(argClass))) {
-					InitCodeChunk variableCodeChunk = createInitCodeChunk(arg, argClass, argID, "given", importsContainer, mockingStrategy, testClassWriter, mainCodeChunk);
+					InitCodeChunk variableCodeChunk = createInitCodeChunk(arg, argClass, argID, "given", importsContainer, mockingStrategy, testClassWriter, testMethod, mainCodeChunk);
 					mainCodeChunk.requiredInits.put(argID, variableCodeChunk);
 					variableCodeChunk.generateRequiredInits();
 				}
@@ -68,11 +68,11 @@ public class RenderersStrategy {
 		return new StructuredTextRenderer(argumentNames.toString(), expressionRenderers.toArray(new ExpressionRenderer[expressionRenderers.size()]));
 	}
 
-	private InitCodeChunk createInitCodeChunk(final Object arg, final Class<?> argClass, final int argID, final String variableNamePrefix, ImportsContainer importsContainer, MockingStrategy mockingStrategy, TestClassWriter testClassWriter, ObjectDeclarationScope parentObjectDeclarationScope) {
-		return new StandardInitCodeChunk(argID, arg, argClass, argID, variableNamePrefix, importsContainer, mockingStrategy, this, testClassWriter, parentObjectDeclarationScope);
+	private InitCodeChunk createInitCodeChunk(final Object arg, final Class<?> argClass, final int argID, final String variableNamePrefix, ImportsContainer importsContainer, MockingStrategy mockingStrategy, TestClassWriter testClassWriter, TestMethod testMethod, ObjectDeclarationScope parentObjectDeclarationScope) {
+		return new StandardInitCodeChunk(argID, arg, argClass, argID, variableNamePrefix, importsContainer, mockingStrategy, this, testClassWriter, testMethod, parentObjectDeclarationScope);
 	}
 
-	VariableNameRenderer buildExpectedReturnValue(CodeChunk codeChunk, Object returnValue, Class<?> returnValueDeclaredType, int identityHashCode, ImportsContainer importsContainer, MockingStrategy mockingStrategy, RenderersStrategy renderersStrategy, TestClassWriter testClassWriter) throws ClassNotFoundException, IOException {
+	VariableNameRenderer buildExpectedReturnValue(CodeChunk codeChunk, Object returnValue, Class<?> returnValueDeclaredType, int identityHashCode, ImportsContainer importsContainer, MockingStrategy mockingStrategy, RenderersStrategy renderersStrategy, TestClassWriter testClassWriter, TestMethod testMethod) throws ClassNotFoundException, IOException {
 		final Object arg = returnValue;
 		final int argID = identityHashCode;
 	
@@ -83,7 +83,7 @@ public class RenderersStrategy {
 	
 		InitCodeChunk returnValueInitCodeChunk = codeChunk.requiredInits.get(identityHashCode);
 		if (returnValueInitCodeChunk == null) {
-			returnValueInitCodeChunk = new StandardInitCodeChunk(argID, arg, returnValueDeclaredType, argID, "expected", importsContainer, mockingStrategy, renderersStrategy, testClassWriter, codeChunk);
+			returnValueInitCodeChunk = new StandardInitCodeChunk(argID, arg, returnValueDeclaredType, argID, "expected", importsContainer, mockingStrategy, renderersStrategy, testClassWriter, testMethod, codeChunk);
 			codeChunk.requiredInits.put(identityHashCode, returnValueInitCodeChunk);
 			returnValueInitCodeChunk.generateRequiredInits();
 		}

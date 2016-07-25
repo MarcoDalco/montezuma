@@ -98,19 +98,6 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 		return importsContainer;
 	}
 
-	public TestMethod cloneOpening(String methodName) {
-		TestMethod newMethod = new TestMethod(parentObjectDeclarationScope);
-		newMethod.declaredVariables = new HashMap<>(declaredVariables);
-
-		newMethod.opening = new TestMethodOpening(opening, methodName);
-		if (instantiationMethodPart != null) {
-			newMethod.instantiationMethodPart = new CodeChunk(instantiationMethodPart);
-			newMethod.instantiationMethodPart.declarations = new HashMap<>(instantiationMethodPart.declarations);
-		}
-
-		return newMethod;
-	}
-
 	public void preprocess() {
 		opening.preprocess();
 		if (instantiationMethodPart != null)
@@ -133,6 +120,9 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 			if ((variableDeclarationRenderer != null) && (variableDeclarationRenderer.declaresClass(requiredClass)))
 				return true;
 		}
+
+		if ((opening != null) && (opening.declaresIdentityHashCode(identityHashCode, requiredClass)))
+				return true;
 
 		if ((instantiationMethodPart != null) && (instantiationMethodPart.declaresIdentityHashCode(identityHashCode, requiredClass)))
 				return true;
@@ -161,6 +151,9 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 		if (null != (renderer = declaredVariables.get(identityHashCode)))
 			return renderer;
 
+		if (null != (renderer = opening.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode, requiredClass)))
+			return renderer;
+
 		if ((instantiationMethodPart != null) && ((renderer = instantiationMethodPart.getVisibleDeclarationRendererInScopeOrSubscopes(identityHashCode, requiredClass)) != null))
 				return renderer;
 
@@ -181,5 +174,9 @@ public class TestMethod implements TextRenderer, ObjectDeclarationScope {
 			return renderer;
 
 		return parentObjectDeclarationScope.getVisibleDeclarationRenderer(identityHashCode, requiredClass);
+	}
+
+	public void addParameter(int identityHashCode, VariableDeclarationRenderer variableDeclarationRenderer) {
+		this.opening.addParameter(identityHashCode, variableDeclarationRenderer);
 	}
 }

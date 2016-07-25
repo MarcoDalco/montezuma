@@ -14,14 +14,14 @@ public class MockitoFramework extends AbstractMockingFramework implements Mockin
 	private static final String PREPARE_FOR_TEST_ANNOTATION_CANONICAL_NAME = "org.powermock.core.classloader.annotations.PrepareForTest";
 
 	@Override
-	public CodeChunk getStrictExpectationPart(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
-		testClassWriter.addImport("org.mockito.Mockito", "when");
+	public CodeChunk getStrictExpectationPart(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, TestMethod testMethod, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser) throws ClassNotFoundException, IOException, NoSuchMethodException, SecurityException {
+		testClassWriter.addImport("org.powermock.api.mockito.PowerMockito", "when");
 		testClassWriter.addImport("org.mockito.stubbing.OngoingStubbing", "*");
-		return super.getStrictExpectationPart(callData, objectDeclarationScope, testClassWriter, renderersStrategy, importsContainer, mockingStrategy, deserialiser);
+		return super.getStrictExpectationPart(callData, objectDeclarationScope, testClassWriter, testMethod, renderersStrategy, importsContainer, mockingStrategy, deserialiser);
 	}
 
 	@Override
-	public void addStub(boolean isStaticStub, boolean isConstructorInvocation, int identityHashCode, Class<?> declaredClass, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, TestClassWriter testClassWriter, CodeChunk codeChunk) throws ClassNotFoundException {
+	public void addStub(boolean isStaticStub, boolean isConstructorInvocation, int identityHashCode, Class<?> declaredClass, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, TestMethod testMethod, CodeChunk codeChunk) throws ClassNotFoundException {
 		// TODO - add mocks to a "(Stubbed)FieldContainer" instead of the testClassWriter
 		// TODO - get the argClass simpleName lazily from the ImportContainer
 		if (isStaticStub && !isConstructorInvocation) {
@@ -57,7 +57,7 @@ public class MockitoFramework extends AbstractMockingFramework implements Mockin
 	}
 
 	@Override
-	protected void writeExpectation(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser, StrictExpectationsCodeChunk codeChunk, String methodName, Class<?> declaringType, boolean isConstructorInvocation, Executable declaredMethod, boolean isStaticMethod, StructuredTextRenderer invocationParameters, byte[] serialisedReturnValue) throws ClassNotFoundException, IOException {
+	protected void writeExpectation(CallInvocationData callData, ObjectDeclarationScope objectDeclarationScope, TestClassWriter testClassWriter, TestMethod testMethod, RenderersStrategy renderersStrategy, ImportsContainer importsContainer, MockingStrategy mockingStrategy, Deserialiser deserialiser, StrictExpectationsCodeChunk codeChunk, String methodName, Class<?> declaringType, boolean isConstructorInvocation, Executable declaredMethod, boolean isStaticMethod, StructuredTextRenderer invocationParameters, byte[] serialisedReturnValue) throws ClassNotFoundException, IOException {
 		ClassNameRenderer classNameRenderer = null;
 		final ExpressionRenderer invocationExpressionRenderer;
 		if (isConstructorInvocation) {
@@ -103,7 +103,7 @@ public class MockitoFramework extends AbstractMockingFramework implements Mockin
 			expectationExpressionRenderer = new StructuredTextRenderer("%s;", invocationExpressionRenderer);
 		} else {
 			final ExpressionRenderer resultExpressionRenderer = buildExpectedReturnValue(
-							codeChunk, serialisedReturnValue, returnType, callData.returnValueID, objectDeclarationScope, deserialiser, testClassWriter, renderersStrategy, importsContainer, mockingStrategy);
+							codeChunk, serialisedReturnValue, returnType, callData.returnValueID, objectDeclarationScope, deserialiser, testClassWriter, testMethod, renderersStrategy, importsContainer, mockingStrategy);
 			codeChunk.declaresIdentityHashCode(callData.returnValueID, returnType); // this is required for increasing the number of references to the return value, so that it's not inlined if referenced more than once
 			expectationExpressionRenderer = new StructuredTextRenderer("%s.thenReturn(%s);", invocationExpressionRenderer, resultExpressionRenderer);
 		}

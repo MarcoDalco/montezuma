@@ -82,6 +82,10 @@ public class VariableDeclarationRenderer extends StructuredTextRenderer {
 
 	@Override
 	public String render() {
+		return render(StructuredTextFileWriter.EOL);
+	}
+
+	public String render(String separator) {
 		String rendering = "";
 		
 		ExpressionRenderer [] expressionRenderersMaster = masterExpressionRenderers;
@@ -103,7 +107,7 @@ withTheNextDesiredClass:
 			expressionRenderers = replaceRenderers(expressionRenderersMaster, desiredClass, variableNameRenderer.getName(desiredClass));
 
 			if (!first)
-				rendering += StructuredTextFileWriter.EOL;
+				rendering += separator;
 
 			first = false;
 
@@ -259,5 +263,4 @@ withTheNextDesiredClass:
 		return getClass().getName() + "@" + System.identityHashCode(this) + " [desiredClasses=" + desiredClasses + ", variableNameRenderer=" + variableNameRenderer + ", importsContainer=" + importsContainer.getClass().getName() + "@" + System.identityHashCode(importsContainer) + ", inlining=" + inlining
 				+ ", formattedText=" + formattedText + ", masterExpressionRenderers=" + Arrays.toString(masterExpressionRenderers) + ", expressionRenderers=" + Arrays.toString(expressionRenderers) + "]";
 	}
-
 }

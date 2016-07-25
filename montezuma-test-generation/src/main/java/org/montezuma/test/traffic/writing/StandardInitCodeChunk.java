@@ -23,8 +23,9 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 	private final MockingStrategy		mockingStrategy;
 	private final RenderersStrategy	renderersStrategy;
 	private final TestClassWriter		testClassWriter;
+	private final TestMethod				testMethod;
 
-	StandardInitCodeChunk(int identityHashCode, Object arg, Class<?> argClass, int argID, String variableNamePrefix, ImportsContainer importsContainer, MockingStrategy mockingStrategy, RenderersStrategy renderersStrategy, TestClassWriter testClassWriter, ObjectDeclarationScope parentObjectDeclarationScope) {
+	StandardInitCodeChunk(int identityHashCode, Object arg, Class<?> argClass, int argID, String variableNamePrefix, ImportsContainer importsContainer, MockingStrategy mockingStrategy, RenderersStrategy renderersStrategy, TestClassWriter testClassWriter, TestMethod testMethod, ObjectDeclarationScope parentObjectDeclarationScope) {
 		super(identityHashCode, parentObjectDeclarationScope);
 		this.arg = arg;
 		this.argDeclaredClass = argClass;
@@ -34,6 +35,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 		this.mockingStrategy = mockingStrategy;
 		this.renderersStrategy = renderersStrategy;
 		this.testClassWriter = testClassWriter;
+		this.testMethod = testMethod;
 	}
 
 	@Override
@@ -190,7 +192,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 																																																// object ID?
 			}
 			StructuredTextRenderer arrayObjectsRenderer =
-					renderersStrategy.buildInvocationParameters(this, rebuiltRuntimeArray, arrayArgTypes, arrayArgIDs, importsContainer, mockingStrategy, testClassWriter);
+					renderersStrategy.buildInvocationParameters(this, rebuiltRuntimeArray, arrayArgTypes, arrayArgIDs, importsContainer, mockingStrategy, testClassWriter, testMethod);
 			VariableDeclarationRenderer variableDeclarationRenderer = new VariableDeclarationRenderer(
 					"final %s %s = %s;", argID, variableNamePrefix, argDeclaredClass, importsContainer, ComputableClassNameRendererPlaceholder.instance, VariableDeclarationRenderer.NewVariableNameRendererPlaceholder.instance, new StructuredTextRenderer("new %s {%s}", ComputableClassNameRendererPlaceholder.instance, arrayObjectsRenderer));
 			codeRenderers.add(variableDeclarationRenderer);
@@ -200,7 +202,7 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 			if (mockingStrategy.mustStub(arg) || mockingStrategy.shouldStub(argActualClass)) {
 				// TO CHECK - getting the visible superclass MIGHT not be necessary.
 				final Class<?> declaredClass = ReflectionUtils.getVisibleSuperClass(argDeclaredClass, testClassWriter.testedClass); // argClass or argActualClass, here?
-				MockingFrameworkFactory.getMockingFramework().addStub(false, false, argID, declaredClass, renderersStrategy, importsContainer, testClassWriter, this);
+				MockingFrameworkFactory.getMockingFramework().addStub(false, false, argID, declaredClass, renderersStrategy, importsContainer, testMethod, this);
 			} else {
 				codeRenderers.add(renderersStrategy.addRealParameter(this, argDeclaredClass, arg, argID, importsContainer, testClassWriter.identityHashCodeGenerator));
 			}
@@ -291,13 +293,13 @@ public final class StandardInitCodeChunk extends InitCodeChunk {
 		// Here I reuse a previous initialisation, to avoid replacing the existing one, which needs to be "preprocessed" for other objects to use it. NOT IDEAL or is it correct? I'm now thinking the latter.
 		InitCodeChunk variableCodeChunk = mainCodeChunk.requiredInits.get(valueID);
 		if ((variableCodeChunk == null) || !(MockingFrameworkFactory.getMockingFramework().canStubMultipleTypeWithOneStub() || ((variableCodeChunk instanceof StandardInitCodeChunk) && (argDeclaredClass.isAssignableFrom(((StandardInitCodeChunk) variableCodeChunk).argDeclaredClass))))) {
-			variableCodeChunk = createInitCodeChunk(entry, valueClass, valueID, "given", mainCodeChunk);
+			variableCodeChunk = createInitCodeChunk(entry, valueClass, valueID, "given", testMethod, mainCodeChunk);
 			mainCodeChunk.requiredInits.put(valueID, variableCodeChunk);
 			variableCodeChunk.generateRequiredInits();
 		}
 	}
 
-	private InitCodeChunk createInitCodeChunk(final Object arg, final Class<?> argClass, final int argID, final String variableNamePrefix, ObjectDeclarationScope parentObjectDeclarationScope) {
-		return new StandardInitCodeChunk(argID, arg, argClass, argID, variableNamePrefix, importsContainer, mockingStrategy, renderersStrategy, testClassWriter, parentObjectDeclarationScope);
+	private InitCodeChunk createInitCodeChunk(final Object arg, final Class<?> argClass, final int argID, final String variableNamePrefix, TestMethod testMethod, ObjectDeclarationScope parentObjectDeclarationScope) {
+		return new StandardInitCodeChunk(argID, arg, argClass, argID, variableNamePrefix, importsContainer, mockingStrategy, renderersStrategy, testClassWriter, testMethod, parentObjectDeclarationScope);
 	}
 }

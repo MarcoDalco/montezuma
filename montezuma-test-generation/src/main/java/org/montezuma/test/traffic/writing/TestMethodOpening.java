@@ -1,14 +1,17 @@
 package org.montezuma.test.traffic.writing;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
-public class TestMethodOpening implements TextRenderer {
+public class TestMethodOpening implements TextRenderer, ObjectDeclarationScope {
 	public final Set<String>											annotations					= new HashSet<>();
 	public final Set<String>											modifiers						= new HashSet<>();
 	public final String														returnType;
 	public final String														methodName;
-	public final Set<String>											parameters					= new HashSet<>();
+	private final Map<Integer, VariableDeclarationRenderer>	stubParameters	= new HashMap<>();
+	private final Map<Integer, VariableDeclarationRenderer>	declaredVariables	= new HashMap<>();
 	public final Set<Class<? extends Throwable>>	declaredThrowables	= new HashSet<>();
 
 	public TestMethodOpening(String returnType, String methodName) {
@@ -21,14 +24,7 @@ public class TestMethodOpening implements TextRenderer {
 		this(opening.returnType, testMethodName);
 		this.annotations.addAll(opening.annotations);
 		this.modifiers.addAll(opening.modifiers);
-		this.parameters.addAll(opening.parameters);
 		this.declaredThrowables.addAll(opening.declaredThrowables);
-	}
-
-	@Override
-	public String toString() {
-		return "TestMethodOpening [annotations=" + annotations + ", modifiers=" + modifiers + ", returnType=" + returnType + ", methodName=" + methodName + ", parameters=" + parameters
-				+ ", declaredThrowables=" + declaredThrowables + "]";
 	}
 
 	protected TextRenderer getRenderer() {
@@ -53,11 +49,11 @@ public class TestMethodOpening implements TextRenderer {
 		signatureLine.append(methodName);
 		signatureLine.append("(");
 
-		for (String parameter : parameters) {
-			signatureLine.append(parameter);
+		for (VariableDeclarationRenderer parameterRenderer : stubParameters.values()) {
+			signatureLine.append(parameterRenderer.render(","));
 			signatureLine.append(",");
 		}
-		if (parameters.size() > 0) {
+		if (stubParameters.size() > 0) {
 			signatureLine.setLength(signatureLine.length() - 1);
 		}
 
@@ -80,5 +76,51 @@ public class TestMethodOpening implements TextRenderer {
 
 	public void preprocess() {
 		// Not yet necessary
+	}
+
+	public void addParameter(int identityHashCode, VariableDeclarationRenderer variableDeclarationRenderer) {
+		this.stubParameters.put(identityHashCode, variableDeclarationRenderer);
+		this.addDeclaredObject(identityHashCode, variableDeclarationRenderer);
+	}
+
+	@Override
+	public String toString() {
+	return "TestMethodOpening [annotations=" + annotations + ", modifiers=" + modifiers + ", returnType=" + returnType + ", methodName=" + methodName + ", stubParameters=" + stubParameters
+		+ ", declaredVariables=" + declaredVariables + ", declaredThrowables=" + declaredThrowables + "]";
+	}
+
+	@Override
+	public void addDeclaredObject(int identityHashCode, VariableDeclarationRenderer variableDeclarationRenderer) {
+		declaredVariables.put(identityHashCode, variableDeclarationRenderer);
+	}
+
+	@Override
+	public boolean declaresIdentityHashCode(int identityHashCode, Class<?> requiredClass) {
+		{
+			VariableDeclarationRenderer variableDeclarationRenderer = declaredVariables.get(identityHashCode);
+			if ((variableDeclarationRenderer != null) && (variableDeclarationRenderer.declaresClass(requiredClass)))
+				return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public boolean declaresOrCanSeeIdentityHashCode(int identityHashCode, Class<?> requiredClass) {
+		throw new IllegalStateException("Unimplemented");
+	}
+
+	@Override
+	public VariableDeclarationRenderer getVisibleDeclarationRendererInScopeOrSubscopes(int identityHashCode, Class<?> requiredClass) {
+		VariableDeclarationRenderer renderer;
+		if (null != (renderer = declaredVariables.get(identityHashCode)))
+			return renderer;
+
+		return null;
+	}
+
+	@Override
+	public VariableDeclarationRenderer getVisibleDeclarationRenderer(int identityHashCode, Class<?> requiredClass) {
+		throw new IllegalStateException("Unimplemented");
 	}
 }
