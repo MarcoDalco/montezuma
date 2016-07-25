@@ -25,11 +25,11 @@ public class MockitoFramework extends AbstractMockingFramework implements Mockin
 		// TODO - add mocks to a "(Stubbed)FieldContainer" instead of the testClassWriter
 		// TODO - get the argClass simpleName lazily from the ImportContainer
 		if (isStaticStub && !isConstructorInvocation) {
-			testClassWriter.addImport("org.powermock.api.mockito.PowerMockito", "mockStatic");
+			importsContainer.addImport(new Import("org.powermock.api.mockito.PowerMockito", "mockStatic"));
 		} else {
-			testClassWriter.addImport("org.mockito.Mockito", "mock");
+			importsContainer.addImport(new Import("org.powermock.api.mockito.PowerMockito", "mock"));
 			if (isConstructorInvocation) {
-				testClassWriter.addImport("org.powermock.api.mockito.PowerMockito", "whenNew");
+				importsContainer.addImport(new Import("org.powermock.api.mockito.PowerMockito", "whenNew"));
 			}
 		}
 		importsContainer.addImport(new Import(declaredClass.getCanonicalName()));
