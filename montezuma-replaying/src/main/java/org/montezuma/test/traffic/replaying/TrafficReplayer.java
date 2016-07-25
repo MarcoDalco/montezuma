@@ -47,7 +47,7 @@ public class TrafficReplayer extends TrafficReader {
 				for (Object arg : methodArgs)
 					if (arg instanceof MustMock)
 						throw new UnsupportedOperationException(
-								"MustMock classes not yet supported: the original traffic recording and policy caused resulted in the use of a non-recordable object, so only a generic information class-and-instance information was stored instead of full serialisation (MustMock class). That is not yet supported in replaying. Invocation of method: "
+								"MustMock classes not yet supported: the original traffic recording and policy resulted in the use of a non-recordable object, so only a generic information class-and-instance information was stored instead of full serialisation (MustMock class). That is not yet supported in replaying. Invocation of method: "
 										+ methodSignature + " on class: " + clazz + ", argument type: " + ((MustMock) arg).clazz);
 				// TODO - get the parameter types from the actual invocation, as overloaded methods/constructors more specific
 				// than the originally invoked one can be found by the existing algorithm
