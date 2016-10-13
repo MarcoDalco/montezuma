@@ -42,12 +42,12 @@
 		<dependency>
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjrt</artifactId>
-			<version>1.8.6</version>
+			<version>1.8.9</version>
 		</dependency>
 		<dependency>
 			<groupId>org.aspectj</groupId>
 			<artifactId>aspectjweaver</artifactId>
-			<version>1.8.6</version>
+			<version>1.8.9</version>
 			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
