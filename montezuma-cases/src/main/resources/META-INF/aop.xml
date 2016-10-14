@@ -5,7 +5,7 @@
  -->
               <!-- define a concrete aspect inline -->
               <concrete-aspect name="org.montezuma.test.traffic.recording.aop.aspects.ConcreteRecordingAspect"
-                               extends="org.montezuma.test.traffic.recording.aop.aspects.AbstractRecordingAspectJava"
+                               extends="org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect"
                                precedence="*">
                 <pointcut name="callPoint" expression="(call(* *(..))) || (call(*.new(..)))"/>
                 <pointcut name="executionAndInstantiationPoint" expression="(execution(* *(..))) || (execution(*.new(..)))"/>
