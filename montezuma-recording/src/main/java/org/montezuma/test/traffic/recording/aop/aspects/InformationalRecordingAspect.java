@@ -6,6 +6,7 @@ import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
+import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.ConstructorSignature;
 import org.aspectj.lang.reflect.InitializerSignature;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -19,15 +20,42 @@ public class InformationalRecordingAspect {
 	private static final String	WITHIN_REGEX																								= "analysethis..*";
 
 	private static final String	CALL_INVOCATION_FILTER																			= "((call(* *(..))) || (call(*.new(..)))) && within(" + WITHIN_REGEX + ")";
+	@Pointcut(CALL_INVOCATION_FILTER)
+	public void callPoint() {}
+
 	private static final String	CALLNEW_INVOCATION_FILTER																		= "(call(*.new(..))) && within(analysethis..*)";
+	@Pointcut(CALLNEW_INVOCATION_FILTER)
+	public void callNewPoint() {}
+
 	private static final String	EXECUTION_INVOCATION_FILTER																	= "(execution(* *(..))) && within(analysethis..*)";
+	@Pointcut(EXECUTION_INVOCATION_FILTER)
+	public void executionPoint() {}
+
 	private static final String	EXECUTION_NEW_INVOCATION_FILTER															= "(execution(*.new(..))) && within(analysethis..*)";
+	@Pointcut(EXECUTION_NEW_INVOCATION_FILTER)
+	public void executionNewPoint() {}
+
 	private static final String	PREINITIALIZATION_NEW_INVOCATION_FILTER											= "(preinitialization(*.new(..))) && within(analysethis..*)";
-	private static final String	INITIALIZATION_NEW_INVOCATION_FILTER												= "(initialization(*.new(..)) && this(thiz)) && within(analysethis..*)";
+	@Pointcut(PREINITIALIZATION_NEW_INVOCATION_FILTER)
+	public void preinitialisationPoint() {}
+
+	private static final String	INITIALIZATION_NEW_INVOCATION_FILTER												= "(initialization(*.new(..))) && within(analysethis..*)";
+	@Pointcut(INITIALIZATION_NEW_INVOCATION_FILTER)
+	public void initialisationPoint() {}
 	// (staticinitialization(*)))?;
-	private static final String	PREINITIALIZATION_INVOCATION_FILTER_AFTER_PREINITIALISATION	= "(preinitialization(*.new(..)) && this(thiz)) && within(analysethis..*)";
-	private static final String	INITIALIZATION_INVOCATION_FILTER_AFTER_INITIALISATION				= "(initialization(*.new(..)) && this(thiz)) && within(analysethis..*)";
-	private static final String	EXECUTION_INVOCATION_FILTER_AFTER_CONSTRUCTOR								= "(execution(*.new(..)) && this(thiz)) && within(analysethis..*)";
+
+	private static final String	PREINITIALIZATION_INVOCATION_FILTER_AFTER_PREINITIALISATION	= "(preinitialization(*.new(..))) && within(analysethis..*)";
+	@Pointcut(PREINITIALIZATION_INVOCATION_FILTER_AFTER_PREINITIALISATION)
+	public void preinitialisationAfterPreinitialisationPoint() {}
+
+	private static final String	INITIALIZATION_INVOCATION_FILTER_AFTER_INITIALISATION				= "(initialization(*.new(..))) && within(analysethis..*)";
+	@Pointcut(INITIALIZATION_INVOCATION_FILTER_AFTER_INITIALISATION)
+	public void initialisationAfterInitialisationPoint() {}
+
+	private static final String	EXECUTION_INVOCATION_FILTER_AFTER_CONSTRUCTOR								= "(execution(*.new(..))) && within(analysethis..*)";
+	@Pointcut(EXECUTION_INVOCATION_FILTER_AFTER_CONSTRUCTOR)
+	public void executionAfterConstructorPoint() {}
+
 	public final static String	RECORDING_PATH																							= "recordings";
 	private final static File		recordingPath																								= new File(RECORDING_PATH);
 	{
@@ -35,35 +63,35 @@ public class InformationalRecordingAspect {
 	}
 	public static boolean				stop																												= false;
 
-	@Before(EXECUTION_INVOCATION_FILTER)
+	@Before("executionPoint()")
 	public void logBeforeExecution(JoinPoint joinPoint) throws IOException {
 		if (stop)
 			return;
-		printInfo(joinPoint, null);
+		printInfo(joinPoint, "EXEC", null);
 	}
 
-	@Before(EXECUTION_NEW_INVOCATION_FILTER)
+	@Before("executionNewPoint()")
 	public void logBeforeExecutioNew(JoinPoint joinPoint) throws IOException {
 		if (stop)
 			return;
-		printInfo(joinPoint, null);
+		printInfo(joinPoint, "EXEC-NEW", null);
 	}
 
-	@Before(PREINITIALIZATION_NEW_INVOCATION_FILTER)
+	@Before("preinitialisationPoint()")
 	public void logBeforePreinitializationNew(JoinPoint joinPoint) throws IOException {
 		if (stop)
 			return;
-		printInfo(joinPoint, null);
+		printInfo(joinPoint, "PREINITIALISATION", null);
 	}
 
-	@Before(INITIALIZATION_NEW_INVOCATION_FILTER)
-	public void logBeforeInitializationNew(JoinPoint joinPoint, Object thiz) throws IOException {
+	@Before("initialisationPoint()")
+	public void logBeforeInitializationNew(JoinPoint joinPoint) throws IOException {
 		if (stop)
 			return;
-		printInfo(joinPoint, thiz);
+		printInfo(joinPoint, "INITIALISATION", null);
 	}
 
-	private void printInfo(JoinPoint joinPoint, Object thiz) {
+	private void printInfo(JoinPoint joinPoint, String operation, Object thiz) {
 		final Signature signature = joinPoint.getSignature();
 		final String methodSignatureString;
 		if (signature instanceof MethodSignature) {
@@ -74,7 +102,7 @@ public class InformationalRecordingAspect {
 			methodSignatureString = signature.getName(); // <clinit>
 		} else
 			throw new IllegalStateException("Unexpected signature type: " + signature.getClass());
-		System.out.println("\nBEFORE EXEC on " + joinPoint.getSignature().getDeclaringType().getName() + ", type: " + joinPoint.getStaticPart().getKind() + ", method " + methodSignatureString
+		System.out.println("\nBEFORE " + operation + " on " + joinPoint.getSignature().getDeclaringType().getName() + ", type: " + joinPoint.getStaticPart().getKind() + ", method " + methodSignatureString
 				+ ", this: " + (thiz == null ? "null" : thiz.getClass()) + ", n. args: " + joinPoint.getArgs().length);
 	}
 
@@ -102,54 +130,54 @@ public class InformationalRecordingAspect {
 		return name + Common.METHOD_NAME_TO_ARGS_SEPARATOR + argTypes;
 	}
 
-	@AfterReturning(value = PREINITIALIZATION_INVOCATION_FILTER_AFTER_PREINITIALISATION)
-	public void logAfterPreinitialisationReturning(JoinPoint joinPoint, Object thiz) throws IOException {
+	@AfterReturning(pointcut = "preinitialisationAfterPreinitialisationPoint()")
+	public void logAfterPreinitialisationReturning(JoinPoint joinPoint) throws IOException {
 		if (stop)
 			return;
-		printAfterInfo(joinPoint, "INITIALISATION", thiz);
+		printAfterInfo(joinPoint, "PREINITIALISATION", joinPoint.getThis());
 	}
 
-	@AfterReturning(value = INITIALIZATION_INVOCATION_FILTER_AFTER_INITIALISATION)
-	public void logAfterInitialisationReturning(JoinPoint joinPoint, Object thiz) throws IOException {
+	@AfterReturning(value = "initialisationAfterInitialisationPoint()")
+	public void logAfterInitialisationReturning(JoinPoint joinPoint) throws IOException {
 		if (stop)
 			return;
-		printAfterInfo(joinPoint, "INITIALISATION", thiz);
+		printAfterInfo(joinPoint, "INITIALISATION", joinPoint.getThis());
 	}
 
-	@AfterReturning(value = EXECUTION_INVOCATION_FILTER_AFTER_CONSTRUCTOR)
-	public void logAfterConstructorReturning(JoinPoint joinPoint, Object thiz) throws IOException {
+	@AfterReturning(value = "executionAfterConstructorPoint()")
+	public void logAfterConstructorReturning(JoinPoint joinPoint) throws IOException {
 		if (stop)
 			return;
-		printAfterInfo(joinPoint, "CONSTRUCTOR", thiz);
+		printAfterInfo(joinPoint, "EXEC-NEW", joinPoint.getThis());
 	}
 
-	@AfterReturning(value = EXECUTION_INVOCATION_FILTER, returning = "result")
+	@AfterReturning(value = "executionPoint()", returning = "result")
 	public void logAfterExecutionReturning(JoinPoint joinPoint, Object result) throws IOException {
 		if (stop)
 			return;
 		printAfterInfo(joinPoint, "EXEC", result);
 	}
 
-	@AfterThrowing(value = EXECUTION_INVOCATION_FILTER, throwing = "throwable")
+	@AfterThrowing(value = "executionPoint()", throwing = "throwable")
 	public void logAfterExecutionThrowing(JoinPoint joinPoint, Throwable throwable) throws IOException {
 		if (stop)
 			return;
 		printAfterInfo(joinPoint, "THROWING", throwable);
 	}
 
-	private void printAfterInfo(JoinPoint joinPoint, String what, Object result) {
-		System.out.println("\nAFTER " + what + " on " + joinPoint.getSignature().getDeclaringType().getName() + ", type: " + joinPoint.getStaticPart().getKind() + ", result class:"
+	private void printAfterInfo(JoinPoint joinPoint, String operation, Object result) {
+		System.out.println("\nAFTER " + operation + " on " + joinPoint.getSignature().getDeclaringType().getName() + ", type: " + joinPoint.getStaticPart().getKind() + ", result class:"
 				+ (result == null ? "null" : result.getClass()) + ", method " + joinPoint.getSignature().toString() + ", n. args: " + joinPoint.getArgs().length);
 	}
 
-	@Before(CALL_INVOCATION_FILTER)
+	@Before("callPoint()")
 	public void logBeforeCall(JoinPoint joinPoint) throws IOException {
 		if (stop)
 			return;
 		printCallInfo(joinPoint, "BEFORE", "CALL", null);
 	}
 
-	@Before(CALLNEW_INVOCATION_FILTER)
+	@Before("callNewPoint()")
 	public void logBeforeCallNew(JoinPoint joinPoint) throws IOException {
 		if (stop)
 			return;
@@ -173,28 +201,28 @@ public class InformationalRecordingAspect {
 				+ joinPoint.getArgs().length + ", result class: " + (result == null ? "null" : result.getClass()));
 	}
 
-	@AfterReturning(value = CALL_INVOCATION_FILTER, returning = "result")
+	@AfterReturning(value = "callPoint()", returning = "result")
 	public void logAfterCallReturning(JoinPoint joinPoint, Object result) throws IOException {
 		if (stop)
 			return;
 		printCallInfo(joinPoint, "AFTER", "CALL", result);
 	}
 
-	@AfterReturning(value = CALLNEW_INVOCATION_FILTER, returning = "result")
+	@AfterReturning(value = "callNewPoint()", returning = "result")
 	public void logAfterCallNewReturning(JoinPoint joinPoint, Object result) throws IOException {
 		if (stop)
 			return;
 		printCallInfo(joinPoint, "AFTER", "CALL", result);
 	}
 
-	@AfterThrowing(value = CALL_INVOCATION_FILTER, throwing = "throwable")
+	@AfterThrowing(value = "callPoint()", throwing = "throwable")
 	public void logAfterCallThrowing(JoinPoint joinPoint, Throwable throwable) throws IOException {
 		if (stop)
 			return;
 		printCallInfo(joinPoint, "AFTER", "THROWING", throwable);
 	}
 
-	@AfterThrowing(value = CALLNEW_INVOCATION_FILTER, throwing = "throwable")
+	@AfterThrowing(value = "callNewPoint()", throwing = "throwable")
 	public void logAfterCallNewThrowing(JoinPoint joinPoint, Throwable throwable) throws IOException {
 		if (stop)
 			return;

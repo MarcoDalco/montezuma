@@ -1,7 +1,7 @@
 package org.montezuma.test.traffic.recording.cases;
 
 import org.montezuma.test.traffic.recording.TrafficRecorder;
-import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
+import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspectControl;
 
 import java.sql.SQLException;
 import java.util.Calendar;
@@ -17,9 +17,9 @@ public class TimeConsumerTrafficRecorder {
 
 			@Override
 			public void run() {
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println("Loading CUT class to avoid static init processing: " + new TimeConsumer());
-				RecordingAspect.turnOn();
+				RecordingAspectControl.getInstance().turnOn();
 
 				TimeConsumer cut = new TimeConsumer();
 
@@ -28,7 +28,7 @@ public class TimeConsumerTrafficRecorder {
 				final Calendar cal = cut.getCalendar();
 				final long nanos = cut.getNanos();
 				final java.sql.Date sqlDate = cut.getSQLDate();
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println(date);
 				System.out.println(millis);
 				System.out.println(cal);

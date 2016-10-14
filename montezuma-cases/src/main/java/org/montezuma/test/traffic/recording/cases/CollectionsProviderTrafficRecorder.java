@@ -1,7 +1,7 @@
 package org.montezuma.test.traffic.recording.cases;
 
 import org.montezuma.test.traffic.recording.TrafficRecorder;
-import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
+import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspectControl;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -18,9 +18,9 @@ public class CollectionsProviderTrafficRecorder {
 
 			@Override
 			public void run() {
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println("Loading CUT class to avoid static init processing: " + new CollectionsProvider());
-				RecordingAspect.turnOn();
+				RecordingAspectControl.getInstance().turnOn();
 
 				CollectionsProvider cut = new CollectionsProvider();
 
@@ -31,7 +31,7 @@ public class CollectionsProviderTrafficRecorder {
 				Map<String, String> hashMap = cut.getHashMap();
 				Map<String, String> treeMap = cut.getTreeMap();
 
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println(arrayList);
 				System.out.println(linkedList);
 				System.out.println(hashSet);

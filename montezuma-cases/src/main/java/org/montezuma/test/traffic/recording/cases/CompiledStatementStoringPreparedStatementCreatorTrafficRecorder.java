@@ -3,7 +3,7 @@ package org.montezuma.test.traffic.recording.cases;
 import analysethis.com.somecompany.dao.CompiledStatementStoringPreparedStatementCreator;
 
 import org.montezuma.test.traffic.recording.TrafficRecorder;
-import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
+import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspectControl;
 
 import java.sql.SQLException;
 
@@ -15,9 +15,9 @@ public class CompiledStatementStoringPreparedStatementCreatorTrafficRecorder {
 
 			@Override
 			public void run() {
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				final MyConnection connection = new MyConnection();
-				RecordingAspect.turnOn();
+				RecordingAspectControl.getInstance().turnOn();
 
 				CompiledStatementStoringPreparedStatementCreator cut5 = new CompiledStatementStoringPreparedStatementCreator("insert into delete_log (resource_id, params) values( ? )", 1234L);
 				try {

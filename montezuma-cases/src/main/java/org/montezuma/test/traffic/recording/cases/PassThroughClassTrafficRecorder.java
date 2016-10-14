@@ -3,7 +3,7 @@ package org.montezuma.test.traffic.recording.cases;
 import analysethis.utils.math.MonitoredClass;
 
 import org.montezuma.test.traffic.recording.TrafficRecorder;
-import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
+import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspectControl;
 
 import dontanalysethis.DummyThirdParty;
 
@@ -17,10 +17,10 @@ public class PassThroughClassTrafficRecorder {
 
 			@Override
 			public void run() {
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println("Loading CUT class to avoid static init processing: " + new DummyThirdParty(""));
 				System.out.println("Loading CUT class to avoid static init processing: " + new MonitoredClass(""));
-				RecordingAspect.turnOn();
+				RecordingAspectControl.getInstance().turnOn();
 
 				DummyThirdParty dummyThirdParty = new DummyThirdParty("-Tail");
 				MonitoredClass cut4 = new MonitoredClass("PRE");
@@ -28,7 +28,7 @@ public class PassThroughClassTrafficRecorder {
 				final String messageEnhancedBy = cut4.getMessageEnhancedBy(dummyThirdParty);
 				final String message = cut4.getMessage();
 
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 
 				System.out.println(messageEnhancedBy);
 				System.out.println(message);
