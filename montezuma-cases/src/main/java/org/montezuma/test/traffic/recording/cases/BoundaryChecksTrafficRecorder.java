@@ -6,7 +6,7 @@ import dontanalysethis.captureboundarychecks.ClassAfterBoundaryExit;
 import dontanalysethis.captureboundarychecks.ClassEnteringBoundary;
 
 import org.montezuma.test.traffic.recording.TrafficRecorder;
-import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
+import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspectControl;
 
 import java.sql.SQLException;
 
@@ -18,17 +18,17 @@ public class BoundaryChecksTrafficRecorder {
 
 			@Override
 			public void run() {
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println("Loading CUT class to avoid static init processing: " + new ClassEnteringBoundary());
 				System.out.println("Loading CUT class to avoid static init processing: " + new EntryClassToAnalyse());
 				System.out.println("Loading CUT class to avoid static init processing: " + new SecondClassToAnalyse());
 				System.out.println("Loading CUT class to avoid static init processing: " + new ClassAfterBoundaryExit());
-				RecordingAspect.turnOn();
+				RecordingAspectControl.getInstance().turnOn();
 
 				ClassEnteringBoundary cut = new ClassEnteringBoundary();
 
 				final String result = cut.enterBoundaryForFullTraversal();
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println(result);
 			}
 		}, BOUNDARY_CHECKS_RECORDING_SUBDIR);

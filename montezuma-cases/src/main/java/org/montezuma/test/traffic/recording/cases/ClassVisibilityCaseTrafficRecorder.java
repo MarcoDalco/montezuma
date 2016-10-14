@@ -1,7 +1,7 @@
 package org.montezuma.test.traffic.recording.cases;
 
 import org.montezuma.test.traffic.recording.TrafficRecorder;
-import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
+import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspectControl;
 
 import analysethis.privateclassreferences.ClassVisibilityCaseMainClass;
 import dontanalysethis.privateclassreferences.VisibleClass;
@@ -15,9 +15,9 @@ public class ClassVisibilityCaseTrafficRecorder {
 
 			@Override
 			public void run() {
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println("Loading CUT class to avoid static init processing: " + new ClassVisibilityCaseTrafficRecorder());
-				RecordingAspect.turnOn();
+				RecordingAspectControl.getInstance().turnOn();
 
 				ClassVisibilityCaseMainClass cut1 = new ClassVisibilityCaseMainClass();
 
@@ -25,7 +25,7 @@ public class ClassVisibilityCaseTrafficRecorder {
 				final VisibleInterface result2 = cut1.getNewSubClassForInterface();
 				final String result3 = cut1.getValueFromNewSubClassForClass();
 				final String result4 = cut1.getValueFromNewSubClassForInterface();
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println(result1);
 				System.out.println(result2);
 				System.out.println(result3);

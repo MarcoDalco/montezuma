@@ -3,7 +3,7 @@ package org.montezuma.test.traffic.recording.cases;
 import analysethis.utils.math.CurrencyUtils;
 
 import org.montezuma.test.traffic.recording.TrafficRecorder;
-import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
+import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspectControl;
 
 import java.math.BigDecimal;
 import java.sql.SQLException;
@@ -17,15 +17,15 @@ public class CurrencyUtilsTrafficRecorder {
 
 			@Override
 			public void run() {
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println("Instantiating CUT class: " + new CurrencyUtils());
-				RecordingAspect.turnOn();
+				RecordingAspectControl.getInstance().turnOn();
 
 				CurrencyUtils cut = new CurrencyUtils();
 				final String result = cut.formatForDefaultCurrency(BigDecimal.TEN);
 				System.out.println(result);
 
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println(result);
 			}
 		}, CURRENCY_UTILS_RECORDING_SUBDIR);

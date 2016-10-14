@@ -6,7 +6,7 @@ import dontanalysethis.untestable.until.westopmockingalltheclasseswithinthebound
 import dontanalysethis.untestable.until.westopmockingalltheclasseswithintheboundaryinsteadofjusttheentryone.A;
 
 import org.montezuma.test.traffic.recording.TrafficRecorder;
-import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
+import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspectControl;
 
 import java.sql.SQLException;
 
@@ -18,17 +18,17 @@ public class BoundaryChecksCallbackTrafficRecorder {
 
 			@Override
 			public void run() {
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println("Loading CUT class to avoid static init processing: " + new A());
 				System.out.println("Loading CUT class to avoid static init processing: " + new B());
 				System.out.println("Loading CUT class to avoid static init processing: " + new C());
 				System.out.println("Loading CUT class to avoid static init processing: " + new D());
-				RecordingAspect.turnOn();
+				RecordingAspectControl.getInstance().turnOn();
 
 				A cut = new A();
 
 				final String result = cut.a();
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println(result);
 			}
 		}, BOUNDARY_CHECKS_RECORDING_SUBDIR);

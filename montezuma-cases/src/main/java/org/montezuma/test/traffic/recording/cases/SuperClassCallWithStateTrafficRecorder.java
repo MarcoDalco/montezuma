@@ -3,7 +3,7 @@ package org.montezuma.test.traffic.recording.cases;
 import analysethis.superclasscall.withstate.SomeClass;
 
 import org.montezuma.test.traffic.recording.TrafficRecorder;
-import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
+import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspectControl;
 
 import java.sql.SQLException;
 
@@ -15,14 +15,14 @@ public class SuperClassCallWithStateTrafficRecorder {
 
 			@Override
 			public void run() {
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println("Loading CUT class to avoid static init processing: " + new SomeClass());
-				RecordingAspect.turnOn();
+				RecordingAspectControl.getInstance().turnOn();
 
 				SomeClass cut = new SomeClass();
 
 				final int result = cut.getState();
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println(result);
 			}
 		}, SUPERCLASS_CALL_RECORDING_SUBDIR);

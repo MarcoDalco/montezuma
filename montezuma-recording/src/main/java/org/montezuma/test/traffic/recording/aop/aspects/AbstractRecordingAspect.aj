@@ -28,7 +28,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.Map;
 
-@Aspect
 public abstract aspect AbstractRecordingAspect {
 
 
@@ -55,14 +54,11 @@ public abstract aspect AbstractRecordingAspect {
 	private static final String		AFTER_EXECUTION_INVOCATION_FILTER							= "((execution(* *(..))) || (staticinitialization(*))) && within(" + WITHIN_REGEX + ")";
     abstract pointcut executionPoint();
 
-	private static final String		EXECUTION_INVOCATION_FILTER_AFTER_CONSTRUCTOR	= "((execution(*.new(..))) && this(thiz)) && within(" + WITHIN_REGEX + ")";
+	private static final String		EXECUTION_INVOCATION_FILTER_AFTER_CONSTRUCTOR	= "((execution(*.new(..)))) && within(" + WITHIN_REGEX + ")";
     abstract pointcut instantiationPoint();
 
 	public static final String		ARGS_SEPARATOR																= ",";
 	public static final String		METHOD_NAME_TO_ARGS_SEPARATOR									= "|";
-	public static String					recordingSubDir;
-	private static boolean				stop																					= false;
-	private static final boolean 	log 																					= true;
 
 	// @formatter:off
 	private final ThreadLocal<LinkedList<InvocationData>>	threadLocalStackOfExecutionInvocationData
@@ -91,11 +87,8 @@ public abstract aspect AbstractRecordingAspect {
 			};
 	// @formatter:on
 
-	@Pointcut(BEFORE_EXECUTION_AND_NEW_INVOCATION_FILTER)
-	public void pointcut() {}
-
 	before() throws IOException: executionAndInstantiationPoint() {
-		if (stop)
+		if (RecordingAspectControl.instance.stop)
 			return;
 		if (behaviouralCapture) {
 			final LinkedList<Boolean> wasOutsideScopeStack = threadLocalWasOutsideScopeStack.get();
@@ -122,12 +115,12 @@ public abstract aspect AbstractRecordingAspect {
 			throw new IllegalStateException("Unexpected signature type: " + signature.getClass());
 		final Object[] args = thisJoinPoint.getArgs();
 		final int[] argIDs = getArgIDs(args);
-		if (log)
+		if (RecordingAspectControl.instance.log)
 			System.out.print("\nBEFORE EXEC on " + "type: " + thisJoinPointStaticPart.getKind() + ", " + thisJoinPoint.getSignature().getDeclaringType().getName() + ", method " + methodSignatureString
 					+ ", n. args: " + args.length);
 		InvocationData data = new InvocationData(new Date(), methodSignatureString, serialiseArgs(args), argIDs);
 		threadLocalStackOfExecutionInvocationData.get().push(data);
-		if (log)
+		if (RecordingAspectControl.instance.log)
 			System.out.println("InvocationData stack size after adding:" + threadLocalStackOfExecutionInvocationData.get().size());
 	}
 
@@ -155,10 +148,8 @@ public abstract aspect AbstractRecordingAspect {
 		return name + METHOD_NAME_TO_ARGS_SEPARATOR + argTypes;
 	}
 
-//	@AfterReturning(value = EXECUTION_INVOCATION_FILTER_AFTER_CONSTRUCTOR)
-//	public void logAfterConstructorReturning(JoinPoint thisJoinPoint, Object thiz) throws IOException {
 	after() throws IOException: instantiationPoint() {
-		if (stop)
+		if (RecordingAspectControl.instance.stop)
 			return;
 
 		if (behaviouralCapture) {
@@ -177,7 +168,7 @@ public abstract aspect AbstractRecordingAspect {
 				// invocation to the signature's declaring type stack-of-execution-InvocationData
 			}
 		}
-		if (log) {
+		if (RecordingAspectControl.instance.log) {
 			System.out.print("\nAFTER CONSTRUCTOR on " + "type: " + thisJoinPointStaticPart.getKind() + ", " + signature.getDeclaringType().getName() + ", n. args: " + thisJoinPoint.getArgs().length);
 			System.out.println("InvocationData stack size before popping:" + threadLocalStackOfExecutionInvocationData.get().size());
 		}
@@ -186,10 +177,8 @@ public abstract aspect AbstractRecordingAspect {
 		store(thisJoinPoint, data);
 	}
 
-//	@AfterReturning(value = AFTER_EXECUTION_INVOCATION_FILTER, returning = "result")
-//	public void logAfterExecutionReturning(JoinPoint thisJoinPoint, Object result) throws IOException {
 	after() returning(Object result) throws IOException: executionPoint() {
-		if (stop)
+		if (RecordingAspectControl.instance.stop)
 			return;
 
 		if (behaviouralCapture) {
@@ -202,7 +191,7 @@ public abstract aspect AbstractRecordingAspect {
 				return; // The invocation comes from within the instrumented code: don't record it.
 		}
 
-		if (log) {
+		if (RecordingAspectControl.instance.log) {
 			System.out.print("\nAFTER EXEC on " + "type: " + thisJoinPointStaticPart.getKind() + ", " + thisJoinPoint.getSignature().getDeclaringType().getName() + ", method "
 					+ thisJoinPoint.getSignature().toString() + ", n. args: " + thisJoinPoint.getArgs().length);
 			System.out.println("InvocationData stack size before popping:" + threadLocalStackOfExecutionInvocationData.get().size());
@@ -215,10 +204,8 @@ public abstract aspect AbstractRecordingAspect {
 		store(thisJoinPoint, data);
 	}
 
-//	@AfterThrowing(value = AFTER_EXECUTION_INVOCATION_FILTER, throwing = "throwable")
-//	public void logAfterExecutionThrowing(JoinPoint thisJoinPoint, Throwable throwable) throws IOException {
 	after() throwing(Throwable throwable) throws IOException: executionPoint() {
-		if (stop)
+		if (RecordingAspectControl.instance.stop)
 			return;
 		if (behaviouralCapture) {
 			final LinkedList<Boolean> wasOutsideScopeStack = threadLocalWasOutsideScopeStack.get();
@@ -230,7 +217,7 @@ public abstract aspect AbstractRecordingAspect {
 				return; // The invocation comes from within the instrumented code: don't record it.
 		}
 
-		if (log) {
+		if (RecordingAspectControl.instance.log) {
 			System.out.println("++++++ Exception thrown: +++++++++");
 			throwable.printStackTrace();
 			System.out.print("\nAFTER-THROWING on " + "type: " + thisJoinPointStaticPart.getKind() + ", " + thisJoinPoint.getSignature().getDeclaringType().getName() + ", method "
@@ -243,10 +230,8 @@ public abstract aspect AbstractRecordingAspect {
 		store(thisJoinPoint, data);
 	}
 
-//	@Before(CALL_INVOCATION_FILTER)
-//	public void logBeforeCall(JoinPoint thisJoinPoint) throws IOException {
 	before() throws IOException: callPoint() {
-		if (stop)
+		if (RecordingAspectControl.instance.stop)
 			return;
 
 		if (!shouldRecordCall(thisJoinPoint))
@@ -274,7 +259,7 @@ public abstract aspect AbstractRecordingAspect {
 		final Class<?> declaringType = signature.getDeclaringType();
 		// final Class declaringType = thisJoinPoint.getTarget().getClass().getMethod(signature.getName(),
 		// parameterTypes).getDeclaringType();
-		if (log) {
+		if (RecordingAspectControl.instance.log) {
 			System.out.print("\nBEFORE CALL on " + "type: " + thisJoinPointStaticPart.getKind() + ", " + thisJoinPoint.getSignature().getDeclaringType().getName() + ", to signature type: " + declaringType
 					+ ", to target: " + (thisJoinPoint.getTarget() == null ? null : thisJoinPoint.getTarget().getClass().getName()) + ", method " + methodSignatureString + ", n. args: " + args.length);
 			System.out.println("InvocationData stack size before peeking:" + stackOfExecutionData.size());
@@ -384,10 +369,8 @@ public abstract aspect AbstractRecordingAspect {
 		return ids;
 	}
 
-//	@AfterReturning(value = CALL_INVOCATION_FILTER, returning = "result")
-//	public void logAfterCallReturning(JoinPoint thisJoinPoint, Object result) throws IOException {
 	after() returning(Object result) throws IOException: callPoint() {
-		if (stop)
+		if (RecordingAspectControl.instance.stop)
 			return;
 
 		if (!shouldRecordCall(thisJoinPoint))
@@ -401,7 +384,7 @@ public abstract aspect AbstractRecordingAspect {
 		final Signature signature = thisJoinPoint.getSignature();
 		if (signature instanceof InitializerSignature)
 			return;
-		if (log) {
+		if (RecordingAspectControl.instance.log) {
 			System.out.print("\nAFTER CALL on " + "type: " + thisJoinPointStaticPart.getKind() + ", " + signature.getDeclaringType().getName() + ", to signature type: "
 					+ signature.getDeclaringType().getName() + ", to target: " + (thisJoinPoint.getTarget() == null ? null : thisJoinPoint.getTarget().getClass().getName()) + ", method " + signature.toString()
 					+ ", n. args: " + thisJoinPoint.getArgs().length);
@@ -417,10 +400,8 @@ public abstract aspect AbstractRecordingAspect {
 		}
 	}
 
-//	@AfterThrowing(value = CALL_INVOCATION_FILTER, throwing = "throwable")
-//	public void logAfterCallThrowing(JoinPoint thisJoinPoint, Throwable throwable) throws IOException {
 	after() throwing(Throwable throwable) throws IOException: callPoint() {
-		if (stop)
+		if (RecordingAspectControl.instance.stop)
 			return;
 
 		if (!shouldRecordCall(thisJoinPoint))
@@ -428,7 +409,7 @@ public abstract aspect AbstractRecordingAspect {
 
 		if (thisJoinPoint.getSignature() instanceof InitializerSignature)
 			return; // INITIALISER CODE NOT SUPPORTED YET
-		if (log) {
+		if (RecordingAspectControl.instance.log) {
 			System.out.println("++++++ Exception thrown: +++++++++");
 			throwable.printStackTrace();
 			System.out.print("\nAFTER-THROWING on " + "type: " + thisJoinPointStaticPart.getKind() + ", " + thisJoinPoint.getSignature().getDeclaringType().getName() + ", to signature type: "
@@ -468,8 +449,8 @@ public abstract aspect AbstractRecordingAspect {
 	private void store(JoinPoint thisJoinPoint, InvocationData data) throws FileNotFoundException, IOException {
 		final Object thiz = thisJoinPoint.getTarget();
 		final Class<?> clazz = thisJoinPoint.getSignature().getDeclaringType();
-		String fileName = Common.BASE_RECORDING_PATH + "/" + recordingSubDir + "/" + clazz.getCanonicalName() + "@" + System.identityHashCode(thiz);
-		if (log)
+		String fileName = Common.BASE_RECORDING_PATH + "/" + RecordingAspectControl.instance.recordingSubDir + "/" + clazz.getCanonicalName() + "@" + System.identityHashCode(thiz);
+		if (RecordingAspectControl.instance.log)
 			System.out.println("WRITING TO " + fileName);
 		FileOutputStream fos = new FileOutputStream(fileName, true);
 		try {
@@ -483,15 +464,7 @@ public abstract aspect AbstractRecordingAspect {
 			}
 		}
 		InvocationData.printSingleInvocationDataSize(data);
-		if (log)
+		if (RecordingAspectControl.instance.log)
 			System.out.println("FILE SIZE: " + new File(fileName).length());
-	}
-
-	public static void turnOff() {
-		stop = true;
-	}
-
-	public static void turnOn() {
-		stop = false;
 	}
 }

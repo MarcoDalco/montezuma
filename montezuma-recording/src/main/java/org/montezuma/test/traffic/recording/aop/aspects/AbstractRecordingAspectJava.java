@@ -29,7 +29,7 @@ import java.util.LinkedList;
 import java.util.Map;
 
 @Aspect
-public class RecordingAspect {
+public abstract class AbstractRecordingAspectJava {
 
 
 	// TODO - make the serialisation level configurable by System property or configuration file.
@@ -78,8 +78,8 @@ public class RecordingAspect {
 			};
 	// @formatter:on
 
-	@Pointcut(BEFORE_EXECUTION_AND_NEW_INVOCATION_FILTER)
-	public void executionAndInstantiationPoint() {}
+	@Pointcut//(BEFORE_EXECUTION_AND_NEW_INVOCATION_FILTER)
+	public abstract void executionAndInstantiationPoint();
 
 	@Before("executionAndInstantiationPoint()")
 	public void logBeforeExecution(JoinPoint joinPoint) throws IOException {
@@ -143,8 +143,8 @@ public class RecordingAspect {
 		return name + METHOD_NAME_TO_ARGS_SEPARATOR + argTypes;
 	}
 
-	@Pointcut(EXECUTION_INVOCATION_FILTER_AFTER_CONSTRUCTOR)
-	public void instantiationPoint() {}
+	@Pointcut//(EXECUTION_INVOCATION_FILTER_AFTER_CONSTRUCTOR)
+	public abstract void instantiationPoint();
 
 @AfterReturning(pointcut = "instantiationPoint()")
 	public void logAfterConstructorReturning(JoinPoint joinPoint) throws IOException {
@@ -176,8 +176,8 @@ public class RecordingAspect {
 		store(joinPoint, data);
 	}
 
-	@Pointcut(AFTER_EXECUTION_INVOCATION_FILTER)
-	public void executionPoint() {}
+	@Pointcut//(AFTER_EXECUTION_INVOCATION_FILTER)
+	public abstract void executionPoint();
 
 	@AfterReturning(pointcut = "executionPoint()", returning = "result")
 	public void logAfterExecutionReturning(JoinPoint joinPoint, Object result) throws IOException {
@@ -234,8 +234,8 @@ public class RecordingAspect {
 		store(joinPoint, data);
 	}
 
-	@Pointcut(CALL_INVOCATION_FILTER)
-	public void callPoint() {}
+	@Pointcut//(CALL_INVOCATION_FILTER)
+	public abstract void callPoint();
 
 	@Before("callPoint()")
 	public void logBeforeCall(JoinPoint joinPoint) throws IOException {

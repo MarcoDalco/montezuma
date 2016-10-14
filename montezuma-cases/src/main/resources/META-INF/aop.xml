@@ -1,16 +1,17 @@
 <aspectj>
 	<aspects>
 		<!-- declare two existing aspects to the weaver -->
-               <aspect name="org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect"/>
-
+<!--                <aspect name="org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect"/>
+ -->
               <!-- define a concrete aspect inline -->
-<!--
-              <concrete-aspect name="com.xyz.tracing.MyTracing"
-                               extends="tracing.AbstractTracing"
-                               precedence="com.xyz.first, *">
-                <pointcut name="tracingScope" expression="within(org.maw.*)"/>
+              <concrete-aspect name="org.montezuma.test.traffic.recording.aop.aspects.ConcreteRecordingAspect"
+                               extends="org.montezuma.test.traffic.recording.aop.aspects.AbstractRecordingAspectJava"
+                               precedence="*">
+                <pointcut name="callPoint" expression="(call(* *(..))) || (call(*.new(..)))"/>
+                <pointcut name="executionAndInstantiationPoint" expression="(execution(* *(..))) || (execution(*.new(..)))"/>
+                <pointcut name="executionPoint" expression="(execution(* *(..))) || (staticinitialization(*))"/>
+                <pointcut name="instantiationPoint" expression="(execution(*.new(..)))"/>
               </concrete-aspect>
--->
  
               <!-- Of the set of aspects declared to the weaver
                    use aspects matching the type pattern "com..*" for weaving. -->
@@ -33,7 +34,8 @@
 <!--                 <include within="uhuru.matrix.lookups.db.DBContext"/> -->
 <!--                <include within="uhuru.matrix.lookups.db..*"/> -->
                <include within="analysethis..*"/>
-              <include within="org.montezuma.test.traffic.recording..*"/>
+<!--               <include within="org.montezuma.test.traffic.recording..*"/>
+ -->
 <!--
               <include within="javax.*"/>
               <include within="org.aspectj.*"/>

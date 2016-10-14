@@ -1,7 +1,7 @@
 package org.montezuma.test.traffic.recording.cases;
 
 import org.montezuma.test.traffic.recording.TrafficRecorder;
-import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspect;
+import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspectControl;
 
 import java.sql.SQLException;
 
@@ -15,15 +15,15 @@ public class StaticMethodCallTrafficRecorder {
 
 			@Override
 			public void run() {
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println("Loading CUT class to avoid static init processing: " + new ClassWithStaticMethods());
-				RecordingAspect.turnOn();
+				RecordingAspectControl.getInstance().turnOn();
 
 				final String result = ClassWithStaticMethods.staticMethod();
 				ClassWithStaticMethods cut = new ClassWithStaticMethods();
 				final String result2 = cut.nonStaticMethod();
 
-				RecordingAspect.turnOff();
+				RecordingAspectControl.getInstance().turnOff();
 				System.out.println(result);
 				System.out.println(result2);
 			}
