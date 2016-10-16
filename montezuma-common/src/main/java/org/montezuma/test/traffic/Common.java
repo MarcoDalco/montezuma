@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class Common {
-	public static final String	DEFAULT_RECORDING_SUBDIR			= "default_recording_subdir";
 	public static final String	ARGS_SEPARATOR								= ",";
 	public static final String	METHOD_NAME_TO_ARGS_SEPARATOR	= "|";
 
