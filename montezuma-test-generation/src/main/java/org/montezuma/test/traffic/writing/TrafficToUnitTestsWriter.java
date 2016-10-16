@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +42,24 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 
 	public TrafficToUnitTestsWriter() {}
 
+	public static void main(String[] args) throws ClassNotFoundException, FileNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
+		if (args.length != 6) {
+			System.out.println("Usage: " + TrafficToUnitTestsWriter.class.getSimpleName() + " clazzUnderTest dontMockRegexList recordingDir outputClassPath testClassNamePrefix classJavadoc");
+			System.exit(0);
+		}
+
+		int argIndex = 0;
+		String classNameArgument = args[argIndex++];
+		String dontMockRegexListArgument = args[argIndex++];
+		String recordingsDirArgument = args[argIndex++];
+		String outputClassPathArgument = args[argIndex++];
+		String testClassNamePrefix = args[argIndex++];
+		String classJavadoc = args[argIndex++];
+
+		Class<?> clazz = Class.forName(classNameArgument);
+		List<String> dontMockRegexList = Arrays.asList(dontMockRegexListArgument.split(","));
+		File recordingDir = new File(recordingsDirArgument);
+		new TrafficToUnitTestsWriter().generateTestsFor(clazz, dontMockRegexList, recordingDir, outputClassPathArgument, testClassNamePrefix, classJavadoc);
 	}
 
 	public void generateTestsFor(final Class<?> clazz, List<String> dontMockRegexList, File recordingDir, String outputClassPath, String testClassNamePrefix, String classJavadoc) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
