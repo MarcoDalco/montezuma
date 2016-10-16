@@ -37,12 +37,10 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 		return dontMockRegexList;
 	}
 
-	private Map<String, String> options = new HashMap<>();
+	private final Map<String, String> options = new HashMap<>();
 
 	public TrafficToUnitTestsWriter() {}
 
-	public TrafficToUnitTestsWriter(Map<String, String> options) {
-		this.options = options;
 	}
 
 	public void generateTestsFor(final Class<?> clazz, List<String> dontMockRegexList, File recordingDir, String outputClassPath, String testClassNamePrefix, String classJavadoc) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
