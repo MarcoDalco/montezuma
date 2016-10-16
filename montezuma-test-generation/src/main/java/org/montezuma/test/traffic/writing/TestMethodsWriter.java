@@ -39,8 +39,9 @@ public class TestMethodsWriter {
 		this.amTestingTheStaticPart = (instanceId == 0);
 		// TODO - extend this to the whole package/boundary if it's for "behavioural test writing", currently only possible
 		// for "behaviouralCapture"
-		dontMockRegexList.add(testClass.getCanonicalName());
-		this.mockingStrategy = new MockingStrategy(dontMockRegexList);
+		List<String> dontMockRegexListWithThisClass = new ArrayList<>(dontMockRegexList);
+		dontMockRegexListWithThisClass.add(testClass.getCanonicalName());
+		this.mockingStrategy = new MockingStrategy(dontMockRegexListWithThisClass);
 		this.renderersStrategy = new RenderersStrategy();
 		this.instanceId = instanceId;
 		this.oneTestPerInvocation = immutablesChecker.isImmutable(testClass);
