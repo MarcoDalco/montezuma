@@ -30,6 +30,18 @@ public class TrafficReplayer extends TrafficReader {
 		primitiveTypes.put("double", double.class);
 	};
 
+	public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+		if (args.length != 2) {
+			System.out.println("Usage: " + TrafficReplayer.class.getSimpleName() + " className recordingsPath");
+			System.exit(0);
+		}
+
+		final String className = args[0];
+		final String pathname = args[1];
+
+		replay(Class.forName(className), new File(pathname));
+	}
+
 	protected static void replay(final Class<?> clazz, File recordingDir) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		final Map<Integer, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingDir);
 		for (List<InvocationData> invocationDataList : invocationDataLists.values()) {
