@@ -11,21 +11,24 @@ import java.util.List;
 import java.util.Map;
 
 public class CasesCommon {
+	public final static String	CASES_BASE_RECORDING_PATH				= "recordings";
 	private static final String	TEST_CLASS_PATH_DEFAULT					= "src/generatedtests/java";
 	public static final String	TEST_CLASS_PATH_KEY							= "-dest";
 	private static final String	TEST_CLASS_NAME_PREFIX_DEFAULT	= "";
 	public static final String	TEST_CLASS_NAME_PREFIX_KEY			= "-pre";
 
-	public static Map<String, String> parseArguments(String [] args) {
+	public static Map<String, String> parseArguments(String[] args) {
 		Map<String, String> parsedArgs = new HashMap<>();
 
 		for (int i=0; i<args.length; i++) {
 			String arg = args[i];
 			switch (arg) {
-				case "-dest" : parsedArgs.put(TEST_CLASS_PATH_KEY, args[++i]);
-				break;
-				case "-pre" : parsedArgs.put(TEST_CLASS_NAME_PREFIX_KEY, args[++i]);
-				break;
+				case "-dest":
+					parsedArgs.put(TEST_CLASS_PATH_KEY, args[++i]);
+					break;
+				case "-pre":
+					parsedArgs.put(TEST_CLASS_NAME_PREFIX_KEY, args[++i]);
+					break;
 			}
 		}
 
@@ -45,11 +48,10 @@ public class CasesCommon {
 	}
 
 	public static void generateTestsFor(Class<?> clazz, List<String> dontMockClasses, String recordingsSubDir, Map<String, String> args, String classJavadoc) throws FileNotFoundException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
-		new TrafficToUnitTestsWriter().generateTestsFor(
-		clazz, dontMockClasses, getRecordingsDir(recordingsSubDir), CasesCommon.getClassPath(args), CasesCommon.getClassNamePrefix(args), classJavadoc);
+		new TrafficToUnitTestsWriter().generateTestsFor(clazz, dontMockClasses, getRecordingsDir(recordingsSubDir), CasesCommon.getClassPath(args), CasesCommon.getClassNamePrefix(args), classJavadoc);
 	}
 
 	public static File getRecordingsDir(String recordingsSubDir) {
-		return new File(Common.BASE_RECORDING_PATH, recordingsSubDir);
+		return new File(CASES_BASE_RECORDING_PATH, recordingsSubDir);
 	}
 }

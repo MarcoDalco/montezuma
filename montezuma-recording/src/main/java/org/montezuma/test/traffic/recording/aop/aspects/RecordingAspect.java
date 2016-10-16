@@ -459,10 +459,10 @@ public abstract class RecordingAspect {
 	private void store(JoinPoint joinPoint, InvocationData data) throws FileNotFoundException, IOException {
 		final Object thiz = joinPoint.getTarget();
 		final Class<?> clazz = joinPoint.getSignature().getDeclaringType();
-		String fileName = Common.BASE_RECORDING_PATH + "/" + RecordingAspectControl.instance.recordingSubDir + "/" + clazz.getCanonicalName() + "@" + System.identityHashCode(thiz);
+		File file = new File(RecordingAspectControl.instance.recordingDir, clazz.getCanonicalName() + "@" + System.identityHashCode(thiz));
 		if (RecordingAspectControl.instance.log)
-			System.out.println("WRITING TO " + fileName);
-		FileOutputStream fos = new FileOutputStream(fileName, true);
+			System.out.println("WRITING TO " + file.getAbsolutePath());
+		FileOutputStream fos = new FileOutputStream(file, true);
 		try {
 			serialiser.get().serialise(fos, data);
 		}
@@ -475,6 +475,6 @@ public abstract class RecordingAspect {
 		}
 		InvocationData.printSingleInvocationDataSize(data);
 		if (RecordingAspectControl.instance.log)
-			System.out.println("FILE SIZE: " + new File(fileName).length());
+			System.out.println("FILE SIZE: " + file.length());
 	}
 }

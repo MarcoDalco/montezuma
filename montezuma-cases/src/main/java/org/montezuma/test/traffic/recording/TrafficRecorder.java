@@ -1,6 +1,6 @@
 package org.montezuma.test.traffic.recording;
 
-import org.montezuma.test.traffic.Common;
+import org.montezuma.test.traffic.CasesCommon;
 import org.montezuma.test.traffic.recording.aop.aspects.RecordingAspectControl;
 
 import java.io.File;
@@ -9,8 +9,8 @@ public class TrafficRecorder {
   public void runRecording(Runnable productionCodeRunner, String recordingSubDir) {
     try {
       RecordingAspectControl.getInstance().turnOff();
-      RecordingAspectControl.getInstance().setRecordingSubdir(recordingSubDir);
-      final File recordingPath = new File(Common.BASE_RECORDING_PATH, recordingSubDir);
+      final File recordingPath = new File(CasesCommon.CASES_BASE_RECORDING_PATH, recordingSubDir);
+      RecordingAspectControl.getInstance().setRecordingDir(recordingPath);
       recordingPath.mkdirs();
       cleanDir(recordingPath);
       RecordingAspectControl.getInstance().turnOn();
