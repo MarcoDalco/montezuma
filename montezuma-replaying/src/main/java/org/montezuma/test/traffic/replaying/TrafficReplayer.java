@@ -1,5 +1,12 @@
 package org.montezuma.test.traffic.replaying;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.montezuma.test.traffic.Common;
 import org.montezuma.test.traffic.InvocationData;
 import org.montezuma.test.traffic.MustMock;
@@ -30,19 +37,33 @@ public class TrafficReplayer extends TrafficReader {
 		primitiveTypes.put("double", double.class);
 	};
 
-	public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
-		if (args.length != 2) {
-			System.out.println("Usage: " + TrafficReplayer.class.getSimpleName() + " className recordingsPath");
-			System.exit(0);
+	public static void main(String[] args) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, ParseException {
+		Option classnameOption = new Option("c", "classname", true, "Name of the class to replay the recordings of");
+		Option recordingspathOption = new Option("r", "recordingspath", true, "Path of the directory with the recordings data");
+
+		classnameOption.setRequired(true);
+		recordingspathOption.setRequired(true);
+
+		Options options = new Options();
+		options.addOption(classnameOption);
+		options.addOption(recordingspathOption);
+
+		try {
+			CommandLineParser parser = new DefaultParser();
+			CommandLine line = parser.parse(options, args);
+
+			final String className = line.getOptionValue(classnameOption.getLongOpt());
+			final String pathname = line.getOptionValue(recordingspathOption.getLongOpt());
+
+			replay(Class.forName(className), new File(pathname));
 		}
-
-		final String className = args[0];
-		final String pathname = args[1];
-
-		replay(Class.forName(className), new File(pathname));
+		catch(ParseException pe) {
+			HelpFormatter helpFormatter = new HelpFormatter();
+			helpFormatter.printHelp(TrafficReplayer.class.getSimpleName(), options, true);
+		}
 	}
 
-	protected static void replay(final Class<?> clazz, File recordingDir) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+	public static void replay(final Class<?> clazz, File recordingDir) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		final Map<Integer, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingDir);
 		for (List<InvocationData> invocationDataList : invocationDataLists.values()) {
 			printInvocationDataSizes(invocationDataList);

@@ -1,5 +1,12 @@
 package org.montezuma.test.traffic.writing;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.montezuma.test.traffic.InvocationData;
 import org.montezuma.test.traffic.TrafficReader;
 
@@ -43,26 +50,49 @@ public class TrafficToUnitTestsWriter extends TrafficReader {
 	public TrafficToUnitTestsWriter() {}
 
 	public static void main(String[] args) throws ClassNotFoundException, FileNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException, IOException {
-		if (args.length != 6) {
-			System.out.println("Usage: " + TrafficToUnitTestsWriter.class.getSimpleName() + " clazzUnderTest dontMockRegexList recordingDir outputClassPath testClassNamePrefix classJavadoc");
-			System.exit(0);
+		Option classnameOption = new Option("c", "classname", true, "Name of the class to write the tests of");
+		Option recordingspathOption = new Option("r", "recordingspath", true, "Path of the directory with the recordings data");
+		Option dontMockRegexListOption = new Option("n", "dontmock", true, "CSV list of classes and packages that must not be mocked");
+		Option outputClassPathOption = new Option("d", "destinationclasspath", true, "Path of the base directory where to write the generated test classes");
+		Option testClassNamePrefixOption = new Option("p", "testclassnameprefix", true, "Prefix for the generated test class names");
+		Option classJavadocOption = new Option(null, "testclassjavadoc", true, "Javadoc for the generated test classes");
+
+		classnameOption.setRequired(true);
+		recordingspathOption.setRequired(true);
+		dontMockRegexListOption.setRequired(true);
+		outputClassPathOption.setRequired(true);
+
+		Options options = new Options();
+		options.addOption(classnameOption);
+		options.addOption(recordingspathOption);
+		options.addOption(dontMockRegexListOption);
+		options.addOption(outputClassPathOption);
+		options.addOption(testClassNamePrefixOption);
+		options.addOption(classJavadocOption);
+
+		try {
+			CommandLineParser parser = new DefaultParser();
+			CommandLine line = parser.parse(options, args);
+
+			final String className = line.getOptionValue(classnameOption.getLongOpt());
+			final String recordingsPath = line.getOptionValue(recordingspathOption.getLongOpt());
+			final String[] dontMockRegexArray = line.getOptionValues(dontMockRegexListOption.getLongOpt());
+			final String outputClassPath = line.getOptionValue(outputClassPathOption.getLongOpt());
+			final String testClassNamePrefix = line.getOptionValue(testClassNamePrefixOption.getLongOpt(), "");
+			final String classJavadoc = line.getOptionValue(classJavadocOption.getLongOpt());
+
+			Class<?> clazz = Class.forName(className);
+			File recordingDir = new File(recordingsPath);
+			List<String> dontMockRegexList = Arrays.asList(dontMockRegexArray);
+			new TrafficToUnitTestsWriter().generateTestsFor(clazz, recordingDir, dontMockRegexList, outputClassPath, testClassNamePrefix, classJavadoc);
 		}
-
-		int argIndex = 0;
-		String classNameArgument = args[argIndex++];
-		String dontMockRegexListArgument = args[argIndex++];
-		String recordingsDirArgument = args[argIndex++];
-		String outputClassPathArgument = args[argIndex++];
-		String testClassNamePrefix = args[argIndex++];
-		String classJavadoc = args[argIndex++];
-
-		Class<?> clazz = Class.forName(classNameArgument);
-		List<String> dontMockRegexList = Arrays.asList(dontMockRegexListArgument.split(","));
-		File recordingDir = new File(recordingsDirArgument);
-		new TrafficToUnitTestsWriter().generateTestsFor(clazz, dontMockRegexList, recordingDir, outputClassPathArgument, testClassNamePrefix, classJavadoc);
+		catch(ParseException pe) {
+			HelpFormatter helpFormatter = new HelpFormatter();
+			helpFormatter.printHelp(TrafficToUnitTestsWriter.class.getSimpleName(), options, true);
+		}
 	}
 
-	public void generateTestsFor(final Class<?> clazz, List<String> dontMockRegexList, File recordingDir, String outputClassPath, String testClassNamePrefix, String classJavadoc) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
+	public void generateTestsFor(final Class<?> clazz, File recordingDir, List<String> dontMockRegexList, String outputClassPath, String testClassNamePrefix, String classJavadoc) throws FileNotFoundException, IOException, ClassNotFoundException, NoSuchMethodException, InstantiationException, IllegalAccessException, InvocationTargetException {
 		final Map<Integer, List<InvocationData>> invocationDataLists = loadInvocationDataForClass(clazz, recordingDir);
 		for (List<InvocationData> invocationDataList : invocationDataLists.values()) {
 			printInvocationDataSizes(invocationDataList);

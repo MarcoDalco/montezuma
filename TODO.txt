@@ -1,0 +1,7 @@
+1) Provide a real-world example use (not RecordAll) with command-line
+2) Provide a UberJar with all the dependencies?
+3) Promote it
+4) Switch to Gradle?
+5) Disable the TurnOff/TurnOn invocations on Recording in Cases
+6) Run with Coverage to find and remove dead code and unused options, then:
+7) Create a true "WriteAll" which also tests the currently-untested options (single-file/multi-file tests).
