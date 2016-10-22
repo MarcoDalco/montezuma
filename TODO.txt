@@ -5,3 +5,4 @@
 5) Disable the TurnOff/TurnOn invocations on Recording in Cases
 6) Run with Coverage to find and remove dead code and unused options, then:
 7) Create a true "WriteAll" which also tests the currently-untested options (single-file/multi-file tests).
+8) Automatically build with Jenkins
