@@ -1,0 +1,12 @@
+java_library(
+  name = 'module-all',
+  srcs = glob(['**/*.java']),
+  visibility = ['PUBLIC'],
+  deps = [
+    '//montezuma-common:module-all'
+  ],
+)
+
+project_config(
+  src_target = ':module-all',
+)

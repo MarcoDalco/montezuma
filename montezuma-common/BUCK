@@ -1,0 +1,9 @@
+java_library(
+  name = 'module-all',
+  srcs = glob(['**/*.java']),
+  visibility = ['PUBLIC'],
+)
+
+project_config(
+  src_target = ':module-all',
+)
