@@ -1,0 +1,42 @@
+dependencies {
+  compile project(':montezuma-recording')
+  compile project(':montezuma-replaying')
+  compile project(':montezuma-test-generation')
+}
+
+jar {
+  manifest {
+    attributes 'Implementation-Title': 'Gradle Quickstart', 'Implementation-Version': version
+  }
+}
+
+task RecordAll(type:JavaExec) {
+  main = 'org.montezuma.test.traffic.recording.cases.RecordAll'
+  classpath = sourceSets.main.runtimeClasspath
+
+  def aspectjweaverPath = "NONE"
+
+  configurations.testRuntime.resolvedConfiguration.resolvedArtifacts.each { artifact -> if (artifact.moduleVersion.id.name == 'aspectjweaver') { aspectjweaverPath = artifact.file };  }
+
+  println aspectjweaverPath
+
+  jvmArgs = ["-javaagent:${aspectjweaverPath}"] 
+}
+
+task ReplayAll(type:JavaExec) {
+  main = 'org.montezuma.test.traffic.replaying.cases.ReplayAll'
+  classpath = sourceSets.main.runtimeClasspath
+}
+
+task WriteAll(type:JavaExec) {
+  main = 'org.montezuma.test.traffic.writing.cases.WriteAll'
+  classpath = sourceSets.main.runtimeClasspath
+}
+
+test {
+  RecordAll.execute()
+  ReplayAll.execute()
+  WriteAll.execute()
+
+//  systemProperties 'property': 'value'
+}
