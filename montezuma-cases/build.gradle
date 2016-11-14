@@ -33,10 +33,38 @@ task WriteAll(type:JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
 }
 
-test {
+task GenerateTests {
   RecordAll.execute()
   ReplayAll.execute()
   WriteAll.execute()
 
 //  systemProperties 'property': 'value'
+}
+
+sourceSets {
+  generated {
+    java.srcDir "${buildDir}/montezuma-cases/src/generatedtests/jmockit/mocking/"
+  }
+}
+
+compileGeneratedJava {
+  dependsOn(RecordAll)
+  dependsOn(ReplayAll)
+  dependsOn(WriteAll)
+  classpath = configurations.compile
+}
+
+task compileGeneratedJMockitMockingTests(type:JavaCompile) {
+  classpath = sourceSets.main.compileClasspath
+  destinationDir = sourceSets.main.output.classesDir
+//  source = sourceSets.main.allSource + sourceSets.generated.allSource
+  sourceSets.main.output.upToDateWhen() { false }
+  source = sourceSets.generated.allSource
+options.fork = true
+  compile()
+} 
+
+test {
+  dependsOn(compileGeneratedJava)
+  compileGeneratedJMockitMockingTests.execute()
 }
