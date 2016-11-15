@@ -14,11 +14,9 @@ task RecordAll(type:JavaExec) {
   main = 'org.montezuma.test.traffic.recording.cases.RecordAll'
   classpath = sourceSets.main.runtimeClasspath
 
-  def aspectjweaverPath = "NONE"
+  def aspectjweaverPath = "ASPECTJWEAVER JAR NOT FOUND"
 
   configurations.testRuntime.resolvedConfiguration.resolvedArtifacts.each { artifact -> if (artifact.moduleVersion.id.name == 'aspectjweaver') { aspectjweaverPath = artifact.file };  }
-
-  println aspectjweaverPath
 
   jvmArgs = ["-javaagent:${aspectjweaverPath}"] 
 }
@@ -37,8 +35,6 @@ task GenerateTests {
   RecordAll.execute()
   ReplayAll.execute()
   WriteAll.execute()
-
-//  systemProperties 'property': 'value'
 }
 
 sourceSets {
@@ -48,23 +44,10 @@ sourceSets {
 }
 
 compileGeneratedJava {
-  dependsOn(RecordAll)
-  dependsOn(ReplayAll)
-  dependsOn(WriteAll)
+  dependsOn(GenerateTests)
   classpath = configurations.compile
 }
 
-task compileGeneratedJMockitMockingTests(type:JavaCompile) {
-  classpath = sourceSets.main.compileClasspath
-  destinationDir = sourceSets.main.output.classesDir
-//  source = sourceSets.main.allSource + sourceSets.generated.allSource
-  sourceSets.main.output.upToDateWhen() { false }
-  source = sourceSets.generated.allSource
-options.fork = true
-  compile()
-} 
-
 test {
   dependsOn(compileGeneratedJava)
-  compileGeneratedJMockitMockingTests.execute()
 }
