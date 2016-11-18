@@ -1,0 +1,53 @@
+dependencies {
+  compile project(':montezuma-recording')
+  compile project(':montezuma-replaying')
+  compile project(':montezuma-test-generation')
+}
+
+jar {
+  manifest {
+    attributes 'Implementation-Title': 'Gradle Quickstart', 'Implementation-Version': version
+  }
+}
+
+task RecordAll(type:JavaExec) {
+  main = 'org.montezuma.test.traffic.recording.cases.RecordAll'
+  classpath = sourceSets.main.runtimeClasspath
+
+  def aspectjweaverPath = "ASPECTJWEAVER JAR NOT FOUND"
+
+  configurations.testRuntime.resolvedConfiguration.resolvedArtifacts.each { artifact -> if (artifact.moduleVersion.id.name == 'aspectjweaver') { aspectjweaverPath = artifact.file };  }
+
+  jvmArgs = ["-javaagent:${aspectjweaverPath}"] 
+}
+
+task ReplayAll(type:JavaExec) {
+  main = 'org.montezuma.test.traffic.replaying.cases.ReplayAll'
+  classpath = sourceSets.main.runtimeClasspath
+}
+
+task WriteAll(type:JavaExec) {
+  main = 'org.montezuma.test.traffic.writing.cases.WriteAll'
+  classpath = sourceSets.main.runtimeClasspath
+}
+
+task GenerateTests {
+  RecordAll.execute()
+  ReplayAll.execute()
+  WriteAll.execute()
+}
+
+sourceSets {
+  generated {
+    java.srcDir "${buildDir}/montezuma-cases/src/generatedtests/jmockit/mocking/"
+  }
+}
+
+compileGeneratedJava {
+  dependsOn(GenerateTests)
+  classpath = configurations.compile
+}
+
+test {
+  dependsOn(compileGeneratedJava)
+}

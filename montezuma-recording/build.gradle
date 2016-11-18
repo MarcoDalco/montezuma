@@ -1,0 +1,12 @@
+dependencies {
+  compile project(':montezuma-common')
+}
+
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+
+jar {
+  manifest {
+    attributes 'Implementation-Title': 'Gradle Quickstart', 'Implementation-Version': version
+  }
+}
