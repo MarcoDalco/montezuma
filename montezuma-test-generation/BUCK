@@ -4,6 +4,10 @@ java_library(
   visibility = ['PUBLIC'],
   deps = [
     '//montezuma-common:module-all'
+  ] +
+  [
+    '//lib:kryo',
+    '//lib:commons-cli',
   ],
 )
 

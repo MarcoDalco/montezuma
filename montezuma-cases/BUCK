@@ -1,8 +1,9 @@
 java_library(
   name = 'module-all',
-  srcs = glob(['**/*.java']),
+  srcs = glob(['src/main/**/*.java']),
   visibility = ['PUBLIC'],
   deps = [
+    '//montezuma-common:module-all',
     '//montezuma-recording:module-all',
     '//montezuma-replaying:module-all',
     '//montezuma-test-generation:module-all',

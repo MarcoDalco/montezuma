@@ -1,10 +1,7 @@
 java_library(
   name = 'module-all',
-  srcs = glob(['**/*.java']),
+  srcs = glob(['*.java']),
   visibility = ['PUBLIC'],
-  deps = [
-    '//lib:kryo',
-  ]
 )
 
 project_config(
